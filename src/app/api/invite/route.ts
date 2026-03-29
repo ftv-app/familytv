@@ -8,7 +8,7 @@ const INVITE_EXPIRY_DAYS = 7;
 
 // POST /api/invite - create an invite
 export async function POST(req: NextRequest) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
 
 // GET /api/invite?token=xxx - accept an invite
 export async function GET(req: NextRequest) {
-  const { userId } = auth();
+  const { userId } = await auth();
   const { searchParams } = new URL(req.url);
   const token = searchParams.get("token");
 

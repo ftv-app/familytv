@@ -4,7 +4,7 @@ import { db, families, familyMemberships } from "@/db";
 import { eq } from "drizzle-orm";
 
 export default async function AppPage() {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
   // Find the user's families
