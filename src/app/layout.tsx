@@ -32,13 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider
-      authorizedParties={[
-        "familytv-linked.vercel.app",
-        "familytv.vercel.app",
-        "localhost",
-      ]}
-    >
+    <ClerkProvider>
       <html
         lang="en"
         className={`${plusJakarta.variable} ${fraunces.variable} h-full antialiased`}
