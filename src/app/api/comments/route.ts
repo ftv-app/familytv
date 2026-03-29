@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { db, comments } from "@/db";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -31,17 +31,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { searchParams } = new URL(req.url);
-  const postId = searchParams.get("postId");
   const body = await req.json();
-  const { content } = body;
+  const { postId, content } = body;
 
   if (!postId || !content?.trim()) {
     return NextResponse.json({ error: "postId and content required" }, { status: 400 });
   }
 
   // Get user name from Clerk
-  const { user } = await auth();
+  const user = await currentUser();
   const authorName = user?.firstName || user?.emailAddresses?.[0]?.emailAddress || "Family Member";
 
   const [comment] = await db.insert(comments).values({
