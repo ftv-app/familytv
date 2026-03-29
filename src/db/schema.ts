@@ -101,6 +101,7 @@ export const posts = pgTable(
       .notNull()
       .references(() => families.id, { onDelete: "cascade" }),
     authorId: text("author_id").notNull(), // Clerk userId
+    authorName: text("author_name").default("Family member").notNull(), // Cached display name from Clerk
     contentType: text("content_type").notNull(),
     mediaUrl: text("media_url"),           // Vercel Blob URL (null for text posts)
     caption: text("caption"),

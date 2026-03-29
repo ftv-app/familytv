@@ -35,7 +35,10 @@ export async function GET(req: NextRequest) {
     orderBy: [desc(posts.createdAt)],
   });
 
-  return NextResponse.json({ posts: allPosts });
+  // Return posts without the Clerk userId from the response body
+  const postsWithoutSensitiveId = allPosts.map(({ authorId: _authorId, ...rest }) => rest);
+
+  return NextResponse.json({ posts: postsWithoutSensitiveId });
 }
 
 // POST /api/posts - create a new post
@@ -78,11 +81,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not a member of this family" }, { status: 403 });
   }
 
+  // Get author name from Clerk user session
+  // Clerk's auth() returns a merged auth object with user properties
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const authObj = await auth() as any;
+  const authorName =
+    authObj.user?.fullName
+    ?? authObj.user?.firstName
+    ?? "Family member";
+
   const [post] = await db
     .insert(posts)
     .values({
       familyId,
       authorId: userId,
+      authorName,
       contentType,
       mediaUrl: mediaUrl || null,
       caption: caption || null,

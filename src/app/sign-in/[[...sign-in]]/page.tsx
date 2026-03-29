@@ -20,11 +20,16 @@ export default function SignInPage() {
             Welcome back
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Sign in to your family space
+            Your family is waiting for you
           </p>
         </div>
 
         <SignIn />
+
+        {/* Warm tagline under the form */}
+        <p className="text-center text-sm text-muted-foreground mt-6 leading-relaxed">
+          Share photos, plan events, and stay connected with the people who matter most.
+        </p>
       </div>
     </div>
   );
