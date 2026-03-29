@@ -1,6 +1,15 @@
+"use client";
+
 import { SignIn } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 
 export default function SignInPage() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
@@ -26,10 +35,12 @@ export default function SignInPage() {
 
         <SignIn />
 
-        {/* Warm tagline under the form */}
-        <p className="text-center text-sm text-muted-foreground mt-6 leading-relaxed">
-          Share photos, plan events, and stay connected with the people who matter most.
-        </p>
+        {/* Warm tagline — only shown after client mount to avoid hydration mismatch */}
+        {mounted && (
+          <p className="text-center text-sm text-muted-foreground mt-6 leading-relaxed">
+            Share photos, plan events, and stay connected with the people who matter most.
+          </p>
+        )}
       </div>
     </div>
   );
