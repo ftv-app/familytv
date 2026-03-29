@@ -178,3 +178,26 @@ export const calendarEventsRelations = relations(calendarEvents, ({ one }) => ({
     references: [families.id],
   }),
 }));
+
+// Comments table
+export const commentStatusEnum = pgEnum("comment_status", ["active", "deleted"]);
+
+export const comments = pgTable("comments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  postId: uuid("post_id").notNull().references(() => posts.id, { onDelete: "cascade" }),
+  authorId: text("author_id").notNull(),
+  authorName: text("author_name").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Reactions table
+export const reactions = pgTable("reactions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  postId: uuid("post_id").notNull().references(() => posts.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(),
+  emoji: text("emoji").notNull(), // 👍 ❤️ 😂 😢
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("unique_user_post_reaction").on(table.userId, table.postId),
+]);
