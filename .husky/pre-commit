@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "Running build check..."
+npm run build || { echo "BUILD FAILED - commit rejected"; exit 1; }
