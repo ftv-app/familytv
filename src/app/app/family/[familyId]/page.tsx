@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import Link from "next/navigation";
+import Link from "next/link";
 import { db, families, familyMemberships, invites } from "@/db";
 import { eq, and } from "drizzle-orm";
 import { Button } from "@/components/ui/button";
