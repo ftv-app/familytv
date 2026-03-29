@@ -17,14 +17,19 @@ export default function SignUpPage() {
             </span>
           </div>
           <h1 className="font-heading text-2xl font-semibold text-foreground">
-            Start your family space
+            Join your family on FamilyTV
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Create an account to share with your family
+            The private place for your closest people
           </p>
         </div>
 
         <SignUp />
+
+        {/* Warm tagline under the form */}
+        <p className="text-center text-sm text-muted-foreground mt-6 leading-relaxed">
+          No ads, no algorithms — just your family, sharing what matters.
+        </p>
       </div>
     </div>
   );
