@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db, families, familyMemberships } from "@/db";
@@ -15,7 +16,7 @@ export async function GET() {
     with: { family: true },
   });
 
-  return NextResponse.json({ families: memberships.map((m) => m.family) });
+  return NextResponse.json({ families: memberships.map((m: typeof memberships[0]) => m.family) });
 }
 
 // POST /api/family - create a new family

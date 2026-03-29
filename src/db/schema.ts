@@ -8,9 +8,8 @@ import {
   index,
   uniqueIndex,
   boolean,
-  sql,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { sql, relations } from "drizzle-orm";
 
 // ---- Enums ----
 export const membershipRoleEnum = pgEnum("membership_role", [
@@ -102,7 +101,7 @@ export const posts = pgTable(
       .notNull()
       .references(() => families.id, { onDelete: "cascade" }),
     authorId: text("author_id").notNull(), // Clerk userId
-    contentType: text("content_type").notNull().check(sql`content_type IN ('video', 'image', 'text')`),
+    contentType: text("content_type").notNull(),
     mediaUrl: text("media_url"),           // Vercel Blob URL (null for text posts)
     caption: text("caption"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
