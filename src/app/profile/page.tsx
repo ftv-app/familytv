@@ -15,8 +15,8 @@ export default async function ProfilePage() {
   const email = user?.emailAddresses?.[0]?.emailAddress || "No email";
 
   return (
-    <div className="container max-w-2xl py-8">
-      <h1 className="text-3xl font-serif mb-6" style={{ color: 'var(--color-primary)' }}>My Profile</h1>
+    <div className="max-w-2xl mx-auto">
+      <h1 className="font-heading text-3xl font-semibold mb-6 text-primary">My Profile</h1>
       <Card>
         <CardHeader>
           <CardTitle>Profile Information</CardTitle>
@@ -30,7 +30,7 @@ export default async function ProfilePage() {
             <Label>Email</Label>
             <Input defaultValue={email} disabled />
           </div>
-          <Button className="bg-[#C4704A] hover:bg-[#a85d3c]">Save Changes</Button>
+          <Button className="w-full sm:w-auto">Save Changes</Button>
         </CardContent>
       </Card>
     </div>

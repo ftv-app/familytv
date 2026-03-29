@@ -17,8 +17,8 @@ export default async function SettingsPage() {
   });
 
   return (
-    <div className="container max-w-2xl py-8">
-      <h1 className="text-3xl font-serif mb-6" style={{ color: 'var(--color-primary)' }}>Settings</h1>
+    <div className="max-w-2xl mx-auto">
+      <h1 className="font-heading text-3xl font-semibold mb-6 text-primary">Settings</h1>
       
       <div className="space-y-6">
         <Card>
@@ -31,7 +31,7 @@ export default async function SettingsPage() {
             ) : (
               <ul className="space-y-2">
                 {memberships.map((m) => (
-                  <li key={m.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <li key={m.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 border rounded-lg">
                     <span className="font-medium">{m.family.name}</span>
                     <span className="text-sm text-muted-foreground capitalize">{m.role}</span>
                   </li>
@@ -46,13 +46,13 @@ export default async function SettingsPage() {
             <CardTitle>Account</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <p className="font-medium">Sign Out</p>
                 <p className="text-sm text-muted-foreground">Sign out of your account</p>
               </div>
               <form action="/api/auth/signout" method="post">
-                <Button variant="outline" type="submit">Sign Out</Button>
+                <Button variant="outline" type="submit" className="w-full sm:w-auto">Sign Out</Button>
               </form>
             </div>
           </CardContent>
