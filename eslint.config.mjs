@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Standalone DB scripts use CommonJS require
+    "add_tables.js",
+    "check_tables.js",
+    "create_tables.js",
+    "coverage/**",
   ]),
 ]);
 
