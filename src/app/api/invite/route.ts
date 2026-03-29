@@ -135,3 +135,74 @@ export async function GET(req: NextRequest) {
     email: invite.email,
   });
 }
+
+// PATCH /api/invite - accept an invite (requires auth)
+export async function PATCH(req: NextRequest) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await req.json();
+  const { token } = body;
+
+  if (!token || typeof token !== "string") {
+    return NextResponse.json({ error: "Token required" }, { status: 400 });
+  }
+
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const invite = await db.query.invites.findFirst({
+    where: eq(invites.tokenHash, tokenHash),
+    with: { family: true },
+  });
+
+  if (!invite) {
+    return NextResponse.json({ error: "Invalid invite" }, { status: 404 });
+  }
+
+  if (invite.status !== "pending") {
+    return NextResponse.json(
+      { error: "This invite has already been used or revoked" },
+      { status: 400 }
+    );
+  }
+
+  if (new Date() > invite.expiresAt) {
+    return NextResponse.json({ error: "This invite has expired" }, { status: 400 });
+  }
+
+  // Check if already a member
+  const existingMembership = await db.query.familyMemberships.findFirst({
+    where: and(
+      eq(familyMemberships.familyId, invite.familyId),
+      eq(familyMemberships.userId, userId)
+    ),
+  });
+
+  if (existingMembership) {
+    return NextResponse.json(
+      { error: "You are already a member of this family" },
+      { status: 400 }
+    );
+  }
+
+  // Accept the invite: create membership + mark invite as accepted
+  await db.transaction(async (tx) => {
+    await tx.update(invites)
+      .set({ status: "accepted" })
+      .where(eq(invites.id, invite.id));
+    
+    await tx.insert(familyMemberships).values({
+      familyId: invite.familyId,
+      userId,
+      role: "member",
+    });
+  });
+
+  return NextResponse.json({
+    family: {
+      id: invite.family.id,
+      name: invite.family.name,
+    },
+  });
+}
