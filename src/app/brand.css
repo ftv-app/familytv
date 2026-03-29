@@ -1,0 +1,109 @@
+# FamilyTV Brand Design Tokens
+# Override shadcn/ui defaults with warm, family-appropriate palette
+
+/* =========================================
+   FamilyTV Design Tokens
+   These override shadcn/ui CSS variables
+   ========================================= */
+
+@theme inline {
+  /* ---- Radii ---- */
+  --radius: 0.5rem; /* soft but not bubbly */
+
+  /* ---- Colors: Warm earth palette ---- */
+  /* Primary: warm terracotta/amber */
+  --color-primary: oklch(55% 0.12 50);        /* #c4785a - terracotta */
+  --color-primary-foreground: oklch(98% 0.01 50); /* off-white text on primary */
+
+  /* Secondary: muted sage */
+  --color-secondary: oklch(65% 0.06 140);     /* #7a9a7a - sage green */
+  --color-secondary-foreground: oklch(98% 0.01 140);
+
+  /* Accent: dusty gold */
+  --color-accent: oklch(70% 0.1 80);          /* #c49a3a - warm gold */
+  --color-accent-foreground: oklch(20% 0.05 80);
+
+  /* Muted: warm gray (not cold) */
+  --color-muted: oklch(90% 0.01 50);         /* #f0ede8 - warm off-white */
+  --color-muted-foreground: oklch(45% 0.02 50); /* warm medium gray */
+
+  /* Background: warm cream (NOT pure white) */
+  --color-background: oklch(97% 0.005 50);   /* #faf8f5 - warm cream */
+  --color-foreground: oklch(18% 0.02 50);   /* #1e1a17 - warm soft black */
+
+  /* Card */
+  --color-card: oklch(98% 0.005 50);         /* #fdfcfb */
+  --color-card-foreground: oklch(18% 0.02 50);
+
+  /* Popover */
+  --color-popover: oklch(98% 0.005 50);
+  --color-popover-foreground: oklch(18% 0.02 50);
+
+  /* Borders: warm gray (not cold gray) */
+  --color-border: oklch(85% 0.01 50);        /* #d8d3cc - warm border */
+  --color-input: oklch(85% 0.01 50);
+  --color-ring: oklch(55% 0.12 50);          /* focus ring matches primary */
+
+  /* Destructive */
+  --color-destructive: oklch(50% 0.2 25);    /* warm red */
+  --color-destructive-foreground: oklch(98% 0.01 25);
+
+  /* ---- Typography ---- */
+  /* Font families - see globals.css for the font imports */
+
+  /* ---- Spacing/sizing ---- */
+  /* Touch targets: minimum 44px for mobile accessibility */
+  --target-min: 44px;
+}
+
+/* =========================================
+   FamilyTV Brand Styles
+   ========================================= */
+
+/* Warm background for entire app */
+body {
+  background-color: #faf8f5;
+  color: #1e1a17;
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* Custom scrollbar (warm tones) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0ede8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c4b8ad;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a89a8c;
+}
+
+/* Selection color */
+::selection {
+  background-color: oklch(70% 0.1 80 / 0.3);
+  color: #1e1a17;
+}
+
+/* Focus visible - warm ring, not blue */
+*:focus-visible {
+  outline: 2px solid oklch(55% 0.12 50);
+  outline-offset: 2px;
+}
+
+/* No generic blue links */
+a {
+  color: oklch(55% 0.12 50);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
