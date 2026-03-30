@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
@@ -27,12 +27,6 @@ export const metadata: Metadata = {
   title: "FamilyTV — Your Family's Private Place to Share",
   description:
     "Photos, videos, and calendars shared only with family. No ads, no algorithms. Start your private family space for free.",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
   alternates: {
     canonical: "https://familytv.vercel.app",
   },
@@ -51,6 +45,13 @@ export const metadata: Metadata = {
     description:
       "Photos, videos, and calendars shared only with family. No ads, no algorithms. Start your private family space for free.",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
