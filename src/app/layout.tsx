@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 /* ---- FamilyTV Fonts ---- */
@@ -53,6 +54,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ErrorBoundary>{children}</ErrorBoundary>
+            <Analytics />
           </ThemeProvider>
           <Toaster
             position="bottom-center"

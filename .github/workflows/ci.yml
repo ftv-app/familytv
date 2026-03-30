@@ -37,3 +37,10 @@ jobs:
         with:
           name: coverage
           path: coverage/
+
+      - name: Upload source maps to Sentry
+        if: success() && github.event_name == 'push'
+        run: |
+          npx @sentry/wizard@latest -i nextjs --token ${{ secrets.SENTRY_AUTH_TOKEN }} --no-install
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
