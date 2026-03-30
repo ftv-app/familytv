@@ -5,10 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { sql as _sql, getFamilyMembers } from "@/lib/db";
 
-import type { NeonQueryFunction } from '@neondatabase/serverless';
-
-// Cast to NeonQueryFunction to allow tagged template syntax
-const sql = _sql as NeonQueryFunction;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sql = _sql as any;
 
 /**
  * Verify the requesting user is a member of the given family.

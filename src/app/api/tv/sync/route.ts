@@ -4,10 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { sql as _sql, getFamilyMembers } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
-import type { NeonQueryFunction } from '@neondatabase/serverless';
-
-// Cast to NeonQueryFunction to allow tagged template syntax
-const sql = _sql as NeonQueryFunction;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sql = _sql as any;
 
 const VALID_ACTIONS = ["play", "pause", "seek", "skip_forward", "skip_back", "video_change"] as const;
 type SyncAction = typeof VALID_ACTIONS[number];
