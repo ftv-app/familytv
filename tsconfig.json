@@ -40,6 +40,8 @@
   ],
   "exclude": [
     "node_modules",
-    "drizzle.config.ts"
+    "drizzle.config.ts",
+    "vitest.config.ts",
+    "eslint.config.mjs"
   ]
 }
