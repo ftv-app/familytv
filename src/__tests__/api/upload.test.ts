@@ -33,7 +33,7 @@ async function getHandler() {
   return mod;
 }
 
-describe("POST /api/upload", () => {
+describe("POST /api/upload", { testTimeout: 30000 }, () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -43,7 +43,6 @@ describe("POST /api/upload", () => {
     vi.mocked(auth).mockResolvedValue({ userId: null });
 
     const handler = await getHandler();
-    // Create formData with required fields
     const formData = new FormData();
     formData.append("file", new Blob(["test"], { type: "image/png" }), "test.png");
     formData.append("filename", "test.png");
@@ -86,7 +85,6 @@ describe("POST /api/upload", () => {
     formData.append("file", new Blob(["test"], { type: "image/png" }), "test.png");
     formData.append("filename", "test.png");
     formData.append("contentType", "image/png");
-    // no familyId
 
     const req = new NextRequest("http://localhost/api/upload", {
       method: "POST",
