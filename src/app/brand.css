@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
 /* FamilyTV Brand Design Tokens - Cinema/Broadcast Language */
 /* FamilyTV is now "a private family TV station" */
 
@@ -98,6 +96,27 @@
 
   /* Green Signal - online indicators */
   --color-success: #2ECC71;
+
+  /* ---- Cinema Black Custom Colors ---- */
+  /* These map directly to the Cinema Black palette for easy utility class usage */
+  --color-cinema-black: #0D0D0F;
+  --color-theater-charcoal: #1A1A1E;
+  --color-shadow-gray: #252529;
+  --color-slate: #2E2E34;
+  --color-ghost-border: rgba(255, 255, 255, 0.06);
+  --color-velvet-red: #C41E3A;
+  --color-broadcast-gold: #D4AF37;
+  --color-silver-white: #E8E8EC;
+  --color-muted-silver: #8E8E96;
+  --color-dim: #5A5A62;
+  --color-green-signal: #2ECC71;
+  --color-amber: #F39C12;
+  --color-alert-red: #E74C3C;
+  --color-cream: #FDF8F3;
+  --color-terracotta-warm: #C4785A;
+  --color-forest: #2D5A4A;
+  --color-forest-lighter: #3D7A64;
+  --color-forest-glow: rgba(45, 90, 74, 0.35);
 
   /* ---- Typography ---- */
   --font-heading: 'Oswald', 'Arial Narrow', sans-serif;
