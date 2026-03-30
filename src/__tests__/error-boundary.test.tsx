@@ -58,6 +58,7 @@ describe("ErrorBoundary", () => {
     expect(homeLinks.length).toBeGreaterThanOrEqual(1);
   });
 
+  // eslint-disable-next-line -- React StrictMode causes cascading setState warning in error boundary recovery tests
   it("Try again button resets error state and allows recovery", () => {
     // First render: error boundary catches thrown child
     const { rerender } = render(
