@@ -14,8 +14,8 @@ const isProtectedRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
     // Redirect to sign-in instead of throwing 401 for unauthenticated users
-    const session = await auth().session();
-    if (!session) {
+    const session = await auth();
+    if (!session.sessionId) {
       redirect("/sign-in");
     }
   }
