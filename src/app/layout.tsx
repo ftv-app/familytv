@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ErrorBoundary } from "@/components/error-boundary";
 import "./globals.css";
 
 /* ---- FamilyTV Fonts ---- */
@@ -44,7 +46,14 @@ export default function RootLayout({
         className={`${plusJakarta.variable} ${fraunces.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col bg-background text-foreground">
-          {children}
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </ThemeProvider>
           <Toaster
             position="bottom-center"
             toastOptions={{

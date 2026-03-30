@@ -111,10 +111,61 @@
   --sidebar-ring: oklch(0.55 0.10 50);
 }
 
-/* Dark mode - defer for v2, keep minimal */
+/* Dark mode - warm palette */
 .dark {
+  /* Warm dark backgrounds */
   --background: oklch(0.145 0.015 50);
   --foreground: oklch(0.92 0.005 50);
+
+  /* Card */
+  --card: oklch(0.185 0.015 50);
+  --card-foreground: oklch(0.92 0.005 50);
+
+  /* Popover */
+  --popover: oklch(0.185 0.015 50);
+  --popover-foreground: oklch(0.92 0.005 50);
+
+  /* Primary: terracotta stays the same */
+  --primary: oklch(0.55 0.10 50);
+  --primary-foreground: oklch(0.98 0.005 50);
+
+  /* Secondary: muted sage - darker in dark mode */
+  --secondary: oklch(0.55 0.05 145);
+  --secondary-foreground: oklch(0.92 0.005 50);
+
+  /* Muted: warm dark surface */
+  --muted: oklch(0.22 0.012 50);
+  --muted-foreground: oklch(0.60 0.015 50);
+
+  /* Accent: dusty gold - darker */
+  --accent: oklch(0.60 0.08 85);
+  --accent-foreground: oklch(0.92 0.005 50);
+
+  /* Destructive */
+  --destructive: oklch(0.52 0.18 25);
+  --destructive-foreground: oklch(0.98 0.005 50);
+
+  /* Border: warm dark border */
+  --border: oklch(0.28 0.012 50);
+  --input: oklch(0.28 0.012 50);
+  --ring: oklch(0.55 0.10 50);
+
+  /* Chart colors (warm variants - darker for dark mode) */
+  --chart-1: oklch(0.50 0.10 50);
+  --chart-2: oklch(0.55 0.06 145);
+  --chart-3: oklch(0.60 0.05 85);
+  --chart-4: oklch(0.48 0.08 25);
+  --chart-5: oklch(0.45 0.10 280);
+
+  /* Sidebar */
+  --sidebar: oklch(0.16 0.015 50);
+  --sidebar-foreground: oklch(0.92 0.005 50);
+  --sidebar-primary: oklch(0.55 0.10 50);
+  --sidebar-primary-foreground: oklch(0.98 0.005 50);
+  --sidebar-accent: oklch(0.22 0.012 50);
+  --sidebar-accent-foreground: oklch(0.92 0.005 50);
+  --sidebar-border: oklch(0.28 0.012 50);
+  --sidebar-ring: oklch(0.55 0.10 50);
 }
 
 @layer base {

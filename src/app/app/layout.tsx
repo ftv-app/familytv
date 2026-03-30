@@ -20,6 +20,7 @@ import {
   Menu,
   LogOut,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -121,7 +122,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
               <UserButton
                 appearance={{
                   elements: {
