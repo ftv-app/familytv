@@ -41,6 +41,11 @@ jobs:
       - name: Upload source maps to Sentry
         if: success() && github.event_name == 'push'
         run: |
-          npx @sentry/wizard@latest -i nextjs --token ${{ secrets.SENTRY_AUTH_TOKEN }} --no-install
+          if [ -n "$SENTRY_AUTH_TOKEN" ]; then
+            npx @sentry/wizard@latest -i nextjs --token $SENTRY_AUTH_TOKEN --no-install
+          else
+            echo "SENTRY_AUTH_TOKEN not set, skipping Sentry source map upload"
+          fi
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        continue-on-error: true
