@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "@sentry/nextjs": "file:../../../../../tmp/sentry-nextjs-10.46.0.tgz",
+    "@sentry/nextjs": "^8.22.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
