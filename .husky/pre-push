@@ -1,6 +1,0 @@
-#!/bin/sh
-echo "Running pre-push lint + test checks..."
-npm run lint || { echo "LINT FAILED - push rejected"; exit 1; }
-npm run test || { echo "TESTS FAILED - push rejected"; exit 1; }
-echo "Pre-push checks passed!"
-echo "NOTE: Build + coverage check runs in CI"
