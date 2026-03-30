@@ -1,140 +1,174 @@
-# FamilyTV Architecture
+# FamilyTV Architecture — Family Invite Flow (CTM-205)
 
 ## Overview
 
-FamilyTV is a private family social media platform built on Next.js 16 (App Router), deployed on Vercel.
+The invite-only family join flow is FamilyTV's core privacy mechanism. It allows family admins to generate invite links that expire after 7 days and can be revoked at any time.
 
-## Tech Stack
+## Design Principles
 
-| Layer | Tool |
-|-------|------|
-| Framework | Next.js 16 (App Router) |
-| UI | shadcn/ui + Tailwind CSS + TypeScript |
-| Auth | Clerk (`@clerk/nextjs`) |
-| Database | Neon Postgres + Drizzle ORM |
-| Storage | Vercel Blob (`@vercel/blob`) |
-| Hosting | Vercel |
-| Observability | **Sentry** (primary) |
+1. **Security First**: Invite codes are never stored in plain text — only bcrypt hashes
+2. **Admin-Controlled**: Only family admins (owner/admin roles) can create and revoke invites
+3. **Self-Service Accept**: Any authenticated user with a valid invite code can join
+4. **Rate-Limited**: Max 10 invite creations per family per day to prevent abuse
+5. **Single-Use**: Each invite can only be accepted once (auto-revoked on accept)
 
----
+## Database Schema
 
-## Observability Stack
+### `family_invites` Table
 
-### Primary: Sentry
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `family_id` | UUID | FK to families |
+| `invite_code_hash` | TEXT | bcrypt hash of 32-char hex code |
+| `created_by_user_id` | TEXT | Clerk userId of inviter |
+| `expires_at` | TIMESTAMPTZ | When invite expires (7 days default) |
+| `revoked_at` | TIMESTAMPTZ | NULL if active, timestamp if revoked |
+| `created_at` | TIMESTAMPTZ | Creation timestamp |
 
-**Decision (2026-03-30):** Sentry is the primary observability platform for FamilyTV.
+### `family_invite_rate_limits` Table
 
-Sentry covers the full observability surface needed for a Next.js web app:
+| Column | Type | Description |
+|--------|------|-------------|
+| `family_id` | UUID | FK to families (part of PK) |
+| `created_date` | DATE | Day of invite creation (part of PK) |
+| `invite_count` | INTEGER | Number of invites created that day |
 
-| Capability | Sentry Feature |
-|-----------|---------------|
-| Error tracking | Issues, stack traces, grouped events |
-| Crash reporting | Session replays, on-error sampling |
-| Performance monitoring | Distributed traces, p95/p99 latency |
-| Release health | Crash-free sessions, adoption matrix |
-| Frontend profiling | Browser profiling integration |
-| Replay on error | Session replays with masked PII |
+## API Endpoints
 
-**Sentry Integration Status:** ✅ Configured (`sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`)
-- DSN via `SENTRY_DSN` env var
-- `tracesSampleRate: 0.1` (10% of transactions traced)
-- Replays: 10% sessions, 100% on error
-- PII masking enabled (maskAllText, blockAllMedia)
+### 1. Create Invite
+```
+POST /api/families/[familyId]/invites
+Authorization: Bearer <clerk_token>
+Role Required: admin or owner
 
-### Future Enhancement: Axiom (Log Aggregation)
+Response 201:
+{
+  "inviteId": "uuid",
+  "inviteLink": "https://familytv.vercel.app/invite/<32-char-hex>",
+  "expiresAt": "2026-04-06T06:03:00.000Z",
+  "familyName": "The Smiths"
+}
 
-Sentry does not replace centralized log aggregation. When FamilyTV scales, the following gaps will need Axiom (or similar):
+Errors:
+- 401: Unauthorized
+- 403: Not an admin
+- 429: Rate limit exceeded (10/day)
+```
 
-| Gap | Description |
-|-----|-------------|
-| Structured log aggregation | All `console.log/info/warn/error` from server functions |
-| Custom events | Non-error events (uploads, invites sent, calendar events created) |
-| Audit logging | Family data access logs for privacy compliance |
-| Arbitrary query | ad-hoc queries across logs beyond Sentry's issue-focused UI |
-| Long-term retention | Logs beyond Sentry's 90-day window |
+### 2. Validate Invite Code
+```
+GET /api/families/invites/[code]
+Authorization: Optional (authenticated users get more info)
 
-**Axiom is not a replacement for Sentry** — it complements it for petabyte-scale log analytics. The two are complementary:
-- **Sentry** → errors, performance, crashes, release health
-- **Axiom** → raw logs, custom events, audit trails, long-term retention
+Response 200:
+{
+  "valid": true,
+  "familyId": "uuid",
+  "familyName": "The Smiths",
+  "familyAvatarUrl": "https://...",
+  "expiresAt": "2026-04-06T06:03:00.000Z"
+}
 
----
+Errors:
+- 400: Invalid code format
+- 404: Code not found
+- 410: Expired or revoked
+```
 
-## SRE & Monitoring
+### 3. Accept Invite
+```
+POST /api/families/invites/[code]/accept
+Authorization: Bearer <clerk_token>
 
-### Four Golden Signals
+Response 200:
+{
+  "success": true,
+  "familyId": "uuid",
+  "familyName": "The Smiths",
+  "familyAvatarUrl": "https://...",
+  "membershipId": "uuid"
+}
 
-| Signal | How Monitored |
-|--------|--------------|
-| **Latency** | Sentry Performance (p95/p99 per route) + Vercel Speed Insights |
-| **Traffic** | Vercel Analytics dashboard |
-| **Errors** | Sentry Issues (5xx, 4xx patterns, Clerk auth failures) |
-| **Saturation** | Vercel function execution time + Neon connection pool |
+Errors:
+- 401: Unauthorized
+- 404: Code not found
+- 410: Expired or revoked
+- 400: Already a member
+```
 
-### Service Level Objectives
+### 4. Revoke Invite
+```
+DELETE /api/families/[familyId]/invites/[inviteId]
+Authorization: Bearer <clerk_token>
+Role Required: admin or owner
 
-| Metric | SLO |
-|--------|-----|
-| Uptime | 99.9% (43.8 min downtime/month max) |
-| Page load (p95) | < 2 seconds |
-| API Error Rate | < 0.1% of requests return 5xx |
-| Media Upload Success | 99.5% complete without retry |
-| Auth Reliability | 99.99% sign-in attempts succeed |
+Response 200:
+{
+  "success": true,
+  "message": "Invite revoked successfully"
+}
 
-### Runbooks (Reference Sentry For)
+Errors:
+- 401: Unauthorized
+- 403: Not an admin
+- 404: Invite not found
+- 400: Already revoked
+```
 
-| Scenario | Sentry Resource |
-|---------|----------------|
-| Error spike | Sentry Issues → filter by `error.level:error` + time range |
-| Slow page loads | Sentry Performance → slow route transactions |
-| Crash on user session | Sentry Replays → find affected user session |
-| Release regression | Sentry Release Health → crash-free session rate |
-| Auth failures | Sentry Issues → filter `Clerk` or `middleware` |
-| DB connection failures | Sentry Issues → filter `neon` or `postgres` |
-| Blob upload failures | Sentry Issues → filter `blob` or `vercel` |
+## Security Considerations
 
-### Incident Severity
+### Invite Code Generation
+- 32 characters of cryptographically random hex (256 bits of entropy)
+- Hashed with bcrypt (cost factor 10) before storage
+- Plain text code only exists in:
+  - The invite link URL
+  - The invite email sent to the invitee
+  - The server console log (for development)
 
-| Severity | Definition | Response |
-|----------|------------|----------|
-| SEV1 | Platform down, all users affected | Immediate: CEO + Founder notified |
-| SEV2 | Major feature broken (uploads, auth) | CEO notified, assigned engineer fixes |
-| SEV3 | Degraded performance, minor feature | Logged in Linear, current sprint |
-| SEV4 | Cosmetic or low-impact | Backlog |
+### Why bcrypt instead of SHA-256?
+- bcrypt is a slow hash designed for password hashing
+- Makes brute-force attacks computationally expensive
+- Even if the database is compromised, plain text codes cannot be recovered
 
----
+### Rate Limiting
+- Tracked per family per day (midnight UTC)
+- Stored in `family_invite_rate_limits` table
+- Returns 429 status when exceeded
 
-## Data Architecture
+### Input Validation
+- All UUIDs validated
+- Invite codes must be exactly 32 hex characters
+- No SQL injection (parameterized queries via Drizzle ORM)
 
-### Family-Scoped Access Control
+## Email Integration
 
-- All data queries are scoped to `family_id` derived from Clerk session
-- Row-level security enforced at the ORM/query layer
-- Unauthenticated requests rejected by Clerk middleware on all protected routes
+Currently logs invite link to console:
+```
+📧 Family Invite Created:
+  Family: The Smiths (uuid)
+  Invite Link: https://familytv.vercel.app/invite/abc123...
+  Expires: 2026-04-06T06:03:00.000Z
+  Created by: user_123
+```
 
-### Database (Neon Postgres + Drizzle ORM)
+Future: Clerk's `sendEmail` or Resend API integration.
 
-- `families` — family groups
-- `family_memberships` — user ↔ family with roles (owner/member)
-- `invites` — pending invitations
+## Frontend Flow
 
-### Storage (Vercel Blob)
+1. **Admin creates invite**: POST to `/api/families/[familyId]/invites`
+2. **Admin copies link**: Displayed in UI, can copy to clipboard
+3. **Admin shares link**: Via email, text, etc.
+4. **Invitee clicks link**: Navigates to `/invite/[code]`
+5. **Invite validated**: GET `/api/families/invites/[code]`
+6. **Invitee signs up/logs in**: Clerk authentication
+7. **Invitee accepts**: POST `/api/families/invites/[code]/accept`
+8. **Added to family**: Redirected to family feed
 
-- Media uploads (videos, images) stored in family-scoped buckets
-- `BLOB_READ_WRITE_TOKEN` scoped to storage API
+## Future Enhancements
 
----
-
-## Privacy-Specific Considerations
-
-- **PII in logs:** Sentry is configured to mask all text and block media in replays. No PII should appear in Vercel function logs.
-- **Data isolation:** Periodic verification that family A cannot access family B data (test in CI).
-- **Auth boundary:** All protected routes enforce Clerk session; unauthenticated requests return 401/redirect.
-- **Backup verification:** Neon point-in-time recovery tested monthly.
-
----
-
-## Decisions Log
-
-| Date | Decision | Rationale |
-|------|----------|-----------|
-| 2026-03-30 | Sentry as primary observability platform | Covers error tracking, performance, release health in one integration; well-suited for Next.js on Vercel |
+- [ ] Email integration with Resend API
+- [ ] Invite email templates
+- [ ] Multiple invite management UI
+- [ ] Invite expiration notifications
+- [ ] Invite link QR codes
