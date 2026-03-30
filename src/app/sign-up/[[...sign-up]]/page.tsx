@@ -60,7 +60,7 @@ export default function SignUpPage() {
           </p>
         </div>
 
-        <SignUp />
+        <SignUp fallbackRedirectUrl="/onboarding/create-family" />
 
         <p className="text-center text-sm text-muted-foreground mt-6 leading-relaxed">
           No ads, no algorithms — just your family, sharing what matters.
