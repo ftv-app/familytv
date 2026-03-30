@@ -11,9 +11,9 @@ export class SignInPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.emailInput = page.getByLabel(/email/i).or(page.locator("input[name='email']"));
-    this.passwordInput = page.getByLabel(/password/i).or(page.locator("input[name='password']"));
-    this.submitBtn = page.getByRole("button", { name: /sign in|log in|continue/i });
+    this.emailInput = page.getByPlaceholder("Enter your email address");
+    this.passwordInput = page.getByPlaceholder("Enter your password");
+    this.submitBtn = page.getByRole("button", { name: /sign in|log in|continue/i }).first();
     this.signUpLink = page.locator("a[href*='sign-up']").first();
     this.branding = page.locator("text=FamilyTV").first();
     this.welcomeHeading = page.getByRole("heading", { name: /welcome back/i });
@@ -48,9 +48,9 @@ export class SignUpPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.emailInput = page.getByLabel(/email/i).or(page.locator("input[name='email']"));
-    this.passwordInput = page.getByLabel(/password/i).or(page.locator("input[name='password']"));
-    this.submitBtn = page.getByRole("button", { name: /sign up|create account|continue/i });
+    this.emailInput = page.getByPlaceholder("Enter your email address");
+    this.passwordInput = page.getByPlaceholder("Enter your password");
+    this.submitBtn = page.getByRole("button", { name: /sign up|create account|continue/i }).first();
     this.signInLink = page.locator("a[href*='sign-in']").first();
     this.branding = page.locator("text=FamilyTV").first();
     this.taglineNoAds = page.locator("text=No ads");

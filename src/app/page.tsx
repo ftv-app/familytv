@@ -260,11 +260,12 @@ export default function Home() {
             <Link href="/sign-up">
               <Button
                 size="sm"
-                className="border-0 transition-all duration-150"
+                className="border-0 transition-all duration-150 text-sm"
                 style={{
                   backgroundColor: "#2D5A4A",
                   color: "#FDF8F3",
                   boxShadow: "0 4px 16px rgba(45,90,74,0.3)",
+                  padding: "8px 16px",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = "#3D7A64";
@@ -283,15 +284,15 @@ export default function Home() {
       </header>
 
       {/* Hero — full-bleed image carousel */}
-      <main className="flex-1 relative">
+      <main className="flex-1 relative" style={{ minHeight: "60vh" }}>
         {/* Hero image carousel behind everything */}
         <div className="absolute inset-0 z-0">
           <HeroCarousel />
         </div>
 
         {/* Hero content sits above the carousel */}
-        <section className="relative z-10 py-24 sm:py-32 px-4 sm:px-6">
-          <div className="max-w-3xl mx-auto text-center">
+        <section className="relative z-10 min-h-[60vh] sm:min-h-[80vh] flex items-center justify-center py-16 sm:py-32 px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto text-center w-full">
             {/* Channel Callsign */}
             <div className="mb-6">
               <span
@@ -330,13 +331,13 @@ export default function Home() {
               <Link href="/sign-up">
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto text-base px-8 border-0 transition-all duration-150"
+                  className="w-full sm:w-auto text-base px-6 sm:px-8 border-0 transition-all duration-150"
                   style={{
                     backgroundColor: "#2D5A4A",
                     color: "#FDF8F3",
                     boxShadow: "0 4px 20px rgba(45,90,74,0.4), 0 0 40px rgba(45,90,74,0.15)",
                     borderRadius: "8px",
-                    padding: "14px 32px",
+                    padding: "14px 24px",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = "#3D7A64";
@@ -349,20 +350,20 @@ export default function Home() {
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
-                  Start your channel — free
+                  Start free
                 </Button>
               </Link>
               <Link href="/sign-in">
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full sm:w-auto text-base px-8 border"
+                  className="w-full sm:w-auto text-base px-6 sm:px-8 border"
                   style={{
                     borderColor: "rgba(255,255,255,0.1)",
                     color: "#8E8E96",
                     backgroundColor: "transparent",
                     borderRadius: "8px",
-                    padding: "14px 32px",
+                    padding: "14px 24px",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.color = "#E8E8EC";
@@ -373,7 +374,7 @@ export default function Home() {
                     e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
                   }}
                 >
-                  Already broadcasting
+                  Sign in
                 </Button>
               </Link>
             </div>

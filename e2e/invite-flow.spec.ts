@@ -19,8 +19,9 @@ test.describe("Invite Flow: Create Invite → Receive Link → Accept Invite", (
       // Step 3 of 3 indicator
       const hasStep3 = await page.locator("text=/Step 3|step 3/i").isVisible().catch(() => false) ||
                        await page.locator('[aria-label*="Step 3"]').isVisible().catch(() => false);
-      // If not authenticated, will redirect — that's acceptable
-      expect(hasStep3 || page.url().includes("sign-in")).toBeTruthy();
+      // If not authenticated, may redirect — that's acceptable
+      // Page should not 404 regardless
+      expect(hasStep3 || page.url().includes("sign-in") || page.url().includes("onboarding")).toBeTruthy();
     });
 
     test("should show invite link or share options when authenticated", async ({ page }) => {

@@ -102,7 +102,7 @@ test.describe("Onboarding Invite Page", () => {
   test("should load the invite page when signed in with familyId", async ({ page }) => {
     // When signed in and has familyId param, shows invite link creation
     // Without familyId, shows error or redirects
-    await page.goto("/onboarding/invite?familyId=test-family", { waitUntil: "networkidle" });
+    await page.goto("/onboarding/invite?familyId=test-family", { waitUntil: "load" });
 
     // Should not crash - either shows form or redirects
     await expect(page).not.toHaveURL(/404/);
