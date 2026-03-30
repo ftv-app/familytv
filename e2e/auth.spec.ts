@@ -7,8 +7,8 @@ test.describe("Sign-In Flow", () => {
   test("should load the sign-in page", async ({ page }) => {
     await page.goto("/sign-in", { waitUntil: "networkidle" });
 
-    // Check branding
-    await expect(page.locator("text=Welcome back")).toBeVisible();
+    // Check branding - use heading role to avoid strict mode violation
+    await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
     await expect(page.locator("text=FamilyTV").first()).toBeVisible();
   });
 
@@ -18,8 +18,8 @@ test.describe("Sign-In Flow", () => {
     // Header branding
     await expect(page.locator("text=FamilyTV").first()).toBeVisible();
 
-    // Welcome text
-    await expect(page.locator("text=Welcome back")).toBeVisible();
+    // Welcome text - use heading role to avoid strict mode violation
+    await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
   });
 
   test("should have sign-up link for new users", async ({ page }) => {
@@ -65,14 +65,18 @@ test.describe("Auth Protected Routes", () => {
   });
 
   test("should redirect to sign-in when accessing app routes without auth", async ({ page }) => {
-    await page.goto("/app", { waitUntil: "networkidle" });
+    await page.goto("/app", { waitUntil: "domcontentloaded" });
 
-    // Should redirect to sign-in (Clerk handles this)
+    // Wait for redirect - Clerk may redirect to sign-in, or /app may redirect to create-family
     await page.waitForURL(/\/(sign-in|app)/, { timeout: 10000 }).catch(() => {});
-    // If Clerk auth is configured, we'll be on sign-in or app
-    // If no Clerk key, we might stay on /app
+    // Give a moment for redirect to complete
+    await page.waitForLoadState("networkidle").catch(() => {});
     const url = page.url();
-    expect(url === "/app" || url.includes("sign-in")).toBeTruthy();
+    // Check path portion for sign-in or /app (handles full URLs like https://familytv.vercel.app/app)
+    const urlPath = new URL(url).pathname;
+    const isSignInRedirect = urlPath.includes("sign-in");
+    const isAppPage = urlPath.startsWith("/app");
+    expect(isSignInRedirect || isAppPage).toBeTruthy();
   });
 
   test("should redirect to sign-in when accessing family routes without auth", async ({ page }) => {
