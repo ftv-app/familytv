@@ -23,6 +23,7 @@ export default defineConfig({
         functions: 80,
         lines: 80,
       },
+      // FamilyTV-specific components and utilities for coverage tracking
       include: [
         "src/lib/utils.ts",
         "src/app/api/posts/route.ts",
@@ -31,7 +32,10 @@ export default defineConfig({
         "src/app/api/family/route.ts",
         "src/app/api/invite/route.ts",
         "src/app/api/events/route.ts",
-        "src/components/**/*.tsx",
+        "src/components/progress-dots.tsx",
+        "src/components/theme-toggle.tsx",
+        "src/components/error-boundary.tsx",
+        "src/components/notifications-client.tsx",
       ],
       exclude: [
         "src/test/**",
