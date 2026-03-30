@@ -159,6 +159,7 @@ describe("/api/invite", () => {
 
     it("creates invite successfully", async () => {
       const membership = createMockFamilyMembership({ familyId: "fam_123", userId: "user_123" });
+      const createdInvite = { id: "invite_new_123" };
       
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
       mockMembershipsFindFirst
@@ -167,7 +168,7 @@ describe("/api/invite", () => {
       mockInvitesFindFirst.mockResolvedValue(null);
       mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([]),
+          returning: vi.fn().mockResolvedValue([createdInvite]),
         }),
       } as any);
       
@@ -179,13 +180,14 @@ describe("/api/invite", () => {
       
       expect(res.status).toBe(201);
       const json = await res.json();
+      expect(json.inviteId).toBe("invite_new_123");
       expect(json.inviteLink).toContain("/invite/");
       expect(json.expiresAt).toBeDefined();
     });
   });
 
   describe("GET - get invite details", () => {
-    it("returns 400 when token is missing", async () => {
+    it("returns 400 when inviteId is missing", async () => {
       mockAuth.mockResolvedValue({ userId: null } as any);
       
       const req = new NextRequest("http://localhost/api/invite");
@@ -193,14 +195,14 @@ describe("/api/invite", () => {
       
       expect(res.status).toBe(400);
       const json = await res.json();
-      expect(json.error).toBe("Token required");
+      expect(json.error).toBe("inviteId required");
     });
 
-    it("returns 404 for invalid token", async () => {
+    it("returns 404 for invalid inviteId", async () => {
       mockAuth.mockResolvedValue({ userId: null } as any);
       mockInvitesFindFirst.mockResolvedValue(null);
       
-      const req = new NextRequest("http://localhost/api/invite?token=invalid");
+      const req = new NextRequest("http://localhost/api/invite?inviteId=invalid");
       const res = await GET(req);
       
       expect(res.status).toBe(404);
@@ -213,7 +215,7 @@ describe("/api/invite", () => {
       mockAuth.mockResolvedValue({ userId: null } as any);
       mockInvitesFindFirst.mockResolvedValue(expiredInvite as any);
       
-      const req = new NextRequest("http://localhost/api/invite?token=some_token");
+      const req = new NextRequest("http://localhost/api/invite?inviteId=some_invite_id");
       const res = await GET(req);
       
       expect(res.status).toBe(400);
@@ -229,7 +231,7 @@ describe("/api/invite", () => {
       mockAuth.mockResolvedValue({ userId: null } as any);
       mockInvitesFindFirst.mockResolvedValue(expiredInvite as any);
       
-      const req = new NextRequest("http://localhost/api/invite?token=some_token");
+      const req = new NextRequest("http://localhost/api/invite?inviteId=some_invite_id");
       const res = await GET(req);
       
       expect(res.status).toBe(400);
@@ -237,7 +239,7 @@ describe("/api/invite", () => {
       expect(json.error).toContain("expired");
     });
 
-    it("returns invite details for valid token", async () => {
+    it("returns invite details for valid inviteId", async () => {
       const family = createMockFamily({ id: "fam_123", name: "The Smiths" });
       const invite = createMockInvite({ 
         familyId: "fam_123", 
@@ -251,7 +253,7 @@ describe("/api/invite", () => {
         family,
       } as any);
       
-      const req = new NextRequest("http://localhost/api/invite?token=some_token");
+      const req = new NextRequest("http://localhost/api/invite?inviteId=some_invite_id");
       const res = await GET(req);
       
       expect(res.status).toBe(200);
@@ -292,7 +294,8 @@ describe("/api/invite", () => {
         familyId: "fam_123", 
         status: "pending",
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        id: "invite_123"
+        id: "invite_123",
+        tokenHash: "hashed_token_value" // matches mock createHash output for "some_token"
       });
       
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
@@ -319,7 +322,7 @@ describe("/api/invite", () => {
       
       const req = new NextRequest("http://localhost/api/invite", {
         method: "PATCH",
-        body: JSON.stringify({ token: "some_token" }),
+        body: JSON.stringify({ inviteId: "invite_123", token: "some_token" }),
       });
       const res = await PATCH(req);
       

@@ -52,30 +52,31 @@ vi.mock("@clerk/nextjs/server", () => ({
   currentUser: (...args: unknown[]) => mockCurrentUser(...args),
 }));
 
-// Mock database
-const mockDb = {
-  query: {
-    posts: {
-      findFirst: (...args: unknown[]) => mockPostsFindFirst(...args),
+// Mock database - define mockDb inside factory to avoid hoisting issues
+vi.mock("@/db", () => {
+  const mockDb = {
+    query: {
+      posts: {
+        findFirst: (...args: unknown[]) => mockPostsFindFirst(...args),
+      },
+      familyMemberships: {
+        findFirst: (...args: unknown[]) => mockMembershipsFindFirst(...args),
+      },
+      comments: {
+        findMany: (...args: unknown[]) => mockCommentsFindMany(...args),
+        findFirst: (...args: unknown[]) => mockCommentsFindFirst(...args),
+      },
     },
-    familyMemberships: {
-      findFirst: (...args: unknown[]) => mockMembershipsFindFirst(...args),
-    },
-    comments: {
-      findMany: (...args: unknown[]) => mockCommentsFindMany(...args),
-      findFirst: (...args: unknown[]) => mockCommentsFindFirst(...args),
-    },
-  },
-  insert: (...args: unknown[]) => mockCommentsInsert(...args),
-  delete: (...args: unknown[]) => mockCommentsDelete(...args),
-};
-
-vi.mock("@/db", () => ({
-  db: mockDb,
-  posts: {},
-  familyMemberships: {},
-  comments: {},
-}));
+    insert: (...args: unknown[]) => mockCommentsInsert(...args),
+    delete: (...args: unknown[]) => mockCommentsDelete(...args),
+  };
+  return {
+    db: mockDb,
+    posts: {},
+    familyMemberships: {},
+    comments: {},
+  };
+});
 
 import { GET, POST, DELETE } from "@/app/api/comments/route";
 import { createMockComment } from "@/test/factories";
@@ -243,7 +244,7 @@ describe("/api/comments", () => {
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
       
       // Mock comment lookup with post relation
-      mockCommentsFindMany.mockResolvedValue({
+      mockCommentsFindFirst.mockResolvedValue({
         id: "comment_123",
         postId: "post_123",
         authorId: "user_123",
@@ -252,18 +253,6 @@ describe("/api/comments", () => {
           familyId: "family_123",
         },
       } as any);
-      // Use mockCommentsInsert as a stand-in for findFirst since we don't have a separate mock
-      const mockCommentsQueryFindFirst = vi.fn().mockResolvedValue({
-        id: "comment_123",
-        postId: "post_123",
-        authorId: "user_123",
-        post: {
-          id: "post_123",
-          familyId: "family_123",
-        },
-      } as any);
-      // Override the findFirst to return our mock
-      mockDb.query.comments = { findMany: mockCommentsFindMany, findFirst: mockCommentsQueryFindFirst };
       
       // Mock membership lookup
       mockMembershipsFindFirst.mockResolvedValue({

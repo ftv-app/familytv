@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
+import { db } from "@/db";
 
 // Create mock functions
 const mockAuth = vi.fn();
@@ -62,6 +63,22 @@ describe("/api/reactions", () => {
 
     it("returns reaction counts for valid postId", async () => {
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      // Mock post lookup
+      const mockPostsQuery = vi.mocked(db.query.posts);
+      mockPostsQuery.findFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      
+      // Mock membership lookup
+      const mockMembershipsQuery = vi.mocked(db.query.familyMemberships);
+      mockMembershipsQuery.findFirst.mockResolvedValue({
+        id: "membership_123",
+        familyId: "family_123",
+        userId: "user_123",
+      } as any);
+      
       mockDbSelect.mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
