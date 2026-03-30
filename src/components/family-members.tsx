@@ -173,9 +173,9 @@ export function FamilyMembers({
       <Separator />
 
       {/* Actions */}
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <Link href={`/app/family/${familyId}/invite`} className="flex-1">
-          <Button variant="outline" className="w-full gap-2">
+          <Button variant="outline" className="w-full gap-2 min-h-[44px]">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -192,7 +192,7 @@ export function FamilyMembers({
             Invite member
           </Button>
         </Link>
-        <Button variant="outline" className="flex-1 gap-2">
+        <Button variant="outline" className="flex-1 gap-2 min-h-[44px]">
           <svg
             className="w-4 h-4"
             fill="none"

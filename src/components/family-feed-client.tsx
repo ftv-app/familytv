@@ -83,7 +83,7 @@ export function FamilyFeedClient({
             variant="outline"
             onClick={handleLoadMore}
             disabled={loading}
-            className="min-w-[140px]"
+            className="min-w-[140px] min-h-[44px]"
           >
             {loading ? (
               <>

@@ -70,14 +70,14 @@ export default async function FamilyPage({
           <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-foreground">
             {family.name}
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+          <p className="text-muted-foreground mt-1">
             {members.length} member{members.length !== 1 ? "s" : ""}
             {pendingInvites.length > 0 &&
               ` · ${pendingInvites.length} pending invite${pendingInvites.length !== 1 ? "s" : ""}`}
           </p>
         </div>
-        <Link href={`/app/family/${familyId}/invite`} className="self-start sm:self-auto">
-          <Button className="gap-2 w-full sm:w-auto min-h-[44px]">
+        <Link href={`/app/family/${familyId}/invite`} className="self-start">
+          <Button className="gap-2 min-h-[44px]">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -98,7 +98,7 @@ export default async function FamilyPage({
 
       {/* Tabbed content */}
       <Tabs defaultValue="feed" className="w-full">
-        <TabsList className="mb-6 w-full overflow-x-auto flex-nowrap">
+        <TabsList className="mb-6 w-full overflow-x-auto flex-nowrap gap-1">
           <TabsTrigger value="feed" className="gap-1.5">
             <svg
               className="w-4 h-4"

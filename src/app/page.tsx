@@ -13,7 +13,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-heading font-bold text-lg">
@@ -39,9 +39,9 @@ export default function Home() {
 
       {/* Hero */}
       <main className="flex-1">
-        <section className="py-24 px-6">
+        <section className="py-16 sm:py-24 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="font-heading text-5xl font-semibold tracking-tight text-foreground mb-6 leading-tight">
+            <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-6 leading-tight">
               Your family&apos;s private place
               <br />
               <span className="text-primary">to share what matters</span>
@@ -71,7 +71,7 @@ export default function Home() {
         </section>
 
         {/* Features */}
-        <section className="py-16 px-6 bg-muted/30 border-y border-border">
+        <section className="py-12 sm:py-16 px-4 sm:px-6 bg-muted/30 border-y border-border">
           <div className="max-w-5xl mx-auto">
             <h2 className="font-heading text-3xl font-semibold text-center text-foreground mb-12">
               Everything your family needs, nothing they don&apos;t
@@ -121,7 +121,7 @@ export default function Home() {
         </section>
 
         {/* Privacy callout */}
-        <section className="py-20 px-6">
+        <section className="py-12 sm:py-20 px-4 sm:px-6">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="font-heading text-2xl font-semibold text-foreground mb-4">
               Privacy isn&apos;t a feature. It&apos;s the foundation.
@@ -136,7 +136,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8 px-6">
+      <footer className="border-t border-border py-8 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-primary flex items-center justify-center">

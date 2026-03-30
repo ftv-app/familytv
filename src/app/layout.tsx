@@ -24,6 +24,12 @@ export const metadata: Metadata = {
   title: "FamilyTV — Private Family Sharing",
   description:
     "The private place for families to share photos, videos, and calendars. No ads, no algorithms, just family.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RootLayout({
