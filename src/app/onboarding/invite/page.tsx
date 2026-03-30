@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
@@ -32,7 +32,7 @@ function ProgressDots({ currentStep }: { currentStep: 1 | 2 | 3 }) {
   );
 }
 
-export default function OnboardingInvitePage() {
+function OnboardingInviteContent() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -276,5 +276,21 @@ export default function OnboardingInvitePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function InvitePageLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+export default function OnboardingInvitePage() {
+  return (
+    <Suspense fallback={<InvitePageLoading />}>
+      <OnboardingInviteContent />
+    </Suspense>
   );
 }
