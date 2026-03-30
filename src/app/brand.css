@@ -22,7 +22,7 @@
   
   /* Text */
   --silver-white: #E8E8EC;
-  --muted-silver: #8E8E96;
+  --muted-silver: #A8A8B0;
   --dim: #5A5A62;
   
   /* Status */
@@ -65,7 +65,7 @@
 
   /* Muted: Cinema Black surface */
   --color-muted: #1A1A1E;
-  --color-muted-foreground: #8E8E96;
+  --color-muted-foreground: #A8A8B0;
 
   /* Background: Cinema Black */
   --color-background: #0D0D0F;
@@ -107,7 +107,7 @@
   --color-velvet-red: #C41E3A;
   --color-broadcast-gold: #D4AF37;
   --color-silver-white: #E8E8EC;
-  --color-muted-silver: #8E8E96;
+  --color-muted-silver: #A8A8B0;
   --color-dim: #5A5A62;
   --color-green-signal: #2ECC71;
   --color-amber: #F39C12;
@@ -183,7 +183,7 @@ body::before {
 
 /* Links - muted silver by default */
 a {
-  color: #8E8E96;
+  color: #A8A8B0;
   text-decoration: none;
   transition: color 200ms ease;
 }
@@ -305,7 +305,7 @@ a:hover {
 /* Secondary - ghost style */
 .btn-secondary {
   background: transparent;
-  color: #8E8E96;
+  color: #A8A8B0;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
   font-family: var(--font-sans);
@@ -352,7 +352,7 @@ a:hover {
 
 /* Muted Silver text */
 .text-muted-silver {
-  color: #8E8E96;
+  color: #A8A8B0;
 }
 
 /* Oswald headings */
@@ -368,5 +368,5 @@ a:hover {
   font-family: var(--font-mono);
   font-weight: 500;
   letter-spacing: 0.05em;
-  color: #8E8E96;
+  color: #A8A8B0;
 }

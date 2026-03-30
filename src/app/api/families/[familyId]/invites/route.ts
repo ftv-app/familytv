@@ -3,13 +3,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db, familyInvites, familyMemberships, familyInviteRateLimits, families } from "@/db";
 import { eq, and } from "drizzle-orm";
-import { randomBytes } from "crypto";
+import { randomBytes, createHash } from "crypto";
 import bcrypt from "bcryptjs";
 
 const INVITE_CODE_LENGTH = 32;
 const INVITE_EXPIRY_DAYS = 7;
 const MAX_INVITES_PER_DAY = 10;
 const BCRYPT_ROUNDS = 12;
+
+/**
+ * Compute SHA-256 hash of a string for indexed lookups
+ */
+function sha256(input: string): string {
+  return createHash("sha256").update(input).digest("hex");
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -69,17 +76,21 @@ export async function POST(req: NextRequest, context: RouteContext) {
     // Generate invite code (32-char hex)
     const inviteCode = randomBytes(INVITE_CODE_LENGTH / 2).toString("hex");
     
-    // Hash the invite code with bcrypt
+    // Hash the invite code with bcrypt (for secure storage)
     const inviteCodeHash = await bcrypt.hash(inviteCode, BCRYPT_ROUNDS);
+    
+    // Compute SHA-256 hash for indexed lookup (O(1) instead of O(n))
+    const lookupHash = sha256(inviteCode);
 
     // Calculate expiry date
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + INVITE_EXPIRY_DAYS);
 
-    // Create the invite
+    // Create the invite with lookup hash for O(1) validation
     const [invite] = await db.insert(familyInvites).values({
       familyId,
       inviteCodeHash,
+      lookupHash,
       createdByUserId: userId,
       expiresAt,
     }).returning();

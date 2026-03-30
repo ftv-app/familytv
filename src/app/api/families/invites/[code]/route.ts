@@ -1,14 +1,23 @@
 // GET /api/families/invites/[code] — Validate invite code
+// Uses SHA-256 lookup hash for O(1) invite validation instead of iterating all invites
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db, familyInvites, families } from "@/db";
 import { eq, and, isNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { createHash } from "crypto";
 
 export const dynamic = 'force-dynamic';
 
 interface RouteContext {
   params: Promise<{ code: string }>;
+}
+
+/**
+ * Compute SHA-256 hash of invite code for indexed lookup
+ */
+function sha256(input: string): string {
+  return createHash("sha256").update(input).digest("hex");
 }
 
 export async function GET(req: NextRequest, context: RouteContext) {
@@ -22,56 +31,62 @@ export async function GET(req: NextRequest, context: RouteContext) {
       );
     }
 
-    // Note: We cannot directly query by hashed code since bcrypt hashes are different each time
-    // Instead, we need to iterate through all active invites and compare
-    // For production, consider using a different approach (e.g., store a separate lookup hash)
-    
-    const activeInvites = await db.query.familyInvites.findMany({
+    // Compute lookup hash for O(1) indexed query
+    const lookupHash = sha256(code);
+
+    // Find invite by lookup_hash first (uses the indexed column)
+    // This is O(1) instead of O(n) - no need to load all active invites
+    const invite = await db.query.familyInvites.findFirst({
       where: and(
-        isNull(familyInvites.revokedAt),
-        // Note: In a real implementation, you'd want to filter by expires_at > now()
-        // but Drizzle doesn't support raw comparisons easily here
+        eq(familyInvites.lookupHash, lookupHash),
+        isNull(familyInvites.revokedAt)
       ),
       with: {
         family: true,
       },
     });
 
-    // Find matching invite by comparing bcrypt hashes
-    for (const invite of activeInvites) {
-      const isValid = await bcrypt.compare(code, invite.inviteCodeHash);
-      
-      if (isValid) {
-        // Check if expired
-        if (new Date() > invite.expiresAt) {
-          return NextResponse.json(
-            { error: "This invite has expired" },
-            { status: 410 }
-          );
-        }
-
-        // Check if revoked
-        if (invite.revokedAt) {
-          return NextResponse.json(
-            { error: "This invite has been revoked" },
-            { status: 410 }
-          );
-        }
-
-        return NextResponse.json({
-          valid: true,
-          familyId: invite.familyId,
-          familyName: invite.family.name,
-          familyAvatarUrl: invite.family.avatarUrl,
-          expiresAt: invite.expiresAt.toISOString(),
-        });
-      }
+    if (!invite) {
+      return NextResponse.json(
+        { error: "Invalid invite code" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(
-      { error: "Invalid invite code" },
-      { status: 404 }
-    );
+    // Now verify with bcrypt (only one invite instead of all)
+    const isValid = await bcrypt.compare(code, invite.inviteCodeHash);
+    
+    if (!isValid) {
+      // This shouldn't happen if lookup_hash is correct, but handle it defensively
+      return NextResponse.json(
+        { error: "Invalid invite code" },
+        { status: 404 }
+      );
+    }
+
+    // Check if expired
+    if (new Date() > invite.expiresAt) {
+      return NextResponse.json(
+        { error: "This invite has expired" },
+        { status: 410 }
+      );
+    }
+
+    // Check if revoked (already handled by query, but double-check)
+    if (invite.revokedAt) {
+      return NextResponse.json(
+        { error: "This invite has been revoked" },
+        { status: 410 }
+      );
+    }
+
+    return NextResponse.json({
+      valid: true,
+      familyId: invite.familyId,
+      familyName: invite.family.name,
+      familyAvatarUrl: invite.family.avatarUrl,
+      expiresAt: invite.expiresAt.toISOString(),
+    });
 
   } catch (error) {
     console.error("Error validating invite code:", error);

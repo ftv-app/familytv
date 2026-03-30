@@ -193,7 +193,14 @@ export function FamilyCalendar({ familyId, events: initialEvents }: FamilyCalend
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3">
-        <Card className="bg-primary/5 border-primary/20">
+        <Card
+          className="border-0"
+          style={{
+            backgroundColor: "#1A1A1E",
+            border: "1px solid rgba(45,90,74,0.3)",
+            borderRadius: "8px",
+          }}
+        >
           <CardContent className="p-4 text-center">
             <p className="font-heading text-2xl font-semibold text-foreground">
               {upcomingCount}
@@ -203,7 +210,14 @@ export function FamilyCalendar({ familyId, events: initialEvents }: FamilyCalend
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-accent/5 border-accent/20">
+        <Card
+          className="border-0"
+          style={{
+            backgroundColor: "#1A1A1E",
+            border: "1px solid rgba(212,175,55,0.3)",
+            borderRadius: "8px",
+          }}
+        >
           <CardContent className="p-4 text-center">
             <p className="font-heading text-2xl font-semibold text-foreground">
               {todayCount}
@@ -216,7 +230,28 @@ export function FamilyCalendar({ familyId, events: initialEvents }: FamilyCalend
       </div>
 
       {/* Add event CTA */}
-      <Button variant="outline" className="w-full gap-2 min-h-[44px]">
+      <Button
+        variant="outline"
+        className="w-full gap-2 min-h-[44px] transition-all duration-150 border-0"
+        style={{
+          backgroundColor: "transparent",
+          border: "1px solid rgba(255,255,255,0.1)",
+          color: "#8E8E96",
+          borderRadius: "8px",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = "#2D5A4A";
+          e.currentTarget.style.borderColor = "#2D5A4A";
+          e.currentTarget.style.color = "#FDF8F3";
+          e.currentTarget.style.boxShadow = "0 4px 16px rgba(45,90,74,0.4)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "transparent";
+          e.currentTarget.style.border = "1px solid rgba(255,255,255,0.1)";
+          e.currentTarget.style.color = "#8E8E96";
+          e.currentTarget.style.boxShadow = "none";
+        }}
+      >
         <svg
           className="w-4 h-4"
           fill="none"

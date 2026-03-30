@@ -4,11 +4,19 @@ import { auth } from "@clerk/nextjs/server";
 import { db, familyInvites, familyMemberships, families } from "@/db";
 import { eq, and, isNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { createHash } from "crypto";
 
 export const dynamic = 'force-dynamic';
 
 interface RouteContext {
   params: Promise<{ code: string }>;
+}
+
+/**
+ * Compute SHA-256 hash of invite code for indexed lookup
+ */
+function sha256(input: string): string {
+  return createHash("sha256").update(input).digest("hex");
 }
 
 export async function POST(req: NextRequest, context: RouteContext) {
@@ -27,24 +35,30 @@ export async function POST(req: NextRequest, context: RouteContext) {
       );
     }
 
-    // Find the invite by comparing bcrypt hashes
-    const activeInvites = await db.query.familyInvites.findMany({
-      where: isNull(familyInvites.revokedAt),
+    // Use SHA-256 lookup hash for O(1) query instead of iterating all invites
+    const lookupHash = sha256(code);
+
+    // Find the invite by lookup_hash (indexed) first
+    const matchedInvite = await db.query.familyInvites.findFirst({
+      where: and(
+        eq(familyInvites.lookupHash, lookupHash),
+        isNull(familyInvites.revokedAt)
+      ),
       with: {
         family: true,
       },
     });
 
-    let matchedInvite = null;
-    for (const invite of activeInvites) {
-      const isValid = await bcrypt.compare(code, invite.inviteCodeHash);
-      if (isValid) {
-        matchedInvite = invite;
-        break;
-      }
+    if (!matchedInvite) {
+      return NextResponse.json(
+        { error: "Invalid invite code" },
+        { status: 404 }
+      );
     }
 
-    if (!matchedInvite) {
+    // Verify with bcrypt (only one invite, not all)
+    const isValid = await bcrypt.compare(code, matchedInvite.inviteCodeHash);
+    if (!isValid) {
       return NextResponse.json(
         { error: "Invalid invite code" },
         { status: 404 }
@@ -59,7 +73,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       );
     }
 
-    // Check if revoked
+    // Check if revoked (already handled by query, but double-check)
     if (matchedInvite.revokedAt) {
       return NextResponse.json(
         { error: "This invite has been revoked" },

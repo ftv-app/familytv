@@ -16,6 +16,28 @@ async function verifyFamilyMembership(familyId: string, userId: string): Promise
   return members.some((m: { user_id: string }) => m.user_id === userId);
 }
 
+/**
+ * Calculate server-authoritative playback position
+ * serverPosition = lastKnownPosition + (now - lastEventTime)
+ * 
+ * This ensures all clients receive the same canonical position
+ * regardless of when they last received a sync event.
+ */
+function calculateServerPosition(
+  playbackPositionSeconds: number,
+  serverClock: Date,
+  now: Date = new Date()
+): { serverPosition: number; serverTimestamp: Date } {
+  const elapsedMs = now.getTime() - serverClock.getTime();
+  const elapsedSeconds = elapsedMs / 1000;
+  const serverPosition = Math.max(0, playbackPositionSeconds + elapsedSeconds);
+  
+  return {
+    serverPosition,
+    serverTimestamp: now,
+  };
+}
+
 // ============================================
 // GET /api/tv/sessions?familyId=xxx — Get active session
 // ============================================
@@ -83,6 +105,12 @@ export async function GET(req: NextRequest) {
 
     const session = sessions[0];
 
+    // Calculate server-authoritative position
+    const { serverPosition, serverTimestamp } = calculateServerPosition(
+      session.playback_position_seconds,
+      new Date(session.server_clock)
+    );
+
     // Get current queue for this family/channel
     const queue = await sql`
       SELECT
@@ -130,7 +158,16 @@ export async function GET(req: NextRequest) {
       user_name: string | null;
     }[];
 
-    return NextResponse.json({ session, queue, presence });
+    // Return session with server-authoritative position
+    return NextResponse.json({
+      session: {
+        ...session,
+        serverPosition,
+        serverTimestamp,
+      },
+      queue,
+      presence,
+    });
   } catch (err) {
     console.error("[GET /api/tv/sessions] Error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -186,11 +223,12 @@ export async function POST(req: NextRequest) {
       WHERE family_id = ${familyId} AND active = TRUE
     `;
 
-    // Create the new session
+    // Create the new session with server_clock set to NOW()
+    const now = new Date();
     const sessions = await sql`
       INSERT INTO tv_sessions
-        (family_id, video_id, broadcaster_id, playback_position_seconds, active, channel_number)
-      VALUES (${familyId}, ${videoId}, ${dbUserId}, 0, TRUE, ${channel})
+        (family_id, video_id, broadcaster_id, playback_position_seconds, active, channel_number, server_clock)
+      VALUES (${familyId}, ${videoId}, ${dbUserId}, 0, TRUE, ${channel}, ${now})
       RETURNING *
     ` as unknown as {
       id: string;
@@ -201,6 +239,7 @@ export async function POST(req: NextRequest) {
       active: boolean;
       channel_number: number;
       started_at: Date;
+      server_clock: Date;
       created_at: Date;
     }[];
 
@@ -215,14 +254,23 @@ export async function POST(req: NextRequest) {
         last_heartbeat_at = NOW()
     `;
 
-    // Record the video_change sync event
+    // Record the video_change sync event with server timestamp
     await sql`
       INSERT INTO tv_sync_events
-        (session_id, family_id, actor_id, action, playback_position_seconds, video_id)
-      VALUES (${session.id}, ${familyId}, ${dbUserId}, 'video_change', 0, ${videoId})
+        (session_id, family_id, actor_id, action, playback_position_seconds, video_id, server_timestamp)
+      VALUES (${session.id}, ${familyId}, ${dbUserId}, 'video_change', 0, ${videoId}, ${now})
     `;
 
-    return NextResponse.json({ session }, { status: 201 });
+    // Calculate server position for response
+    const { serverPosition, serverTimestamp } = calculateServerPosition(0, now);
+
+    return NextResponse.json({
+      session: {
+        ...session,
+        serverPosition,
+        serverTimestamp,
+      },
+    }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/tv/sessions] Error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -78,7 +78,7 @@
 
   /* Muted: Theater Charcoal with Muted Silver text */
   --muted: #1A1A1E;
-  --muted-foreground: #8E8E96;
+  --muted-foreground: #A8A8B0;
 
   /* Accent: Broadcast Gold */
   --accent: #D4AF37;
@@ -98,7 +98,7 @@
   --chart-2: #D4AF37;
   --chart-3: #2ECC71;
   --chart-4: #2D5A4A;
-  --chart-5: #8E8E96;
+  --chart-5: #A8A8B0;
 
   --radius: 0.5rem;
 
@@ -126,7 +126,7 @@
   --secondary: #1A1A1E;
   --secondary-foreground: #E8E8EC;
   --muted: #1A1A1E;
-  --muted-foreground: #8E8E96;
+  --muted-foreground: #A8A8B0;
   --accent: #D4AF37;
   --accent-foreground: #0D0D0F;
   --destructive: #E74C3C;
@@ -138,7 +138,7 @@
   --chart-2: #D4AF37;
   --chart-3: #2ECC71;
   --chart-4: #2D5A4A;
-  --chart-5: #8E8E96;
+  --chart-5: #A8A8B0;
   --sidebar: #1A1A1E;
   --sidebar-foreground: #E8E8EC;
   --sidebar-primary: #2D5A4A;
