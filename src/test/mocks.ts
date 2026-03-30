@@ -1,5 +1,12 @@
 import React from "react";
-import type { MockUser } from "@/test/factories";
+
+// Define MockUser type inline (avoids import from non-existent factories file)
+interface MockUser {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  emailAddresses: Array<{ emailAddress: string }>;
+}
 
 // Mock next/navigation
 export const mockRouter = {
