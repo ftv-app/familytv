@@ -1,8 +1,11 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
-  "/family(.*)",
+  "/app(.*)",
+  "/settings(.*)",
+  "/profile(.*)",
   "/api/upload(.*)",
   "/api/family(.*)",
   "/api/media(.*)",
@@ -10,7 +13,11 @@ const isProtectedRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
-    await auth.protect();
+    // Redirect to sign-in instead of throwing 401 for unauthenticated users
+    const session = await auth().session();
+    if (!session) {
+      redirect("/sign-in");
+    }
   }
 });
 
