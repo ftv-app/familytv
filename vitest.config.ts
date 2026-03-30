@@ -2,8 +2,6 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-process.env.NODE_ENV = "test";
-
 export default defineConfig({
   plugins: [react()],
   test: {
@@ -15,9 +13,6 @@ export default defineConfig({
     ],
     exclude: [
       "src/test/**/*.spec.{ts,tsx}",
-      "src/components/error-boundary.test.tsx",
-      "src/components/progress-dots.test.tsx",
-      "src/components/theme-toggle.test.tsx",
     ],
     coverage: {
       provider: "v8",
@@ -28,7 +23,6 @@ export default defineConfig({
         functions: 80,
         lines: 80,
       },
-      // Components covered via E2E (Playwright) — not in unit test coverage
       include: [
         "src/lib/utils.ts",
         "src/app/api/posts/route.ts",
@@ -37,12 +31,12 @@ export default defineConfig({
         "src/app/api/family/route.ts",
         "src/app/api/invite/route.ts",
         "src/app/api/events/route.ts",
+        "src/components/**/*.tsx",
       ],
       exclude: [
         "src/test/**",
         "src/**/*.d.ts",
         "e2e/**",
-        "src/components/**",
       ],
     },
   },

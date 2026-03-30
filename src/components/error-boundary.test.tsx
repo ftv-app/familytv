@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import { ErrorBoundary } from "./error-boundary";
@@ -67,7 +67,9 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>
     );
 
-    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+    // Use getAllBy to handle StrictMode double-rendering
+    const buttons = screen.getAllByRole("button", { name: /try again/i });
+    expect(buttons[0]).toBeInTheDocument();
   });
 
   it("renders 'Go home' button in default fallback", () => {
@@ -82,7 +84,9 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>
     );
 
-    expect(screen.getByRole("link", { name: /go home/i })).toBeInTheDocument();
+    // Use getAllBy to handle StrictMode double-rendering
+    const links = screen.getAllByRole("link", { name: /go home/i });
+    expect(links[0]).toBeInTheDocument();
   });
 
   it("calls onReset callback when Try again is clicked", () => {
@@ -99,7 +103,8 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    // Use getAllBy to handle StrictMode double-rendering
+    fireEvent.click(screen.getAllByRole("button", { name: /try again/i })[0]);
 
     // After clicking "Try again", the error state should be reset
     // and children should be rendered again
@@ -122,7 +127,7 @@ describe("ErrorBoundary", () => {
     );
 
     render(<Parent />);
-    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.getAllByText("Something went wrong")[0]).toBeInTheDocument();
   });
 
   it("logs error to console", () => {
@@ -152,6 +157,6 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>
     );
 
-    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.getAllByText("Something went wrong")[0]).toBeInTheDocument();
   });
 });
