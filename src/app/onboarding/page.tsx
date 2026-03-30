@@ -23,19 +23,25 @@ export default function OnboardingPage() {
   // If still loading auth, show nothing (prevent flash)
   if (!isLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: '#0D0D0F' }}
+      >
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8E8E96' }} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-8">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
+      style={{ backgroundColor: '#0D0D0F' }}
+    >
       {/* Back to home link */}
       <a
         href="/"
-        className="absolute top-4 left-4 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-        style={{ minWidth: "44px", minHeight: "44px" }}
+        className="absolute top-4 left-4 flex items-center gap-2 transition-colors"
+        style={{ color: '#8E8E96', minWidth: "44px", minHeight: "44px" }}
       >
         <ArrowRight className="w-5 h-5 rotate-180" />
         <span className="sr-only sm:not-sr-only sm:text-sm">Back</span>
@@ -44,32 +50,64 @@ export default function OnboardingPage() {
       <div className="w-full max-w-md mx-auto text-center">
         {step === "welcome" ? (
           <>
-            {/* Logo */}
+            {/* Logo — TV icon */}
             <div className="flex items-center justify-center gap-2 mb-8">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-heading font-bold text-xl">F</span>
+              <div 
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{ backgroundColor: '#C41E3A' }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FDF8F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="7" width="20" height="15" rx="2" ry="2"/>
+                  <polyline points="17 2 12 7 7 2"/>
+                </svg>
               </div>
             </div>
 
-            <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-foreground mb-4 leading-tight">
-              Your family&apos;s private place
+            <p 
+              className="font-heading text-sm tracking-[0.2em] uppercase mb-4"
+              style={{ color: '#8E8E96' }}
+            >
+              Welcome to
+            </p>
+            
+            <h1 
+              className="font-heading text-4xl sm:text-5xl font-bold mb-6 leading-tight glow-gold"
+              style={{ color: '#D4AF37' }}
+            >
+              FamilyTV
             </h1>
-            <p className="text-muted-foreground text-base mb-10 leading-relaxed max-w-sm mx-auto">
-              Share photos, videos, and calendars only with the people you invite. No ads, no algorithms.
+            
+            <p 
+              className="text-base mb-10 leading-relaxed max-w-sm mx-auto"
+              style={{ color: '#8E8E96' }}
+            >
+              Your private family channel. Share photos, videos, and live moments only with the people you invite.
             </p>
 
             <button
               onClick={() => router.push("/sign-in")}
-              className="w-full bg-primary text-primary-foreground font-medium rounded-lg transition-all duration-100 active:scale-[0.98]"
-              style={{ height: "52px", fontSize: "16px" }}
+              className="w-full font-medium rounded-lg transition-all duration-100 active:scale-[0.98] border-0"
+              style={{ 
+                height: "52px", 
+                fontSize: "16px",
+                backgroundColor: '#2D5A4A',
+                color: '#FDF8F3'
+              }}
             >
               Get started
               <ArrowRight className="inline-block w-5 h-5 ml-2" />
             </button>
 
-            <p className="text-center text-sm text-muted-foreground mt-6">
+            <p 
+              className="text-center text-sm mt-6"
+              style={{ color: '#8E8E96' }}
+            >
               New to FamilyTV?{" "}
-              <Link href="/sign-up" className="text-secondary font-medium hover:underline">
+              <Link 
+                href="/sign-up" 
+                className="font-medium hover:underline"
+                style={{ color: '#D4AF37' }}
+              >
                 Create an account
               </Link>
             </p>
@@ -77,7 +115,7 @@ export default function OnboardingPage() {
         ) : (
           // Redirecting state - should not happen since we redirect in useEffect
           <div className="flex items-center justify-center">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8E8E96' }} />
           </div>
         )}
       </div>

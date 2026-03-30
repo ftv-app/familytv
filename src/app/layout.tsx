@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
+import { Oswald, Source_Sans_3 } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -8,25 +8,26 @@ import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 /* ---- FamilyTV Fonts ---- */
-/* Heading: Fraunces - warm serif with personality, not Inter */
-const fraunces = Fraunces({
+/* Heading: Oswald — broadcast/station feel, weight 400-700 */
+const oswald = Oswald({
   variable: "--font-heading",
   subsets: ["latin"],
-  axes: ["opsz"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-/* Body: Plus Jakarta Sans - geometric but warm, highly readable */
-const plusJakarta = Plus_Jakarta_Sans({
+/* Body: Source Sans 3 — clean, readable, weight 300-600 */
+const sourceSans = Source_Sans_3({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "FamilyTV — Your Family's Private Place to Share",
+  title: "FamilyTV — Your Family's Private Channel",
   description:
-    "Photos, videos, and calendars shared only with family. No ads, no algorithms. Start your private family space for free.",
+    "Your private family TV station. Share photos, videos, and live moments with family only. No ads, no algorithms.",
   alternates: {
     canonical: "https://familytv.vercel.app",
   },
@@ -35,15 +36,15 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://familytv.vercel.app",
     siteName: "FamilyTV",
-    title: "FamilyTV — Your Family's Private Place to Share",
+    title: "FamilyTV — Your Family's Private Channel",
     description:
-      "Photos, videos, and calendars shared only with family. No ads, no algorithms. Start your private family space for free.",
+      "Your private family TV station. Share photos, videos, and live moments with family only. No ads, no algorithms.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "FamilyTV — Your Family's Private Place to Share",
+    title: "FamilyTV — Your Family's Private Channel",
     description:
-      "Photos, videos, and calendars shared only with family. No ads, no algorithms. Start your private family space for free.",
+      "Your private family TV station. Share photos, videos, and live moments with family only. No ads, no algorithms.",
   },
 };
 
@@ -63,7 +64,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html
         lang="en"
-        className={`${plusJakarta.variable} ${fraunces.variable} h-full antialiased`}
+        className={`${sourceSans.variable} ${oswald.variable} h-full antialiased dark`}
       >
         <body className="min-h-full flex flex-col bg-background text-foreground">
           <script
@@ -76,15 +77,15 @@ export default function RootLayout({
                 url: "https://familytv.vercel.app",
                 logo: "https://familytv.vercel.app/favicon.ico",
                 description:
-                  "Private family social media platform for sharing photos, videos, and calendars with family only.",
+                  "Private family TV station for sharing photos, videos, and live moments with family only.",
                 sameAs: [],
               }),
             }}
           />
           <ThemeProvider
             attribute="class"
-            defaultTheme="light"
-            enableSystem
+            defaultTheme="dark"
+            enableSystem={false}
             disableTransitionOnChange
           >
             <ErrorBoundary>{children}</ErrorBoundary>
@@ -94,9 +95,9 @@ export default function RootLayout({
             position="bottom-center"
             toastOptions={{
               style: {
-                background: "oklch(0.18 0.015 50)",
-                color: "oklch(0.98 0.005 50)",
-                border: "1px solid oklch(0.86 0.008 50)",
+                background: "#1A1A1E",
+                color: "#E8E8EC",
+                border: "1px solid rgba(255, 255, 255, 0.06)",
               },
             }}
           />

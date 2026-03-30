@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Loader2, Copy, Check, Link2, Mail } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Copy, Check, Mail } from "lucide-react";
 
 // Progress dots component - step 3
 function ProgressDots({ currentStep }: { currentStep: 1 | 2 | 3 }) {
@@ -17,13 +17,13 @@ function ProgressDots({ currentStep }: { currentStep: 1 | 2 | 3 }) {
         return (
           <div
             key={step}
-            className={`rounded-full transition-all duration-300 ${
-              isActive
-                ? "w-2.5 h-2.5 bg-primary"
-                : isCompleted
-                ? "w-2 h-2 bg-secondary"
-                : "w-2 h-2 border border-border bg-transparent"
-            }`}
+            className="rounded-full transition-all duration-300"
+            style={{
+              width: isActive ? "10px" : "8px",
+              height: isActive ? "10px" : "8px",
+              backgroundColor: isActive ? '#2D5A4A' : isCompleted ? '#3D7A64' : 'transparent',
+              border: isActive ? 'none' : '1px solid rgba(255, 255, 255, 0.15)',
+            }}
             aria-current={isActive ? "step" : undefined}
           />
         );
@@ -122,19 +122,25 @@ function OnboardingInviteContent() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: '#0D0D0F' }}
+      >
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8E8E96' }} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-8">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
+      style={{ backgroundColor: '#0D0D0F' }}
+    >
       {/* Back button */}
       <button
         onClick={() => router.push("/onboarding/create-family")}
-        className="absolute top-4 left-4 flex items-center gap-2 text-secondary hover:text-foreground transition-colors"
-        style={{ minWidth: "44px", minHeight: "44px" }}
+        className="absolute top-4 left-4 flex items-center gap-2 transition-colors"
+        style={{ color: '#8E8E96', minWidth: "44px", minHeight: "44px" }}
         aria-label="Go back"
       >
         <ArrowLeft className="w-5 h-5" />
@@ -146,19 +152,43 @@ function OnboardingInviteContent() {
 
         {/* Header */}
         <div className="text-center mb-6">
-          <p className="text-4xl mb-4">👋</p>
-          <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-foreground mb-2 leading-tight">
+          {/* Wave icon */}
+          <div 
+            className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4"
+            style={{ backgroundColor: 'rgba(46, 204, 113, 0.15)' }}
+          >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2ECC71" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          
+          <h1 
+            className="font-heading text-3xl sm:text-4xl font-bold mb-2 leading-tight"
+            style={{ color: '#E8E8EC' }}
+          >
             Almost there!
           </h1>
-          <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-foreground leading-tight">
+          <h2 
+            className="font-heading text-3xl sm:text-4xl font-bold leading-tight"
+            style={{ color: '#E8E8EC' }}
+          >
             Invite someone special
           </h2>
-          <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-foreground leading-tight">
-            to see your family photos
+          <h2 
+            className="font-heading text-3xl sm:text-4xl font-bold leading-tight"
+            style={{ color: '#8E8E96' }}
+          >
+            to your channel
           </h2>
         </div>
 
-        <p className="text-muted-foreground text-base text-center mb-8">
+        <p 
+          className="text-base text-center mb-8"
+          style={{ color: '#8E8E96' }}
+        >
           Your family can&apos;t wait to see your photos and videos.
         </p>
 
@@ -167,8 +197,13 @@ function OnboardingInviteContent() {
           {inviteLoading ? (
             <button
               disabled
-              className="w-full bg-secondary text-secondary-foreground font-medium rounded-lg flex items-center justify-center gap-2 opacity-50"
-              style={{ height: "52px", fontSize: "16px" }}
+              className="w-full font-medium rounded-lg flex items-center justify-center gap-2 opacity-50 border-0"
+              style={{ 
+                height: "52px", 
+                fontSize: "16px",
+                backgroundColor: '#1A1A1E',
+                color: '#8E8E96'
+              }}
             >
               <Loader2 className="w-5 h-5 animate-spin" />
               Creating invite...
@@ -176,8 +211,13 @@ function OnboardingInviteContent() {
           ) : inviteLink ? (
             <button
               onClick={handleCopy}
-              className="w-full bg-secondary text-secondary-foreground font-medium rounded-lg flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98]"
-              style={{ height: "52px", fontSize: "16px" }}
+              className="w-full font-medium rounded-lg flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] border-0"
+              style={{ 
+                height: "52px", 
+                fontSize: "16px",
+                backgroundColor: '#2D5A4A',
+                color: '#FDF8F3'
+              }}
             >
               {copied ? (
                 <>
@@ -194,21 +234,34 @@ function OnboardingInviteContent() {
           ) : (
             <button
               disabled
-              className="w-full bg-secondary text-secondary-foreground font-medium rounded-lg flex items-center justify-center gap-2 opacity-50"
-              style={{ height: "52px", fontSize: "16px" }}
+              className="w-full font-medium rounded-lg flex items-center justify-center gap-2 opacity-50 border-0"
+              style={{ 
+                height: "52px", 
+                fontSize: "16px",
+                backgroundColor: '#1A1A1E',
+                color: '#8E8E96'
+              }}
             >
               Could not create invite
             </button>
           )}
 
           {copyError && inviteLink && (
-            <div className="text-sm text-muted-foreground text-center">
+            <div 
+              className="text-sm text-center"
+              style={{ color: '#8E8E96' }}
+            >
               <p>Could not copy automatically. Here&apos;s your link:</p>
               <input
                 type="text"
                 readOnly
                 value={inviteLink}
-                className="w-full mt-2 px-3 py-2 bg-muted rounded-lg text-sm font-mono text-foreground"
+                className="w-full mt-2 px-3 py-2 rounded-lg text-sm border-0"
+                style={{ 
+                  backgroundColor: '#252529', 
+                  color: '#E8E8EC',
+                  fontFamily: 'var(--font-mono)'
+                }}
                 onClick={(e) => (e.target as HTMLInputElement).select()}
               />
             </div>
@@ -217,9 +270,14 @@ function OnboardingInviteContent() {
 
         {/* Divider */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-sm text-muted-foreground">or</span>
-          <div className="flex-1 h-px bg-border" />
+          <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)' }} />
+          <span 
+            className="text-sm"
+            style={{ color: '#5A5A62' }}
+          >
+            or
+          </span>
+          <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)' }} />
         </div>
 
         {/* Email invite */}
@@ -235,16 +293,27 @@ function OnboardingInviteContent() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Their email address"
               autoComplete="email"
-              className="w-full bg-card border border-border rounded-lg px-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
-              style={{ height: "52px", fontSize: "16px" }}
+              className="w-full rounded-lg px-4 text-base transition-colors focus:outline-none focus:ring-2 border-0"
+              style={{ 
+                height: "52px", 
+                backgroundColor: '#1A1A1E',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                color: '#E8E8EC',
+              }}
             />
           </div>
 
           <button
             type="submit"
             disabled={!email || emailLoading || !inviteLink}
-            className="w-full bg-card border-2 border-secondary text-secondary font-medium rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ height: "48px", fontSize: "16px" }}
+            className="w-full font-medium rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ 
+              height: "48px", 
+              fontSize: "16px",
+              backgroundColor: 'transparent',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: '#8E8E96'
+            }}
           >
             {emailLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -259,7 +328,10 @@ function OnboardingInviteContent() {
 
         {/* Email sent confirmation */}
         {emailSent && (
-          <p className="text-sm text-secondary font-medium text-center mt-3">
+          <p 
+            className="text-sm font-medium text-center mt-3"
+            style={{ color: '#2ECC71' }}
+          >
             Invite sent to {emailSent} ✓
           </p>
         )}
@@ -268,8 +340,8 @@ function OnboardingInviteContent() {
         <div className="mt-8 text-center">
           <button
             onClick={handleSkip}
-            className="text-primary font-medium hover:underline"
-            style={{ fontSize: "16px" }}
+            className="font-medium hover:underline"
+            style={{ fontSize: "16px", color: '#8E8E96' }}
           >
             Skip for now →
           </button>
@@ -281,8 +353,11 @@ function OnboardingInviteContent() {
 
 function InvitePageLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+    <div 
+      className="min-h-screen flex items-center justify-center"
+      style={{ backgroundColor: '#0D0D0F' }}
+    >
+      <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8E8E96' }} />
     </div>
   );
 }
