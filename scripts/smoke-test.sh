@@ -11,7 +11,8 @@ check_page() {
   local path="$1"
   local name="$2"
   local status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${BASE_URL}${path}" 2>/dev/null)
-  if [ "$status" = "200" ]; then
+  # 200 = OK, 307/302 = redirect (correct for auth-gated pages), 401 = unauthorized (also OK)
+  if [ "$status" = "200" ] || [ "$status" = "307" ] || [ "$status" = "302" ] || [ "$status" = "401" ]; then
     echo "✅ $name ($status)"
   else
     echo "❌ $name ($status)"
