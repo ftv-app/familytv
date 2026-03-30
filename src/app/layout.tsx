@@ -24,14 +24,32 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "FamilyTV — Private Family Sharing",
+  title: "FamilyTV — Your Family's Private Place to Share",
   description:
-    "The private place for families to share photos, videos, and calendars. No ads, no algorithms, just family.",
+    "Photos, videos, and calendars shared only with family. No ads, no algorithms. Start your private family space for free.",
   viewport: {
     width: "device-width",
     initialScale: 1,
     maximumScale: 1,
     userScalable: false,
+  },
+  alternates: {
+    canonical: "https://familytv.vercel.app",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://familytv.vercel.app",
+    siteName: "FamilyTV",
+    title: "FamilyTV — Your Family's Private Place to Share",
+    description:
+      "Photos, videos, and calendars shared only with family. No ads, no algorithms. Start your private family space for free.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FamilyTV — Your Family's Private Place to Share",
+    description:
+      "Photos, videos, and calendars shared only with family. No ads, no algorithms. Start your private family space for free.",
   },
 };
 
@@ -47,6 +65,21 @@ export default function RootLayout({
         className={`${plusJakarta.variable} ${fraunces.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col bg-background text-foreground">
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: "FamilyTV",
+                url: "https://familytv.vercel.app",
+                logo: "https://familytv.vercel.app/favicon.ico",
+                description:
+                  "Private family social media platform for sharing photos, videos, and calendars with family only.",
+                sameAs: [],
+              }),
+            }}
+          />
           <ThemeProvider
             attribute="class"
             defaultTheme="light"

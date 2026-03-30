@@ -70,6 +70,56 @@ export default function Home() {
           </div>
         </section>
 
+        {/* How it works */}
+        <section className="py-12 sm:py-16 px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="font-heading text-3xl font-semibold text-center text-foreground mb-10">
+              See how it works
+            </h2>
+            <div className="space-y-6">
+              <div className="flex gap-4 items-start">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-heading font-semibold text-sm">
+                  1
+                </div>
+                <div>
+                  <h3 className="font-heading font-semibold text-foreground mb-1">
+                    Create your family space
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Sign up in seconds — no credit card needed. Give your family space a name and you&apos;re ready to go.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-4 items-start">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-heading font-semibold text-sm">
+                  2
+                </div>
+                <div>
+                  <h3 className="font-heading font-semibold text-foreground mb-1">
+                    Invite your family
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Share a simple link or invite code — no app store downloads required. Anyone can join on any device.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-4 items-start">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-heading font-semibold text-sm">
+                  3
+                </div>
+                <div>
+                  <h3 className="font-heading font-semibold text-foreground mb-1">
+                    Share what matters
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Post photos, videos, and events. Everything stays private to your family — no ads, no algorithms, no strangers.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Features */}
         <section className="py-12 sm:py-16 px-4 sm:px-6 bg-muted/30 border-y border-border">
           <div className="max-w-5xl mx-auto">
