@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Oswald, Source_Sans_3 } from "next/font/google";
+import { Oswald, Source_Sans_3, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -21,6 +21,14 @@ const sourceSans = Source_Sans_3({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
+  display: "swap",
+});
+
+/* Mono: JetBrains Mono — timestamps, timecodes, technical data */
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
   display: "swap",
 });
 
@@ -64,7 +72,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html
         lang="en"
-        className={`${sourceSans.variable} ${oswald.variable} h-full antialiased dark`}
+        className={`${sourceSans.variable} ${oswald.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
       >
         <body className="min-h-full flex flex-col bg-background text-foreground">
           <script

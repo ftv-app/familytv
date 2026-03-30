@@ -9,13 +9,10 @@ import {
   Users,
   Calendar,
   Settings,
-  Image,
   Tv,
   LogOut,
   Menu,
-  Plus,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -23,7 +20,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/app", icon: Home, label: "Dashboard" },
@@ -38,12 +34,10 @@ function MobileNav() {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+      <SheetTrigger>
         <button
           className="flex items-center justify-center w-11 h-11 rounded-lg transition-colors"
-          style={{
-            color: "#8E8E96",
-          }}
+          style={{ color: "#8E8E96" }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#252529")}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
           aria-label="Open menu"
@@ -140,7 +134,7 @@ function MobileNav() {
   );
 }
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
@@ -156,8 +150,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               You need to sign in to access your family space.
             </p>
             <Link href="/sign-in">
-              <Button
-                className="transition-all duration-150 border-0"
+              <button
+                className="px-4 py-2 rounded-md font-medium border-0 transition-all duration-150"
                 style={{
                   backgroundColor: "#2D5A4A",
                   color: "#FDF8F3",
@@ -173,14 +167,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 }}
               >
                 Sign in
-              </Button>
+              </button>
             </Link>
           </div>
         </div>
       }
     >
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#0D0D0F" }}>
-        {/* Film grain on app shell */}
+        {/* Film grain overlay */}
         <div
           className="fixed inset-0 pointer-events-none"
           aria-hidden="true"
@@ -251,7 +245,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         }
                       }}
                     >
-                      <item.icon className="w-4 h-4" style={{ color: isActive ? "#D4AF37" : "inherit" }} />
+                      <item.icon
+                        className="w-4 h-4"
+                        style={{ color: isActive ? "#D4AF37" : "inherit" }}
+                      />
                       {item.label}
                     </Link>
                   );
@@ -280,3 +277,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </Show>
   );
 }
+
+// Default export as alias for the named export
+export default AppShell;
