@@ -9,7 +9,7 @@ import { ArrowRight, Loader2 } from "lucide-react";
 export default function OnboardingPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
-  const [step, setStep] = useState<"welcome" | "signin">("welcome");
+  const [step] = useState<"welcome" | "signin">("welcome");
 
   // If user is already signed in, redirect to create-family
   useEffect(() => {
@@ -38,14 +38,14 @@ export default function OnboardingPage() {
       style={{ backgroundColor: '#0D0D0F' }}
     >
       {/* Back to home link */}
-      <a
+      <Link
         href="/"
         className="absolute top-4 left-4 flex items-center gap-2 transition-colors"
         style={{ color: '#8E8E96', minWidth: "44px", minHeight: "44px" }}
       >
         <ArrowRight className="w-5 h-5 rotate-180" />
         <span className="sr-only sm:not-sr-only sm:text-sm">Back</span>
-      </a>
+      </Link>
 
       <div className="w-full max-w-md mx-auto text-center">
         {step === "welcome" ? (

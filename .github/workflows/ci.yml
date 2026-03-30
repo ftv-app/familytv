@@ -10,42 +10,30 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
-          cache: 'npm'
-      
-      - run: npm install
-      
+          node-version: "24"
+          cache: "npm"
+
+      - run: npm ci
+
       - run: npm run lint
         continue-on-error: true
-      
+
       - run: npm run build
         continue-on-error: true
-      
+
       - name: Run tests with coverage
         run: npm run test:coverage
         continue-on-error: true
-      
+
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage
           path: coverage/
-
-      - name: Upload source maps to Sentry
-        if: success() && github.event_name == 'push'
-        run: |
-          if [ -n "$SENTRY_AUTH_TOKEN" ]; then
-            npx @sentry/wizard@latest -i nextjs --token $SENTRY_AUTH_TOKEN --no-install
-          else
-            echo "SENTRY_AUTH_TOKEN not set, skipping Sentry source map upload"
-          fi
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        continue-on-error: true

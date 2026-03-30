@@ -1,0 +1,92 @@
+name: Sentry Release
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+env:
+  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+  SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+  SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+jobs:
+  sentry-release:
+    name: Create Sentry Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Sentry CLI
+        run: |
+          if [ -n "$SENTRY_AUTH_TOKEN" ]; then
+            npm install -g @sentry/cli
+          fi
+
+      - name: Create Sentry release
+        if: success() && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        run: |
+          if [ -n "$SENTRY_AUTH_TOKEN" ]; then
+            export SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
+            export SENTRY_ORG=$SENTRY_ORG
+            export SENTRY_PROJECT=$SENTRY_PROJECT
+
+            # Create a new Sentry release
+            sentry-cli releases new "$GITHUB_SHA" --org "$SENTRY_ORG" --project "$SENTRY_PROJECT" 2>/dev/null || true
+
+            # Set the commit info
+            sentry-cli releases set-commits "$GITHUB_SHA" --commit "ftv-app/familytv@$GITHUB_SHA" 2>/dev/null || true
+
+            # Finalize the release
+            sentry-cli releases finalize "$GITHUB_SHA" 2>/dev/null || true
+
+            echo "Sentry release $GITHUB_SHA created"
+          else
+            echo "SENTRY_AUTH_TOKEN not set, skipping Sentry release"
+          fi
+
+      - name: Upload source maps to Sentry
+        if: success() && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        run: |
+          if [ -n "$SENTRY_AUTH_TOKEN" ]; then
+            export SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
+            export SENTRY_ORG=$SENTRY_ORG
+            export SENTRY_PROJECT=$SENTRY_PROJECT
+
+            # Build the app to generate source maps
+            npm run build
+
+            # Upload source maps
+            sentry-cli releases files "$GITHUB_SHA" upload-sourcemaps .next --org "$SENTRY_ORG" --project "$SENTRY_PROJECT" --release "$GITHUB_SHA" 2>/dev/null || true
+
+            echo "Source maps uploaded for release $GITHUB_SHA"
+          else
+            echo "SENTRY_AUTH_TOKEN not set, skipping source map upload"
+          fi
+
+      - name: Create Sentry Deploy
+        if: success() && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        run: |
+          if [ -n "$SENTRY_AUTH_TOKEN" ]; then
+            export SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
+            export SENTRY_ORG=$SENTRY_ORG
+            export SENTRY_PROJECT=$SENTRY_PROJECT
+
+            # Create a deploy notification
+            sentry-cli releases deploys "$GITHUB_SHA" new --org "$SENTRY_ORG" --project "$SENTRY_PROJECT" --env production 2>/dev/null || true
+
+            echo "Sentry deploy notification sent for release $GITHUB_SHA"
+          fi
