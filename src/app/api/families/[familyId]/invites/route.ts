@@ -9,7 +9,7 @@ import bcrypt from "bcryptjs";
 const INVITE_CODE_LENGTH = 32;
 const INVITE_EXPIRY_DAYS = 7;
 const MAX_INVITES_PER_DAY = 10;
-const BCRYPT_ROUNDS = 10;
+const BCRYPT_ROUNDS = 12;
 
 export const dynamic = 'force-dynamic';
 
@@ -107,16 +107,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
       where: eq(families.id, familyId),
     });
 
-    const inviteLink = `https://familytv.vercel.app/invite/${inviteCode}`;
+    const inviteLink = `https://familytv.vercel.app/invite/${invite.id}`;
 
     // TODO: Send email with invite link using Clerk's sendEmail or Resend API
-    // For now, log the invite link to console
-    console.log(`📧 Family Invite Created:
-      Family: ${family?.name} (${familyId})
-      Invite Link: ${inviteLink}
-      Expires: ${expiresAt.toISOString()}
-      Created by: ${userId}
-    `);
 
     return NextResponse.json({
       inviteId: invite.id,

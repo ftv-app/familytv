@@ -17,7 +17,7 @@ interface InviteInfo {
 export default function InviteAcceptPage() {
   const params = useParams();
   const router = useRouter();
-  const token = params.token as string;
+  const inviteId = params.token as string;
 
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
@@ -27,7 +27,7 @@ export default function InviteAcceptPage() {
   useEffect(() => {
     async function fetchInvite() {
       try {
-        const res = await fetch(`/api/invite?token=${encodeURIComponent(token)}`);
+        const res = await fetch(`/api/invite?inviteId=${encodeURIComponent(inviteId)}`);
         const data = await res.json();
 
         if (!res.ok) {
@@ -43,7 +43,7 @@ export default function InviteAcceptPage() {
     }
 
     fetchInvite();
-  }, [token]);
+  }, [inviteId]);
 
   async function handleAccept() {
     setAccepting(true);
@@ -53,7 +53,7 @@ export default function InviteAcceptPage() {
       const res = await fetch("/api/invite", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ inviteId }),
       });
 
       const data = await res.json();

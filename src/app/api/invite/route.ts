@@ -74,42 +74,41 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Create invite token
+  // Create invite token (secret) and hash it for storage
   const token = randomBytes(32).toString("hex");
   const tokenHash = createHash("sha256").update(token).digest("hex");
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + INVITE_EXPIRY_DAYS);
 
-  await db.insert(invites).values({
+  const [invite] = await db.insert(invites).values({
     familyId,
     email: email.toLowerCase(),
     tokenHash,
     expiresAt,
     createdBy: userId,
-  });
+  }).returning();
 
   // TODO: Send email with invite link
-  // For now, return the token for testing
+  // Return the public invite ID (not the secret token)
   return NextResponse.json({
-    inviteLink: `/invite/${token}`,
+    inviteId: invite.id,
+    inviteLink: `/invite/${invite.id}`,
     expiresAt: expiresAt.toISOString(),
   }, { status: 201 });
 }
 
-// GET /api/invite?token=xxx - accept an invite
+// GET /api/invite?inviteId=xxx - get invite info
 export async function GET(req: NextRequest) {
-  const { userId } = await auth();
   const { searchParams } = new URL(req.url);
-  const token = searchParams.get("token");
+  const inviteId = searchParams.get("inviteId");
 
-  if (!token) {
-    return NextResponse.json({ error: "Token required" }, { status: 400 });
+  if (!inviteId) {
+    return NextResponse.json({ error: "inviteId required" }, { status: 400 });
   }
 
-  // Hash the token and look up
-  const tokenHash = createHash("sha256").update(token).digest("hex");
+  // Look up invite by public ID (not token)
   const invite = await db.query.invites.findFirst({
-    where: eq(invites.tokenHash, tokenHash),
+    where: eq(invites.id, inviteId),
     with: { family: true },
   });
 
@@ -145,20 +144,30 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { token } = body;
+  const { inviteId, token } = body;
+
+  if (!inviteId || typeof inviteId !== "string") {
+    return NextResponse.json({ error: "inviteId required" }, { status: 400 });
+  }
 
   if (!token || typeof token !== "string") {
     return NextResponse.json({ error: "Token required" }, { status: 400 });
   }
 
-  const tokenHash = createHash("sha256").update(token).digest("hex");
+  // Look up by public invite ID
   const invite = await db.query.invites.findFirst({
-    where: eq(invites.tokenHash, tokenHash),
+    where: eq(invites.id, inviteId),
     with: { family: true },
   });
 
   if (!invite) {
     return NextResponse.json({ error: "Invalid invite" }, { status: 404 });
+  }
+
+  // Verify the token matches the stored hash
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  if (invite.tokenHash !== tokenHash) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 400 });
   }
 
   if (invite.status !== "pending") {

@@ -3,7 +3,10 @@
 // GET  /api/tv/sessions?familyId=xxx — Get active session for a family
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { sql, getFamilyMembers } from "@/lib/db";
+import { sql as _sql, getFamilyMembers } from "@/lib/db";
+
+// Cast to any to allow tagged template syntax (neon returns a tagged template function)
+const sql = _sql as any;
 
 /**
  * Verify the requesting user is a member of the given family.
@@ -57,7 +60,7 @@ export async function GET(req: NextRequest) {
       WHERE ts.family_id = ${familyId} AND ts.active = TRUE
       ORDER BY ts.started_at DESC
       LIMIT 1
-    ` as {
+    ` as unknown as {
       id: string;
       family_id: string;
       video_id: string;
@@ -98,7 +101,7 @@ export async function GET(req: NextRequest) {
         AND q.played = FALSE
       ORDER BY q.position ASC
       LIMIT 10
-    ` as {
+    ` as unknown as {
       id: string;
       video_id: string;
       position: number;
@@ -120,7 +123,7 @@ export async function GET(req: NextRequest) {
       WHERE tp.session_id = ${session.id}
         AND tp.last_heartbeat_at > NOW() - INTERVAL '60 seconds'
       ORDER BY tp.joined_at ASC
-    ` as {
+    ` as unknown as {
       user_id: string;
       solo_mode: boolean;
       joined_at: Date;
@@ -169,7 +172,7 @@ export async function POST(req: NextRequest) {
     // Look up the user's db id via clerk_id
     const userRows = await sql`
       SELECT id FROM users WHERE clerk_id = ${userId}
-    ` as { id: string }[];
+    ` as unknown as { id: string }[];
 
     if (!userRows || userRows.length === 0) {
       return NextResponse.json({ error: "User not found in database" }, { status: 404 });
@@ -189,7 +192,7 @@ export async function POST(req: NextRequest) {
         (family_id, video_id, broadcaster_id, playback_position_seconds, active, channel_number)
       VALUES (${familyId}, ${videoId}, ${dbUserId}, 0, TRUE, ${channel})
       RETURNING *
-    ` as {
+    ` as unknown as {
       id: string;
       family_id: string;
       video_id: string;
