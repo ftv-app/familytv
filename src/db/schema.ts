@@ -8,6 +8,7 @@ import {
   index,
   uniqueIndex,
   boolean,
+  integer,
 } from "drizzle-orm/pg-core";
 import { sql, relations } from "drizzle-orm";
 
@@ -141,9 +142,50 @@ export const calendarEvents = pgTable(
 
 // ---- Relations ----
 
+/**
+ * Family invites - invite-only family join mechanism (CTM-205)
+ * Invite codes are 32-char hex, bcrypt-hashed before storage
+ */
+export const familyInvites = pgTable(
+  "family_invites",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    familyId: uuid("family_id")
+      .notNull()
+      .references(() => families.id, { onDelete: "cascade" }),
+    inviteCodeHash: text("invite_code_hash").notNull(),
+    createdByUserId: text("created_by_user_id").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    revokedAt: timestamp("revoked_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("family_invites_family_idx").on(table.familyId),
+    index("family_invites_created_by_idx").on(table.createdByUserId),
+  ]
+);
+
+/**
+ * Rate limiting for invite creation per family per day
+ */
+export const familyInviteRateLimits = pgTable(
+  "family_invite_rate_limits",
+  {
+    familyId: uuid("family_id")
+      .notNull()
+      .references(() => families.id, { onDelete: "cascade" }),
+    createdDate: timestamp("created_date").notNull().defaultNow(),
+    inviteCount: integer("invite_count").notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex("family_invite_rl_pk").on(table.familyId, table.createdDate),
+  ]
+);
+
 export const familiesRelations = relations(families, ({ many }) => ({
   memberships: many(familyMemberships),
   invites: many(invites),
+  familyInvites: many(familyInvites),
   posts: many(posts),
   calendarEvents: many(calendarEvents),
 }));
@@ -161,6 +203,13 @@ export const familyMembershipsRelations = relations(
 export const invitesRelations = relations(invites, ({ one }) => ({
   family: one(families, {
     fields: [invites.familyId],
+    references: [families.id],
+  }),
+}));
+
+export const familyInvitesRelations = relations(familyInvites, ({ one }) => ({
+  family: one(families, {
+    fields: [familyInvites.familyId],
     references: [families.id],
   }),
 }));
