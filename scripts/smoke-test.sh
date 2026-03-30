@@ -10,9 +10,12 @@ RESULTS=""
 check_page() {
   local path="$1"
   local name="$2"
-  local status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${BASE_URL}${path}" 2>/dev/null)
-  # 200 = OK, 307/302 = redirect (correct for auth-gated pages), 401 = unauthorized (also OK)
-  if [ "$status" = "200" ] || [ "$status" = "307" ] || [ "$status" = "302" ] || [ "$status" = "401" ]; then
+  # Use -L to follow redirects; get final status after all redirects
+  local status=$(curl -s -o /dev/null -w "%{http_code}" -L --max-time 10 "${BASE_URL}${path}" 2>/dev/null)
+  # 200 = OK (or final destination after redirect)
+  # 307/302 = redirect chain incomplete (should not happen with -L)
+  # 401 = Clerk auth required (unauthenticated /dashboard redirects to /sign-in which is OK)
+  if [ "$status" = "200" ] || [ "$status" = "401" ] || [ "$status" = "307" ] || [ "$status" = "302" ]; then
     echo "✅ $name ($status)"
   else
     echo "❌ $name ($status)"
@@ -29,9 +32,10 @@ check_page "/" "Landing page"
 check_page "/sign-in" "Sign in"
 check_page "/sign-up" "Sign up"
 check_page "/onboarding" "Onboarding"
-check_page "/dashboard" "Dashboard"
+check_page "/dashboard" "Dashboard (auth-gated, expects redirect to sign-in)"
 check_page "/robots.txt" "Robots.txt"
 check_page "/sitemap.xml" "Sitemap"
+check_page "/tv" "TV Player"
 
 echo ""
 if [ $FAILURES -eq 0 ]; then
