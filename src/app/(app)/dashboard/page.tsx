@@ -4,7 +4,16 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { DashboardClient } from "./dashboard-client";
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
+  // auth() returns { userId } — null if no session, throws on Clerk config errors
+  let userId: string | null = null;
+  try {
+    const authResult = await auth();
+    userId = authResult.userId ?? null;
+  } catch {
+    // Clerk threw (misconfigured key, network error, etc.) — redirect to sign-in
+    redirect("/sign-in");
+    return; // never reached but satisfies TypeScript
+  }
 
   if (!userId) {
     redirect("/sign-in");
