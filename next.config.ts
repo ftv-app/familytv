@@ -18,9 +18,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    instrumentationHook: true,
-  },
+  // instrumentationHook removed - available by default in Next.js 16
 };
 
 const sentryConfig = withSentryConfig(nextConfig, {
