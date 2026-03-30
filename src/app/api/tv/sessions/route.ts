@@ -7,8 +7,8 @@ import { sql as _sql, getFamilyMembers } from "@/lib/db";
 
 import type { NeonQueryFunction } from '@neondatabase/serverless';
 
-// Cast to NeonQueryFunction to allow tagged template syntax
-const sql = _sql as NeonQueryFunction;
+// Cast to any to allow tagged template syntax (neon returns tagged template function)
+const sql = _sql as any;
 
 /**
  * Verify the requesting user is a member of the given family.

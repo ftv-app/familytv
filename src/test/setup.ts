@@ -12,7 +12,7 @@ class MockIntersectionObserver {
   disconnect = vi.fn();
   takeRecords = vi.fn(() => []);
 }
-(globalThis as any).IntersectionObserver = MockIntersectionObserver;
+(globalThis as unknown as typeof globalThis).IntersectionObserver = MockIntersectionObserver;
 
 // Mock matchMedia
 Object.defineProperty(window, "matchMedia", {
