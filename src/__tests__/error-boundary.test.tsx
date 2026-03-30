@@ -62,22 +62,41 @@ describe("ErrorBoundary", () => {
   });
 
   it("resets error state and re-renders children when Try again is clicked", () => {
-    render(
+    // After clicking Try again, the error boundary resets its internal state.
+    // We verify this by remounting with a child that no longer throws.
+    let renderCount = 0;
+    function RecoverableChild() {
+      renderCount++;
+      if (renderCount === 1) {
+        throw new Error("Initial error");
+      }
+      return <div data-testid="recovered">Recovered successfully</div>;
+    }
+
+    const { rerender } = render(
       <ErrorBoundary>
-        <ThrowError shouldThrow={true} />
+        <RecoverableChild />
       </ErrorBoundary>
     );
-    // Error UI is showing
+
+    // Error fallback is shown on first render
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
 
-    // Click Try again
+    // Click Try again — resets boundary state to hasError=false
     const tryAgainButton = screen.getByRole("button", { name: /try again/i });
     fireEvent.click(tryAgainButton);
 
-    // Should re-render children — since shouldThrow is still true, it will throw again
-    // but the key thing is the error state was reset
-    // Actually with shouldThrow=true it will immediately throw again.
-    // Let's test with a component that can toggle
+    // Now remount with a child that recovers (no longer throws)
+    // This simulates what happens after a successful reset
+    rerender(
+      <ErrorBoundary>
+        <div data-testid="recovered">Recovered successfully</div>
+      </ErrorBoundary>
+    );
+
+    // Child content is now visible after recovery
+    expect(screen.getByTestId("recovered")).toBeInTheDocument();
+    expect(screen.getByText("Recovered successfully")).toBeInTheDocument();
   });
 
   it("allows custom fallback to be provided", () => {
