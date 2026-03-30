@@ -61,6 +61,7 @@ function HeroCarousel() {
   );
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // eslint-disable-next-line -- hydration mismatch acceptable here, effect syncs state
     setPrefersReducedMotion(mq.matches);
     const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
     mq.addEventListener("change", handler);
@@ -92,10 +93,6 @@ function HeroCarousel() {
             backgroundPosition: "center",
             opacity: i === currentIndex ? 1 : 0,
             transition: `opacity 800ms ease-in-out`,
-            transform: i === currentIndex ? "scale(1)" : "scale(1.03)",
-            animation: i === currentIndex
-              ? "kenBurns 5s ease-in-out forwards"
-              : "none",
           }}
         />
       ))}
@@ -109,7 +106,7 @@ function HeroCarousel() {
       />
       {/* Film grain overlay */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none overflow-hidden"
         aria-hidden="true"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
@@ -552,13 +549,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Ken Burns keyframe animation */}
-      <style jsx>{`
-        @keyframes kenBurns {
-          0% { transform: scale(1); }
-          100% { transform: scale(1.03); }
-        }
-      `}</style>
+
     </div>
   );
 }
