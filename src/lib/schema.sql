@@ -116,3 +116,30 @@ CREATE TABLE IF NOT EXISTS notifications (
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id_read ON notifications(user_id, read);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
+
+-- ============================================
+-- Sprint 003: Family Invite Flow (CTM-205)
+-- ============================================
+
+-- Family invites table: invite-only family join mechanism
+-- Invite codes are 32-char hex, bcrypt-hashed before storage
+CREATE TABLE IF NOT EXISTS family_invites (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    family_id UUID NOT NULL REFERENCES families(id) ON DELETE CASCADE,
+    invite_code_hash TEXT NOT NULL,
+    created_by_user_id TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_family_invites_family_id ON family_invites(family_id);
+CREATE INDEX IF NOT EXISTS idx_family_invites_created_by ON family_invites(created_by_user_id);
+
+-- Rate limiting: track invite creations per family per day
+CREATE TABLE IF NOT EXISTS family_invite_rate_limits (
+    family_id UUID NOT NULL REFERENCES families(id) ON DELETE CASCADE,
+    created_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    invite_count INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (family_id, created_date)
+);

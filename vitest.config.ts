@@ -4,24 +4,19 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
-  define: {
-    "process.env.NODE_ENV": JSON.stringify("test"),
-  },
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
-    testTimeout: 30000,
-    hookTimeout: 30000,
+    include: ["src/test/**/*.test.{ts,tsx}"],
+    exclude: ["src/test/**/*.spec.{ts,tsx}"],
     coverage: {
       provider: "v8",
       reporter: ["text", "text-summary", "lcov"],
       thresholds: {
-        // TODO(Familytv): Raise to 90% in Sprint 004 — currently 18%
-        // Focusing on getting tests written and passing first
-        statements: 15,
-        branches: 15,
-        functions: 8,
-        lines: 15,
+        statements: 90,
+        branches: 90,
+        functions: 90,
+        lines: 90,
       },
       include: [
         "src/lib/utils.ts",
@@ -35,6 +30,7 @@ export default defineConfig({
       exclude: [
         "src/test/**",
         "src/**/*.d.ts",
+        "e2e/**",
       ],
     },
   },
