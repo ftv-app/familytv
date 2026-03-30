@@ -15,11 +15,20 @@ vi.mock("@clerk/nextjs/server", () => ({
 // Mock database
 vi.mock("@/db", () => ({
   db: {
-    query: {},
+    query: {
+      posts: {
+        findFirst: vi.fn(),
+      },
+      familyMemberships: {
+        findFirst: vi.fn(),
+      },
+    },
     select: (...args: unknown[]) => mockDbSelect(...args),
     insert: (...args: unknown[]) => mockDbInsert(...args),
     delete: (...args: unknown[]) => mockDbDelete(...args),
   },
+  posts: {},
+  familyMemberships: {},
   reactions: {},
 }));
 
@@ -102,6 +111,22 @@ describe("/api/reactions", () => {
 
     it("adds reaction successfully", async () => {
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      // Mock post lookup
+      const mockPostsQuery = vi.mocked(db.query.posts);
+      mockPostsQuery.findFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      
+      // Mock membership lookup
+      const mockMembershipsQuery = vi.mocked(db.query.familyMemberships);
+      mockMembershipsQuery.findFirst.mockResolvedValue({
+        id: "membership_123",
+        familyId: "family_123",
+        userId: "user_123",
+      } as any);
+      
       mockDbInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
           onConflictDoUpdate: vi.fn().mockReturnValue({
@@ -147,6 +172,22 @@ describe("/api/reactions", () => {
 
     it("deletes reaction successfully", async () => {
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      // Mock post lookup
+      const mockPostsQuery = vi.mocked(db.query.posts);
+      mockPostsQuery.findFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      
+      // Mock membership lookup
+      const mockMembershipsQuery = vi.mocked(db.query.familyMemberships);
+      mockMembershipsQuery.findFirst.mockResolvedValue({
+        id: "membership_123",
+        familyId: "family_123",
+        userId: "user_123",
+      } as any);
+      
       mockDbDelete.mockReturnValue({
         where: vi.fn().mockResolvedValue({} as any),
       } as any);

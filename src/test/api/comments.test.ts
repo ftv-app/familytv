@@ -40,8 +40,11 @@ vi.mock("drizzle-orm/neon-http", () => ({
 const mockAuth = vi.fn();
 const mockCurrentUser = vi.fn();
 const mockCommentsFindMany = vi.fn();
+const mockCommentsFindFirst = vi.fn();
 const mockCommentsInsert = vi.fn();
 const mockCommentsDelete = vi.fn();
+const mockPostsFindFirst = vi.fn();
+const mockMembershipsFindFirst = vi.fn();
 
 // Mock Clerk auth
 vi.mock("@clerk/nextjs/server", () => ({
@@ -50,16 +53,27 @@ vi.mock("@clerk/nextjs/server", () => ({
 }));
 
 // Mock database
-vi.mock("@/db", () => ({
-  db: {
-    query: {
-      comments: {
-        findMany: (...args: unknown[]) => mockCommentsFindMany(...args),
-      },
+const mockDb = {
+  query: {
+    posts: {
+      findFirst: (...args: unknown[]) => mockPostsFindFirst(...args),
     },
-    insert: (...args: unknown[]) => mockCommentsInsert(...args),
-    delete: (...args: unknown[]) => mockCommentsDelete(...args),
+    familyMemberships: {
+      findFirst: (...args: unknown[]) => mockMembershipsFindFirst(...args),
+    },
+    comments: {
+      findMany: (...args: unknown[]) => mockCommentsFindMany(...args),
+      findFirst: (...args: unknown[]) => mockCommentsFindFirst(...args),
+    },
   },
+  insert: (...args: unknown[]) => mockCommentsInsert(...args),
+  delete: (...args: unknown[]) => mockCommentsDelete(...args),
+};
+
+vi.mock("@/db", () => ({
+  db: mockDb,
+  posts: {},
+  familyMemberships: {},
   comments: {},
 }));
 
@@ -96,6 +110,20 @@ describe("/api/comments", () => {
       const comments = [createMockComment({ postId: "post_123" })];
       
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      // Mock post lookup
+      mockPostsFindFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      
+      // Mock membership lookup
+      mockMembershipsFindFirst.mockResolvedValue({
+        id: "membership_123",
+        familyId: "family_123",
+        userId: "user_123",
+      } as any);
+      
       mockCommentsFindMany.mockResolvedValue(comments as any);
       
       const req = new NextRequest("http://localhost/api/comments?postId=post_123");
@@ -154,6 +182,20 @@ describe("/api/comments", () => {
         firstName: "John", 
         emailAddresses: [] 
       } as any);
+      
+      // Mock post lookup
+      mockPostsFindFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      
+      // Mock membership lookup
+      mockMembershipsFindFirst.mockResolvedValue({
+        id: "membership_123",
+        familyId: "family_123",
+        userId: "user_123",
+      } as any);
+      
       mockCommentsInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([comment]),
@@ -199,6 +241,37 @@ describe("/api/comments", () => {
 
     it("deletes comment successfully", async () => {
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      // Mock comment lookup with post relation
+      mockCommentsFindMany.mockResolvedValue({
+        id: "comment_123",
+        postId: "post_123",
+        authorId: "user_123",
+        post: {
+          id: "post_123",
+          familyId: "family_123",
+        },
+      } as any);
+      // Use mockCommentsInsert as a stand-in for findFirst since we don't have a separate mock
+      const mockCommentsQueryFindFirst = vi.fn().mockResolvedValue({
+        id: "comment_123",
+        postId: "post_123",
+        authorId: "user_123",
+        post: {
+          id: "post_123",
+          familyId: "family_123",
+        },
+      } as any);
+      // Override the findFirst to return our mock
+      mockDb.query.comments = { findMany: mockCommentsFindMany, findFirst: mockCommentsQueryFindFirst };
+      
+      // Mock membership lookup
+      mockMembershipsFindFirst.mockResolvedValue({
+        id: "membership_123",
+        familyId: "family_123",
+        userId: "user_123",
+      } as any);
+      
       mockCommentsDelete.mockReturnValue({
         where: vi.fn().mockResolvedValue({} as any),
       } as any);
