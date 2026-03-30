@@ -175,7 +175,8 @@ export function CreatePost({ familyId, onPostCreated }: CreatePostProps) {
               </h2>
               <button
                 onClick={() => setOpen(false)}
-                className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
+                className="w-11 h-11 rounded-full hover:bg-muted flex items-center justify-center transition-colors shrink-0"
+                aria-label="Close modal"
               >
                 <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

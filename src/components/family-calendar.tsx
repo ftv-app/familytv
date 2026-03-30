@@ -216,7 +216,7 @@ export function FamilyCalendar({ familyId, events: initialEvents }: FamilyCalend
       </div>
 
       {/* Add event CTA */}
-      <Button variant="outline" className="w-full gap-2">
+      <Button variant="outline" className="w-full gap-2 min-h-[44px]">
         <svg
           className="w-4 h-4"
           fill="none"

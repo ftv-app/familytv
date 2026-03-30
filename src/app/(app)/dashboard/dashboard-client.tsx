@@ -47,9 +47,9 @@ function StatCard({
   sublabel?: string;
 }) {
   return (
-    <Card className="flex-1 min-w-[140px]">
+    <Card className="flex-1 min-w-[140px] overflow-hidden">
       <CardContent className="p-4 flex items-start gap-3">
-        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 min-w-[44px]">
           <Icon className="w-4 h-4 text-primary" />
         </div>
         <div>
@@ -80,7 +80,7 @@ function ActionButton({
   return (
     <Link
       href={href}
-      className="block rounded-lg border border-border bg-background hover:bg-muted hover:border-primary/40 transition-colors"
+      className="block rounded-lg border border-border bg-background hover:bg-muted hover:border-primary/40 transition-colors min-h-[60px]"
     >
       <div className="flex items-center gap-2 w-full p-4">
         <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">

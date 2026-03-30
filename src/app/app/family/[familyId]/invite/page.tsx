@@ -97,7 +97,7 @@ export default function InvitePage() {
       <div className="mb-6">
         <Link
           href={`/app/family/${familyId}`}
-          className="text-sm text-muted-foreground hover:text-foreground"
+          className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 min-h-[44px] py-2"
         >
           ← Back to family
         </Link>

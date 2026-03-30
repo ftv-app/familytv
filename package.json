@@ -21,6 +21,7 @@
     "@neondatabase/serverless": "^1.0.2",
     "@upstash/ratelimit": "^2.0.8",
     "@vercel/blob": "^2.3.2",
+    "@vercel/sdk": "^1.19.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
