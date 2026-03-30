@@ -39,9 +39,12 @@
     ".next/dev/dev/types/**/*.ts"
   ],
   "exclude": [
+    "src/test/**",
+    "src/__tests__/**",
     "node_modules",
     "drizzle.config.ts",
     "vitest.config.ts",
     "eslint.config.mjs"
   ]
 }
+

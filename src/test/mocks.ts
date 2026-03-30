@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import React from "react";
 
 // Define MockUser type inline (avoids import from non-existent factories file)
