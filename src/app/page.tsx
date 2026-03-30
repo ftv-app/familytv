@@ -96,12 +96,12 @@ function HeroCarousel() {
           }}
         />
       ))}
-      {/* Cinema Black 70%→transparent gradient overlay */}
+      {/* Cinema Black 45%→20%→45% gradient overlay — image shows through */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(13,13,15,0.75) 0%, rgba(13,13,15,0.5) 50%, rgba(13,13,15,0.7) 100%)",
+            "linear-gradient(to bottom, rgba(13,13,15,0.45) 0%, rgba(13,13,15,0.2) 50%, rgba(13,13,15,0.45) 100%)",
         }}
       />
       {/* Film grain overlay */}
@@ -286,14 +286,14 @@ export default function Home() {
       </header>
 
       {/* Hero — full-bleed image carousel */}
-      <main className="flex-1 relative" style={{ minHeight: "60vh" }}>
-        {/* Hero image carousel behind everything */}
-        <div className="absolute inset-0 z-0">
+      <main className="flex-1">
+        {/* Carousel: explicit height, not filling the whole main */}
+        <div className="relative overflow-hidden" style={{ height: "min(60vh, 480px)", minHeight: "320px" }}>
           <HeroCarousel />
         </div>
 
-        {/* Hero content sits above the carousel */}
-        <section className="relative z-10 min-h-[60vh] sm:min-h-[80vh] flex items-center justify-center py-16 sm:py-32 px-4 sm:px-6">
+        {/* Hero content below the carousel image */}
+        <section className="py-16 sm:py-24 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center w-full">
             {/* Channel Callsign */}
             <div className="mb-6">
