@@ -56,9 +56,9 @@ function StatCard({
           <p className="text-2xl font-heading font-semibold text-foreground">
             {value}
           </p>
-          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="text-sm text-muted-foreground">{label}</p>
           {sublabel && (
-            <p className="text-xs text-muted-foreground/70">{sublabel}</p>
+            <p className="text-sm text-muted-foreground/70">{sublabel}</p>
           )}
         </div>
       </CardContent>
@@ -88,7 +88,7 @@ function ActionButton({
         </div>
         <div className="flex-1 min-w-0">
           <span className="font-medium text-foreground block">{label}</span>
-          <span className="text-xs text-muted-foreground">{description}</span>
+          <span className="text-sm text-muted-foreground">{description}</span>
         </div>
         <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
       </div>
@@ -122,7 +122,7 @@ export function DashboardClient({
           <h1 className="font-heading text-3xl font-semibold text-foreground">
             Good evening, {firstName}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-base text-muted-foreground mt-1">
             Here&apos;s what&apos;s happening with your family.
           </p>
         </div>
@@ -239,7 +239,7 @@ export function DashboardClient({
           <h2 className="font-heading text-lg font-semibold text-foreground">
             Family feed
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             Recent photos, videos, and updates from your family.
           </p>
         </div>
@@ -275,7 +275,7 @@ export function DashboardClient({
       )}
 
       {/* Signed-in context */}
-      <p className="text-xs text-muted-foreground/60 text-center">
+      <p className="text-sm text-muted-foreground/60 text-center">
         Signed in as {email}
       </p>
     </div>

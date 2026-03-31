@@ -1,85 +1,48 @@
-// GET /api/families/invites/[code] — Validate invite code
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { db, familyInvites, families } from "@/db";
-import { eq, and, isNull } from "drizzle-orm";
-import bcrypt from "bcryptjs";
+import { db, invites, families } from "@/db";
+import { eq, and } from "drizzle-orm";
+import { createHash } from "crypto";
 
-export const dynamic = 'force-dynamic';
+// GET /api/families/invites/[code] — validate an invite code
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ code: string }> }
+) {
+  const { code } = await params;
 
-interface RouteContext {
-  params: Promise<{ code: string }>;
-}
-
-export async function GET(req: NextRequest, context: RouteContext) {
-  try {
-    const { code } = await context.params;
-
-    if (!code || code.length !== INVITE_CODE_LENGTH) {
-      return NextResponse.json(
-        { error: "Invalid invite code format" },
-        { status: 400 }
-      );
-    }
-
-    // Note: We cannot directly query by hashed code since bcrypt hashes are different each time
-    // Instead, we need to iterate through all active invites and compare
-    // For production, consider using a different approach (e.g., store a separate lookup hash)
-    
-    const activeInvites = await db.query.familyInvites.findMany({
-      where: and(
-        isNull(familyInvites.revokedAt),
-        // Note: In a real implementation, you'd want to filter by expires_at > now()
-        // but Drizzle doesn't support raw comparisons easily here
-      ),
-      with: {
-        family: true,
-      },
-    });
-
-    // Find matching invite by comparing bcrypt hashes
-    for (const invite of activeInvites) {
-      const isValid = await bcrypt.compare(code, invite.inviteCodeHash);
-      
-      if (isValid) {
-        // Check if expired
-        if (new Date() > invite.expiresAt) {
-          return NextResponse.json(
-            { error: "This invite has expired" },
-            { status: 410 }
-          );
-        }
-
-        // Check if revoked
-        if (invite.revokedAt) {
-          return NextResponse.json(
-            { error: "This invite has been revoked" },
-            { status: 410 }
-          );
-        }
-
-        return NextResponse.json({
-          valid: true,
-          familyId: invite.familyId,
-          familyName: invite.family.name,
-          familyAvatarUrl: invite.family.avatarUrl,
-          expiresAt: invite.expiresAt.toISOString(),
-        });
-      }
-    }
-
-    return NextResponse.json(
-      { error: "Invalid invite code" },
-      { status: 404 }
-    );
-
-  } catch (error) {
-    console.error("Error validating invite code:", error);
-    return NextResponse.json(
-      { error: "Failed to validate invite" },
-      { status: 500 }
-    );
+  if (!code) {
+    return NextResponse.json({ error: "Invite code required" }, { status: 400 });
   }
-}
 
-const INVITE_CODE_LENGTH = 32;
+  const tokenHash = createHash("sha256").update(code).digest("hex");
+  const invite = await db.query.invites.findFirst({
+    where: eq(invites.tokenHash, tokenHash),
+    with: { family: true },
+  });
+
+  if (!invite) {
+    return NextResponse.json({ error: "Invalid invite" }, { status: 404 });
+  }
+
+  if (invite.status === "revoked") {
+    return NextResponse.json({ error: "This invite has been revoked" }, { status: 410 });
+  }
+
+  if (invite.status === "accepted") {
+    return NextResponse.json({ error: "This invite has already been used" }, { status: 410 });
+  }
+
+  if (new Date() > invite.expiresAt) {
+    return NextResponse.json({ error: "This invite has expired" }, { status: 410 });
+  }
+
+  return NextResponse.json({
+    family: {
+      id: invite.family.id,
+      name: invite.family.name,
+    },
+    expiresAt: invite.expiresAt.toISOString(),
+  });
+}

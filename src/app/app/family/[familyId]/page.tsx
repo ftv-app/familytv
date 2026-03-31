@@ -65,7 +65,7 @@ export default async function FamilyPage({
   return (
     <div className="space-y-6">
       {/* Family header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-foreground">
             {family.name}
@@ -76,8 +76,8 @@ export default async function FamilyPage({
               ` · ${pendingInvites.length} pending invite${pendingInvites.length !== 1 ? "s" : ""}`}
           </p>
         </div>
-        <Link href={`/app/family/${familyId}/invite`} className="self-start">
-          <Button className="gap-2 min-h-[44px]">
+        <Link href={`/app/family/${familyId}/invite`} className="shrink-0">
+          <Button className="gap-2 w-full sm:w-auto">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -98,8 +98,8 @@ export default async function FamilyPage({
 
       {/* Tabbed content */}
       <Tabs defaultValue="feed" className="w-full">
-        <TabsList className="mb-6 w-full overflow-x-auto flex-nowrap gap-1">
-          <TabsTrigger value="feed" className="gap-1.5">
+        <TabsList className="mb-6 w-full overflow-x-auto flex-nowrap">
+          <TabsTrigger value="feed" className="gap-1.5 shrink-0">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -115,7 +115,7 @@ export default async function FamilyPage({
             </svg>
             Feed
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="gap-1.5">
+          <TabsTrigger value="calendar" className="gap-1.5 shrink-0">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -131,7 +131,7 @@ export default async function FamilyPage({
             </svg>
             Calendar
           </TabsTrigger>
-          <TabsTrigger value="members" className="gap-1.5">
+          <TabsTrigger value="members" className="gap-1.5 shrink-0">
             <svg
               className="w-4 h-4"
               fill="none"

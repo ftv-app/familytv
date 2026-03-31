@@ -20,45 +20,35 @@ export default async function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
-      <header
-        className="border-b px-6 py-4"
-        style={{ background: 'var(--card)', borderColor: 'var(--border)' }}
-      >
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-card px-4 sm:px-6 py-4">
+        <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
           <Link
             href="/dashboard"
-            className="text-sm transition-colors hover:opacity-70"
-            style={{ color: 'var(--muted-foreground)' }}
+            className="text-sm transition-colors hover:opacity-70 text-muted-foreground"
           >
-            ← Back to Dashboard
+            ← Back
           </Link>
-          <h1
-            className="text-xl font-bold"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
-            <span style={{ color: 'var(--primary)' }}>Family</span>TV
+          <h1 className="font-heading text-lg font-bold text-primary shrink-0">
+            FamilyTV
           </h1>
-          <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+          <span className="text-sm text-muted-foreground">
             {unreadCount > 0 && (
-              <span className="inline-flex items-center gap-1" style={{ color: 'var(--primary)' }}>
+              <span className="inline-flex items-center gap-1 text-primary">
                 <Bell className="w-4 h-4" />
-                {unreadCount} unread
+                {unreadCount}
               </span>
             )}
           </span>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-8">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
         <div className="mb-6">
-          <h2
-            className="text-2xl font-semibold"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
+          <h2 className="font-heading text-2xl font-semibold text-foreground">
             Notifications
           </h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
+          <p className="text-sm mt-1 text-muted-foreground">
             Stay up to date with your family activity
           </p>
         </div>

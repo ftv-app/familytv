@@ -44,7 +44,7 @@ export default function CreateFamilyPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto py-12">
+    <div className="max-w-lg mx-auto py-8 sm:py-12 px-4">
       <div className="text-center mb-8">
         <h1 className="font-heading text-3xl font-semibold text-foreground mb-2">
           Name your family

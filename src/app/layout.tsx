@@ -2,9 +2,6 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ErrorBoundary } from "@/components/error-boundary";
-import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 /* ---- FamilyTV Fonts ---- */
@@ -23,33 +20,60 @@ const plusJakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+const APP_URL = "https://familytv.vercel.app";
+
 export const metadata: Metadata = {
-  title: "FamilyTV — Your Family's Private Place to Share",
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: "FamilyTV — Private Family Sharing",
+    template: "%s | FamilyTV",
+  },
   description:
-    "Photos, videos, and calendars shared only with family. No ads, no algorithms. Start your private family space for free.",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
-  alternates: {
-    canonical: "https://familytv.vercel.app",
-  },
+    "The private place for families to share photos, videos, and calendars. No ads, no algorithms, just family.",
+  keywords: [
+    "family photo sharing",
+    "private family app",
+    "family calendar",
+    "family memories",
+    "no ads social media",
+  ],
+  authors: [{ name: "FamilyTV" }],
+  creator: "FamilyTV",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://familytv.vercel.app",
+    url: APP_URL,
     siteName: "FamilyTV",
-    title: "FamilyTV — Your Family's Private Place to Share",
+    title: "FamilyTV — Your Family's Private Space to Share Memories",
     description:
-      "Photos, videos, and calendars shared only with family. No ads, no algorithms. Start your private family space for free.",
+      "Share photos, videos, and calendars only with family. No ads, no algorithms, no strangers.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "FamilyTV — Private Family Sharing",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "FamilyTV — Your Family's Private Place to Share",
+    title: "FamilyTV — Your Family's Private Space",
     description:
-      "Photos, videos, and calendars shared only with family. No ads, no algorithms. Start your private family space for free.",
+      "Share photos, videos, and calendars only with family. No ads, no algorithms.",
+    images: ["/og-image.png"],
+    creator: "@familytv",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
@@ -65,30 +89,7 @@ export default function RootLayout({
         className={`${plusJakarta.variable} ${fraunces.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col bg-background text-foreground">
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "Organization",
-                name: "FamilyTV",
-                url: "https://familytv.vercel.app",
-                logo: "https://familytv.vercel.app/favicon.ico",
-                description:
-                  "Private family social media platform for sharing photos, videos, and calendars with family only.",
-                sameAs: [],
-              }),
-            }}
-          />
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <ErrorBoundary>{children}</ErrorBoundary>
-            <Analytics />
-          </ThemeProvider>
+          {children}
           <Toaster
             position="bottom-center"
             toastOptions={{

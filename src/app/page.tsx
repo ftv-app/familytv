@@ -41,7 +41,7 @@ export default function Home() {
       <main className="flex-1">
         <section className="py-16 sm:py-24 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-6 leading-tight">
+            <h1 className="font-heading text-4xl sm:text-5xl font-semibold tracking-tight text-foreground mb-6 leading-tight">
               Your family&apos;s private place
               <br />
               <span className="text-primary">to share what matters</span>
@@ -70,63 +70,13 @@ export default function Home() {
           </div>
         </section>
 
-        {/* How it works */}
-        <section className="py-12 sm:py-16 px-4 sm:px-6">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="font-heading text-3xl font-semibold text-center text-foreground mb-10">
-              See how it works
-            </h2>
-            <div className="space-y-6">
-              <div className="flex gap-4 items-start">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-heading font-semibold text-sm">
-                  1
-                </div>
-                <div>
-                  <h3 className="font-heading font-semibold text-foreground mb-1">
-                    Create your family space
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Sign up in seconds — no credit card needed. Give your family space a name and you&apos;re ready to go.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4 items-start">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-heading font-semibold text-sm">
-                  2
-                </div>
-                <div>
-                  <h3 className="font-heading font-semibold text-foreground mb-1">
-                    Invite your family
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Share a simple link or invite code — no app store downloads required. Anyone can join on any device.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4 items-start">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-heading font-semibold text-sm">
-                  3
-                </div>
-                <div>
-                  <h3 className="font-heading font-semibold text-foreground mb-1">
-                    Share what matters
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Post photos, videos, and events. Everything stays private to your family — no ads, no algorithms, no strangers.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Features */}
         <section className="py-12 sm:py-16 px-4 sm:px-6 bg-muted/30 border-y border-border">
           <div className="max-w-5xl mx-auto">
-            <h2 className="font-heading text-3xl font-semibold text-center text-foreground mb-12">
+            <h2 className="font-heading text-2xl sm:text-3xl font-semibold text-center text-foreground mb-8 sm:mb-12">
               Everything your family needs, nothing they don&apos;t
             </h2>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg font-heading">
@@ -186,7 +136,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8 px-4 sm:px-6">
+      <footer className="border-t border-border py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-primary flex items-center justify-center">
