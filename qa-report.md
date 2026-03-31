@@ -83,6 +83,35 @@ Status: PARTIAL - network timeouts & locator issues
 
 ---
 
+## Additional Bugs Found & Fixed (2026-03-31)
+
+### 🔴 Critical: CSP blocking Clerk JS (caused blank pages)
+- **File:** `vercel.json`
+- **Symptom:** All `/app/family/*` routes rendered blank — Clerk JS blocked by CSP `script-src`
+- **Fix:** Added `https://*.clerk.accounts.dev https://*.clerk.com` to CSP script-src
+
+### 🔴 Critical: Private blob 403 on image posts
+- **File:** `src/app/api/upload/route.ts` + `src/components/post-card.tsx` + new `src/app/api/media/route.ts`
+- **Symptom:** Uploaded images returned 403 when viewed — private blobs need auth header
+- **Fix:** (1) Created `/api/media` proxy route that adds `Authorization: Bearer BLOB_READ_WRITE_TOKEN` server-side; (2) Updated post-card to route blob URLs through `/api/media?url=`
+
+### 🔴 Calendar tab crash
+- **File:** `src/components/family-calendar.tsx`
+- **Symptom:** "Something went wrong" error on Calendar tab
+- **Fix:** Added `"use client"` directive — server components can't have `onMouseEnter`/`onMouseLeave`
+
+### 🔴 Sign-in always redirected to create-family
+- **File:** `src/app/sign-in/[[...sign-in]]/page.tsx`, `src/app/sign-up/[[...sign-up]]/page.tsx`
+- **Symptom:** Every sign-in, even for existing users, redirected to onboarding
+- **Fix:** Changed `fallbackRedirectUrl` from `/onboarding/create-family` → `/app`
+
+### 🟡 Share moment CTA didn't open modal
+- **File:** `src/components/create-post.tsx`
+- **Symptom:** "Share your first memory" empty state link pointed to `#create-post` but trigger card had no id
+- **Fix:** Added `id="create-post"` to the trigger Card
+
+---
+
 ## Issues Requiring Attention
 
 1. **Landing page CTA locators** - The "Start your family" link is not being found by the E2E tests. May need selector update or element render check.
