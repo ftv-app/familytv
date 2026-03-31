@@ -126,7 +126,7 @@ function OnboardingInviteContent() {
         className="min-h-screen flex items-center justify-center"
         style={{ backgroundColor: '#0D0D0F' }}
       >
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8E8E96' }} />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#A8A8B0' }} />
       </div>
     );
   }
@@ -140,7 +140,7 @@ function OnboardingInviteContent() {
       <button
         onClick={() => router.push("/onboarding/create-family")}
         className="absolute top-4 left-4 flex items-center gap-2 transition-colors"
-        style={{ color: '#8E8E96', minWidth: "44px", minHeight: "44px" }}
+        style={{ color: '#A8A8B0', minWidth: "44px", minHeight: "44px" }}
         aria-label="Go back"
       >
         <ArrowLeft className="w-5 h-5" />
@@ -179,7 +179,7 @@ function OnboardingInviteContent() {
           </h2>
           <h2 
             className="font-heading text-3xl sm:text-4xl font-bold leading-tight"
-            style={{ color: '#8E8E96' }}
+            style={{ color: '#A8A8B0' }}
           >
             to your channel
           </h2>
@@ -187,7 +187,7 @@ function OnboardingInviteContent() {
 
         <p 
           className="text-base text-center mb-8"
-          style={{ color: '#8E8E96' }}
+          style={{ color: '#A8A8B0' }}
         >
           Your family can&apos;t wait to see your photos and videos.
         </p>
@@ -202,7 +202,7 @@ function OnboardingInviteContent() {
                 height: "52px", 
                 fontSize: "16px",
                 backgroundColor: '#1A1A1E',
-                color: '#8E8E96'
+                color: '#A8A8B0'
               }}
             >
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -239,7 +239,7 @@ function OnboardingInviteContent() {
                 height: "52px", 
                 fontSize: "16px",
                 backgroundColor: '#1A1A1E',
-                color: '#8E8E96'
+                color: '#A8A8B0'
               }}
             >
               Could not create invite
@@ -249,7 +249,7 @@ function OnboardingInviteContent() {
           {copyError && inviteLink && (
             <div 
               className="text-sm text-center"
-              style={{ color: '#8E8E96' }}
+              style={{ color: '#A8A8B0' }}
             >
               <p>Could not copy automatically. Here&apos;s your link:</p>
               <input
@@ -312,7 +312,7 @@ function OnboardingInviteContent() {
               fontSize: "16px",
               backgroundColor: 'transparent',
               border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: '#8E8E96'
+              color: '#A8A8B0'
             }}
           >
             {emailLoading ? (
@@ -341,7 +341,7 @@ function OnboardingInviteContent() {
           <button
             onClick={handleSkip}
             className="font-medium hover:underline"
-            style={{ fontSize: "16px", color: '#8E8E96' }}
+            style={{ fontSize: "16px", color: '#A8A8B0' }}
           >
             Skip for now →
           </button>
@@ -357,7 +357,7 @@ function InvitePageLoading() {
       className="min-h-screen flex items-center justify-center"
       style={{ backgroundColor: '#0D0D0F' }}
     >
-      <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8E8E96' }} />
+      <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#A8A8B0' }} />
     </div>
   );
 }

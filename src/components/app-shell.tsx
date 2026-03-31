@@ -37,14 +37,14 @@ function MobileNav() {
       <SheetTrigger>
         {/*
           CTM-222: Redesigned hamburger for seniors
-          - Tap target: 48×48px minimum (exceeds 44px default)
+          - Tap target: 48×54px (px-3 py-3 = 12px padding + 24px icon + 6px gap + text)
           - Contrast: icon #2D5A3D on cream #faf8f5 = ~6.5:1 ✓
           - "Menu" label in terracotta #c4785a on cream = ~3.3:1 (icon passes at 4.5:1)
           - Works at 320px viewport width
           - Forest green focus ring per CTM-221
         */}
         <button
-          className="flex items-center gap-1.5 px-2 py-2 rounded-lg transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2"
+          className="flex items-center gap-1.5 px-3 py-3 rounded-lg transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2"
           style={{ backgroundColor: "#faf8f5" }}
           aria-label="Open navigation menu"
         >
@@ -96,7 +96,7 @@ function MobileNav() {
                 `}
                 style={{
                   backgroundColor: isActive ? "#252529" : "transparent",
-                  color: isActive ? "#E8E8EC" : "#8E8E96",
+                  color: isActive ? "#E8E8EC" : "#A8A8B0",
                 }}
                 onClick={() => setOpen(false)}
               >
@@ -123,7 +123,7 @@ function MobileNav() {
                 className="flex items-center gap-3 px-3 py-3 rounded-lg transition-colors w-full text-left
                   focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
                   hover:bg-[#252529] hover:text-[#E8E8EC]"
-                style={{ color: "#8E8E96" }}
+                style={{ color: "#A8A8B0" }}
                 onClick={() => { window.location.href = "/"; }}
               >
                 <LogOut className="w-5 h-5 shrink-0" />
@@ -149,7 +149,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           style={{ backgroundColor: "#0D0D0F" }}
         >
           <div className="text-center space-y-4">
-            <p className="text-sm" style={{ color: "#8E8E96" }}>
+            <p className="text-sm" style={{ color: "#A8A8B0" }}>
               You need to sign in to access your family space.
             </p>
             <Link href="/sign-in">
@@ -230,7 +230,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         hover:bg-[#252529] hover:text-[#E8E8EC]
                       `}
                       style={{
-                        color: isActive ? "#E8E8EC" : "#8E8E96",
+                        color: isActive ? "#E8E8EC" : "#A8A8B0",
                         backgroundColor: isActive ? "#252529" : "transparent",
                       }}
                     >

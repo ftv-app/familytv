@@ -244,7 +244,7 @@ export function FamilyCalendar({ familyId, events: initialEvents }: FamilyCalend
         style={{
           backgroundColor: "transparent",
           border: "1px solid rgba(255,255,255,0.1)",
-          color: "#8E8E96",
+          color: "#A8A8B0",
           borderRadius: "8px",
         }}
         onMouseEnter={(e) => {
@@ -256,7 +256,7 @@ export function FamilyCalendar({ familyId, events: initialEvents }: FamilyCalend
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = "transparent";
           e.currentTarget.style.border = "1px solid rgba(255,255,255,0.1)";
-          e.currentTarget.style.color = "#8E8E96";
+          e.currentTarget.style.color = "#A8A8B0";
           e.currentTarget.style.boxShadow = "none";
         }}
       >

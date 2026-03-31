@@ -86,7 +86,7 @@ export function PostCard({ post }: PostCardProps) {
                       className="w-6 h-6 rounded-full animate-spin"
                       style={{
                         border: "2px solid rgba(142,142,150,0.3)",
-                        borderTopColor: "#8E8E96",
+                        borderTopColor: "#A8A8B0",
                       }}
                     />
                   </div>

@@ -143,7 +143,7 @@ function SocialProofSection() {
       <div className="max-w-4xl mx-auto">
         <h2
           className="font-heading text-sm font-semibold text-center mb-8 uppercase tracking-[0.08em]"
-          style={{ color: "#8E8E96" }}
+          style={{ color: "#A8A8B0" }}
         >
           Families love FamilyTV
         </h2>
@@ -254,7 +254,7 @@ export default function Home() {
                 variant="ghost"
                 size="sm"
                 className="hover:text-silver"
-                style={{ color: "#8E8E96" }}
+                style={{ color: "#A8A8B0" }}
               >
                 Sign in
               </Button>
@@ -299,7 +299,7 @@ export default function Home() {
             <div className="mb-6">
               <span
                 className="font-heading text-sm tracking-[0.3em] uppercase"
-                style={{ color: "#8E8E96" }}
+                style={{ color: "#A8A8B0" }}
               >
                 ★ Now Streaming ★
               </span>
@@ -323,7 +323,7 @@ export default function Home() {
 
             <p
               className="text-lg mb-10 max-w-xl mx-auto leading-relaxed"
-              style={{ color: "#8E8E96" }}
+              style={{ color: "#A8A8B0" }}
             >
               Photos, videos, and live moments — shared only with family.
               No ads, no algorithms, no strangers. Just your people, seeing what matters.
@@ -362,7 +362,7 @@ export default function Home() {
                   className="w-full sm:w-auto text-base px-6 sm:px-8 border"
                   style={{
                     borderColor: "rgba(255,255,255,0.1)",
-                    color: "#8E8E96",
+                    color: "#A8A8B0",
                     backgroundColor: "transparent",
                     borderRadius: "8px",
                     padding: "14px 24px",
@@ -372,7 +372,7 @@ export default function Home() {
                     e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "#8E8E96";
+                    e.currentTarget.style.color = "#A8A8B0";
                     e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
                   }}
                 >
@@ -431,7 +431,7 @@ export default function Home() {
                     <h3 className="font-heading font-semibold mb-1" style={{ color: "#E8E8EC" }}>
                       {step.title}
                     </h3>
-                    <p className="text-sm leading-relaxed" style={{ color: "#8E8E96" }}>
+                    <p className="text-sm leading-relaxed" style={{ color: "#A8A8B0" }}>
                       {step.desc}
                     </p>
                   </div>
@@ -493,7 +493,7 @@ export default function Home() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <CardDescription className="text-base" style={{ color: "#8E8E96" }}>
+                    <CardDescription className="text-base" style={{ color: "#A8A8B0" }}>
                       {feature.desc}
                     </CardDescription>
                   </CardContent>
@@ -515,7 +515,7 @@ export default function Home() {
             <h2 className="font-heading text-2xl font-semibold mb-4" style={{ color: "#E8E8EC" }}>
               Family privacy, guaranteed.
             </h2>
-            <p className="leading-relaxed" style={{ color: "#8E8E96" }}>
+            <p className="leading-relaxed" style={{ color: "#A8A8B0" }}>
               We don&apos;t sell your data. We don&apos;t show ads. We don&apos;t use your family&apos;s
               photos to train AI. FamilyTV is built to protect what you share, not exploit it.
             </p>
@@ -539,11 +539,11 @@ export default function Home() {
                 <polyline points="17 2 12 7 7 2" />
               </svg>
             </div>
-            <span className="font-heading text-sm" style={{ color: "#8E8E96" }}>
+            <span className="font-heading text-sm" style={{ color: "#A8A8B0" }}>
               FamilyTV
             </span>
           </div>
-          <p className="text-sm" style={{ color: "#8E8E96" }}>
+          <p className="text-sm" style={{ color: "#A8A8B0" }}>
             Made for families, with privacy first.
           </p>
         </div>

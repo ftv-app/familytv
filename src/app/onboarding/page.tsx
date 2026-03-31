@@ -27,7 +27,7 @@ export default function OnboardingPage() {
         className="min-h-screen flex items-center justify-center"
         style={{ backgroundColor: '#0D0D0F' }}
       >
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8E8E96' }} />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#A8A8B0' }} />
       </div>
     );
   }
@@ -41,7 +41,7 @@ export default function OnboardingPage() {
       <Link
         href="/"
         className="absolute top-4 left-4 flex items-center gap-2 transition-colors"
-        style={{ color: '#8E8E96', minWidth: "44px", minHeight: "44px" }}
+        style={{ color: '#A8A8B0', minWidth: "44px", minHeight: "44px" }}
       >
         <ArrowRight className="w-5 h-5 rotate-180" />
         <span className="sr-only sm:not-sr-only sm:text-sm">Back</span>
@@ -65,7 +65,7 @@ export default function OnboardingPage() {
 
             <p 
               className="font-heading text-sm tracking-[0.2em] uppercase mb-4"
-              style={{ color: '#8E8E96' }}
+              style={{ color: '#A8A8B0' }}
             >
               Welcome to
             </p>
@@ -79,7 +79,7 @@ export default function OnboardingPage() {
             
             <p 
               className="text-base mb-10 leading-relaxed max-w-sm mx-auto"
-              style={{ color: '#8E8E96' }}
+              style={{ color: '#A8A8B0' }}
             >
               Your private family channel. Share photos, videos, and live moments only with the people you invite.
             </p>
@@ -100,7 +100,7 @@ export default function OnboardingPage() {
 
             <p 
               className="text-center text-sm mt-6"
-              style={{ color: '#8E8E96' }}
+              style={{ color: '#A8A8B0' }}
             >
               New to FamilyTV?{" "}
               <Link 
@@ -115,7 +115,7 @@ export default function OnboardingPage() {
         ) : (
           // Redirecting state - should not happen since we redirect in useEffect
           <div className="flex items-center justify-center">
-            <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8E8E96' }} />
+            <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#A8A8B0' }} />
           </div>
         )}
       </div>

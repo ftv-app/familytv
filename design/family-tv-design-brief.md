@@ -34,7 +34,7 @@ The brand is no longer metaphorically a TV. It is literally a TV channel. The vi
 | Primary Accent | **Velvet Red** | `#C41E3A` | Now Playing indicator, LIVE badge, primary play button, alerts |
 | Secondary Accent | **Broadcast Gold** | `#D4AF37` | Channel callsign, family name, premium timestamps, star ratings |
 | Text Primary | **Silver White** | `#E8E8EC` | Headings, video titles, primary labels |
-| Text Secondary | **Muted Silver** | `#8E8E96` | Timestamps, metadata, "Chosen by," captions |
+| Text Secondary | **Muted Silver** | `#A8A8B0` | Timestamps, metadata, "Chosen by," captions |
 | Text Tertiary | **Dim** | `#5A5A62` | Placeholders, disabled states |
 | Success | **Green Signal** | `#2ECC71` | Online indicators, sync confirmed, "Joined Live" |
 | Warning | **Amber** | `#F39C12` | Solo Mode badge, reconnecting state, "X minutes behind" |
@@ -107,7 +107,7 @@ Dark backgrounds make type feel thinner and smaller. Sizes below are tuned for d
 
 - **On Cinema Black:** `#E8E8EC` (Silver White) — primary text
 - **On Theater Charcoal:** `#E8E8EC` or `#FDF8F3` (Cream) for warm-tone labels
-- **Metadata, timestamps:** `#8E8E96` (Muted Silver)
+- **Metadata, timestamps:** `#A8A8B0` (Muted Silver)
 - **Disabled:** `#5A5A62` (Dim)
 - **LIVE badge:** `#C41E3A` (Velvet Red)
 - **Channel callsign:** `#D4AF37` (Broadcast Gold)
@@ -559,7 +559,7 @@ Family members currently watching:
 **Image Counter:**
 - Position: bottom center, `16px` from bottom
 - Style: `"3 of 12"` format
-- Font: JetBrains Mono, `13px`, Muted Silver (`#8E8E96`)
+- Font: JetBrains Mono, `13px`, Muted Silver (`#A8A8B0`)
 
 ---
 
@@ -785,7 +785,7 @@ Behind the CTA area, a slowly rotating carousel of family imagery keeps the page
 **Secondary Link:**
 - Text: "Learn about FamilyTV"
 - Font: Source Sans 3, weight 400
-- Color: Muted Silver `#8E8E96`
+- Color: Muted Silver `#A8A8B0`
 - Text decoration: none (no underline default)
 - Hover: color transitions to Velvet Red `#C41E3A`, `200ms ease`
 - Position: beneath or beside the primary CTA
@@ -1029,7 +1029,7 @@ All filters applied via CSS filters on the displayed image. Preview thumbnail in
 
 **Filter Display:**
 - Filter name shown in JetBrains Mono below preview thumbnail
-- Font size: 12px, Muted Silver (`#8E8E96`)
+- Font size: 12px, Muted Silver (`#A8A8B0`)
 - Real-time preview as filter is selected (no "apply" step)
 
 ### 16.3 Slideshow Player

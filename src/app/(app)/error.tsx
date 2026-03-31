@@ -37,7 +37,7 @@ export default function Error({
       <h1 className="text-2xl font-bold mb-4" style={{ color: "#E8E8EC" }}>
         Something went wrong
       </h1>
-      <p className="text-sm mb-6" style={{ color: "#8E8E96" }}>
+      <p className="text-sm mb-6" style={{ color: "#A8A8B0" }}>
         We encountered an error loading this page.
       </p>
       <button

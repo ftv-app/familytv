@@ -581,7 +581,7 @@ export default function TVPlayerPage() {
             <p
               className="font-heading text-xs mt-0.5"
               style={{
-                color: "#8E8E96",
+                color: "#A8A8B0",
                 fontFamily: "var(--font-heading, 'Oswald', sans-serif)",
                 fontWeight: 400,
               }}

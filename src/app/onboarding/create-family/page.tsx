@@ -95,7 +95,7 @@ export default function OnboardingCreateFamilyPage() {
         className="min-h-screen flex items-center justify-center"
         style={{ backgroundColor: '#0D0D0F' }}
       >
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8E8E96' }} />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#A8A8B0' }} />
       </div>
     );
   }
@@ -109,7 +109,7 @@ export default function OnboardingCreateFamilyPage() {
       <button
         onClick={() => router.push("/onboarding")}
         className="absolute top-4 left-4 flex items-center gap-2 transition-colors"
-        style={{ color: '#8E8E96', minWidth: "44px", minHeight: "44px" }}
+        style={{ color: '#A8A8B0', minWidth: "44px", minHeight: "44px" }}
         aria-label="Go back"
       >
         <ArrowLeft className="w-5 h-5" />
