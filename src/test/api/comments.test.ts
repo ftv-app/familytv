@@ -274,5 +274,97 @@ describe("/api/comments", () => {
       const json = await res.json();
       expect(json.success).toBe(true);
     });
+
+    it("returns 404 when comment not found", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockCommentsFindFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/comments?id=nonexistent", {
+        method: "DELETE",
+      });
+      const res = await DELETE(req);
+      
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 403 when user is not a family member (DELETE)", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      mockCommentsFindFirst.mockResolvedValue({
+        id: "comment_123",
+        postId: "post_123",
+        authorId: "user_123",
+        post: {
+          id: "post_123",
+          familyId: "family_123",
+        },
+      } as any);
+      mockMembershipsFindFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/comments?id=comment_123", {
+        method: "DELETE",
+      });
+      const res = await DELETE(req);
+      
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe("GET - error branches", () => {
+    it("returns 404 when post not found", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockPostsFindFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/comments?postId=nonexistent");
+      const res = await GET(req);
+      
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 403 when user is not a family member (GET)", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockPostsFindFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      mockMembershipsFindFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/comments?postId=post_123");
+      const res = await GET(req);
+      
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe("POST - error branches", () => {
+    it("returns 404 when post not found", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockPostsFindFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/comments", {
+        method: "POST",
+        body: JSON.stringify({ postId: "nonexistent", content: "Hello" }),
+      });
+      const res = await POST(req);
+      
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 403 when user is not a family member (POST)", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockPostsFindFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      mockMembershipsFindFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/comments", {
+        method: "POST",
+        body: JSON.stringify({ postId: "post_123", content: "Hello" }),
+      });
+      const res = await POST(req);
+      
+      expect(res.status).toBe(403);
+    });
   });
 });

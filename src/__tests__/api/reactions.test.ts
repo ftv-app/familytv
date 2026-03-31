@@ -20,6 +20,14 @@ const mockDb = {
       }),
     }),
   }),
+  query: {
+    posts: {
+      findFirst: vi.fn(),
+    },
+    familyMemberships: {
+      findFirst: vi.fn(),
+    },
+  },
   insert: vi.fn().mockReturnValue({
     values: vi.fn().mockReturnValue({
       onConflictDoUpdate: vi.fn(),
@@ -33,6 +41,8 @@ const mockDb = {
 vi.mock("@/db", () => ({
   db: mockDb,
   reactions: {},
+  posts: {},
+  familyMemberships: {},
 }));
 
 async function getHandler() {
@@ -244,5 +254,115 @@ describe("DELETE /api/reactions", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.success).toBe(true);
+  });
+});
+
+describe("GET /api/reactions - family membership branches", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 404 when post not found", async () => {
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.posts.findFirst = vi.fn().mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest("http://localhost/api/reactions?postId=nonexistent", {
+      method: "GET",
+    });
+    const res = await handler.GET(req);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 403 when user is not a family member (GET)", async () => {
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    const post = createMockPost();
+    mockDb.query.posts.findFirst = vi.fn().mockResolvedValue(post);
+    mockDb.query.familyMemberships.findFirst = vi.fn().mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest(`http://localhost/api/reactions?postId=${post.id}`, {
+      method: "GET",
+    });
+    const res = await handler.GET(req);
+
+    expect(res.status).toBe(403);
+  });
+});
+
+describe("POST /api/reactions - family membership branches", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 404 when post not found", async () => {
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.posts.findFirst = vi.fn().mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest("http://localhost/api/reactions", {
+      method: "POST",
+      body: JSON.stringify({ postId: "nonexistent", emoji: "👍" }),
+    });
+    const res = await handler.POST(req);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 403 when user is not a family member (POST)", async () => {
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    const post = createMockPost();
+    mockDb.query.posts.findFirst = vi.fn().mockResolvedValue(post);
+    mockDb.query.familyMemberships.findFirst = vi.fn().mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest("http://localhost/api/reactions", {
+      method: "POST",
+      body: JSON.stringify({ postId: post.id, emoji: "👍" }),
+    });
+    const res = await handler.POST(req);
+
+    expect(res.status).toBe(403);
+  });
+});
+
+describe("DELETE /api/reactions - family membership branches", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 404 when post not found", async () => {
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.posts.findFirst = vi.fn().mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest("http://localhost/api/reactions?postId=nonexistent", {
+      method: "DELETE",
+    });
+    const res = await handler.DELETE(req);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 403 when user is not a family member (DELETE)", async () => {
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    const post = createMockPost();
+    mockDb.query.posts.findFirst = vi.fn().mockResolvedValue(post);
+    mockDb.query.familyMemberships.findFirst = vi.fn().mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest(`http://localhost/api/reactions?postId=${post.id}`, {
+      method: "DELETE",
+    });
+    const res = await handler.DELETE(req);
+
+    expect(res.status).toBe(403);
   });
 });

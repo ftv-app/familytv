@@ -18,6 +18,12 @@ const mockDb = {
     comments: {
       findMany: vi.fn(),
     },
+    posts: {
+      findFirst: vi.fn(),
+    },
+    familyMemberships: {
+      findFirst: vi.fn(),
+    },
   },
   insert: vi.fn().mockReturnValue({
     values: vi.fn().mockReturnValue({
@@ -32,6 +38,8 @@ const mockDb = {
 vi.mock("@/db", () => ({
   db: mockDb,
   comments: {},
+  posts: {},
+  familyMemberships: {},
 }));
 
 async function getHandler() {
@@ -322,5 +330,111 @@ describe("DELETE /api/comments", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.success).toBe(true);
+  });
+
+  it("returns 404 when comment not found", async () => {
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    // Mock comment not found
+    mockDb.query.comments.findFirst = vi.fn().mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest("http://localhost/api/comments?id=nonexistent", {
+      method: "DELETE",
+    });
+    const res = await handler.DELETE(req);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 403 when user is not a family member (DELETE)", async () => {
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    const post = createMockPost();
+    const comment = createMockComment({ postId: post.id, authorId: TEST_USER_ID });
+    mockDb.query.comments.findFirst = vi.fn().mockResolvedValue({ ...comment, post });
+    mockDb.query.familyMemberships.findFirst = vi.fn().mockResolvedValue(null); // not a member
+
+    const handler = await getHandler();
+    const req = new NextRequest(`http://localhost/api/comments?id=${comment.id}`, {
+      method: "DELETE",
+    });
+    const res = await handler.DELETE(req);
+
+    expect(res.status).toBe(403);
+  });
+});
+
+describe("GET /api/comments - family membership branches", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 404 when post not found", async () => {
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.posts.findFirst = vi.fn().mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest("http://localhost/api/comments?postId=nonexistent", {
+      method: "GET",
+    });
+    const res = await handler.GET(req);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 403 when user is not a family member (GET)", async () => {
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    const post = createMockPost();
+    mockDb.query.posts.findFirst = vi.fn().mockResolvedValue(post);
+    mockDb.query.familyMemberships.findFirst = vi.fn().mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest(`http://localhost/api/comments?postId=${post.id}`, {
+      method: "GET",
+    });
+    const res = await handler.GET(req);
+
+    expect(res.status).toBe(403);
+  });
+});
+
+describe("POST /api/comments - family membership branches", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 404 when post not found", async () => {
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.posts.findFirst = vi.fn().mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest("http://localhost/api/comments", {
+      method: "POST",
+      body: JSON.stringify({ postId: "nonexistent", content: "Hello" }),
+    });
+    const res = await handler.POST(req);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 403 when user is not a family member (POST)", async () => {
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    const post = createMockPost();
+    mockDb.query.posts.findFirst = vi.fn().mockResolvedValue(post);
+    mockDb.query.familyMemberships.findFirst = vi.fn().mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest("http://localhost/api/comments", {
+      method: "POST",
+      body: JSON.stringify({ postId: post.id, content: "Hello" }),
+    });
+    const res = await handler.POST(req);
+
+    expect(res.status).toBe(403);
   });
 });

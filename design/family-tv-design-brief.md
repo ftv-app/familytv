@@ -848,6 +848,146 @@ Testimonial cards with authentic family imagery reinforce trust and belonging on
 
 ---
 
+## Multi-Generational Accessibility Standards
+
+**Owner:** Principal Designer (aligned with CEO/Atlas UX Leadership Brief, 2026-03-31)  
+**Applies to:** All screens, components, and copy across FamilyTV Phase 1–4  
+**Principle:** Every screen must work for all four user generations — grandparents (65+), adults (35-55), teens (13-17), and young parents (25-35). Not a compromise. A product that's *better* because it works for everyone.
+
+> **Note:** The leadership brief explicitly calls out that the FamilyTV team (AI-powered startup, power users) instinctively underestimates accessibility needs. We must *explicitly fight our assumptions.* What feels "fine" to us is often a barrier to our actual users.
+
+---
+
+### 1. Contrast Rules
+
+**Minimum contrast ratio: 4.5:1** (WCAG AA) for normal text.  
+**Minimum contrast ratio: 3:1** for large text (18px+ or 14px+ bold).
+
+**Exact color tokens for Cinema Black backgrounds:**
+
+| Role | Token | Hex | Contrast on `#0D0D0F` |
+|------|-------|-----|----------------------|
+| Primary body text | Silver White | `#E8E8EC` | ~15.4:1 ✅ |
+| Secondary/metadata text | Warm Muted | `#A8A8B0` | ~5.2:1 ✅ |
+| Tertiary/disabled | Dim | `#787882` | ~3.4:1 ✅ |
+| Decorative/label-only | Dim | `#5A5A62` | ~1.9:1 ❌ — **never on dark bg** |
+
+**Critical:**  
+- `#8E8E96` on `#0D0D0F` = **2.4:1** — this is a safety hazard. An 80-year-old with cataracts literally cannot read it. **Do not use.** Replace with `#A8A8B0`.  
+- `#5A5A62` on `#0D0D0F` = ~1.8:1 — even worse. Only acceptable as **decorative** text on light surfaces, never for UI labels.  
+- **Never use pure white (#FFFFFF) on Cinema Black** — it causes bloom/bleed. Use `#E8E8EC` instead.
+
+---
+
+### 2. Text Size Rules
+
+| Role | Minimum Size | Token | Notes |
+|------|-------------|-------|-------|
+| Body text (all UI labels, descriptions, body copy) | **16px** | `text-base` | The true minimum for comfortable reading at arm's length |
+| Secondary info (metadata, timestamps, captions) | **14px** | `text-sm` | Absolute floor — only for captions, timestamps, fine print |
+| Tertiary / timestamps only | 12px | `text-xs` | Fine print, timestamps ONLY. Never for UI labels or body |
+
+**Key insight from research:** Most people cannot comfortably read 14px on a phone at arm's length. 16px (text-base) is the true minimum for body text. The design brief's type scale (Section 3.3) reflects this.
+
+**What this means in practice:**
+- `text-xs` (12px): timestamps and timestamps only
+- `text-sm` (14px): captions, badges, tertiary labels — the absolute floor for any visible text
+- `text-base` (16px): all body text, descriptions, button labels, nav items
+- `text-lg` (18px+): section headings, primary action labels
+
+---
+
+### 3. Tap Target Rules
+
+**Minimum tap target: 48×48px** (not 44px).  
+**Minimum gap between targets: 8px.**
+
+This follows the leadership brief directive (matching Google's Material Design 48dp, which is more conservative than Apple's 44pt). The FamilyTV standard is **48px minimum, always**.
+
+**Rules:**
+- All buttons, nav items, and interactive elements: **48×48px minimum** on mobile and desktop
+- Icon-only interactive elements: the entire element (including visible padding) must be ≥48×48px, not just the icon
+- Gap between any two adjacent tap targets: **minimum 8px** to prevent mis-taps
+- Example: a grid of action buttons needs 8px gaps between items, and each button must be ≥48px tall/wide
+
+---
+
+### 4. Icon + Text Always Rule
+
+**Every icon must have a visible text label alongside it. Always.**
+
+Exception: Primary navigation items (Dashboard, Family, Calendar) may use icon-only IF they have active ARIA labels and are in a recognized nav pattern. But even in nav, adding a text label is preferred when space allows.
+
+**Research basis:** The "Senior Meetme" app research shows icons work well for seniors **when there's also text**. Icon-only interfaces cause confusion and mis-taps for older users who don't share our icon vocabulary.
+
+**Implementation rules:**
+- No icon-only buttons, CTAs, or action items without a text label
+- Text labels must be visible and legible (not tooltips-only on desktop)
+- Icons should be 24px with 1.5px stroke (Lucide style) alongside text labels
+- Icon + text should be horizontally centered within the tap target
+
+---
+
+### 5. Warmth Principles
+
+Family apps are not enterprise software. They should feel like home. The Cinema Black aesthetic is cinematic — but "cinema" can feel cold. We warm it deliberately.
+
+**Warmth rules:**
+- **Rounded corners: 12px minimum** for cards, 8px for smaller elements. Warmth is communicated through soft geometry.
+- **Generous padding:** at minimum `space-4` (16px) on cards. Dense layouts feel clinical.
+- **Friendly color palette for accents:** Warm Cream (`#FDF8F3`), Terracotta (`#C4785A`), Forest (`#2D5A4A`) — these soften the dark palette.
+- **Invitation over efficiency:** CTAs should feel like invitations, not transaction triggers. "See family photos" not "View feed." "Welcome back" not "Good evening."
+- **Familiar layouts:** Reference Instacart's horizontal grids that feel like supermarket shelves — familiar and comforting. FamilyTV should feel like a family photo wall, not a CMS.
+- **No harsh borders:** Use `box-shadow` with low-opacity blacks, or subtle `rgba(255,255,255,0.06)` borders. Never solid `#333`.
+- **Content-first on empty states:** Empty states must show the path — a small illustration, plain language explanation, and ONE clear action. Never a blank page.
+
+**Visual warmth checklist for new screens:**
+- [ ] Are corners rounded (≥8px, preferably ≥12px)?
+- [ ] Is padding generous (≥16px on cards)?
+- [ ] Are warm accent colors used for family identity elements (Broadcast Gold, Warm Cream)?
+- [ ] Does the copy feel like a conversation, not a system message?
+- [ ] Does the layout feel like home, not an enterprise dashboard?
+- [ ] Are empty states warm and instructive, not cold error states?
+
+---
+
+### 6. Time-Based Greetings
+
+**"Good evening, [Name]" style greetings are prohibited.**
+
+Many older users lose track of time or are confused by greetings they didn't ask for. Better alternatives:
+- "Welcome back" (neutral, warm)
+- The family name only ("The Henderson Family")
+- No greeting at all — lead directly with content
+
+---
+
+### 7. Color Is Not the Only Signal
+
+Never rely on color alone to convey meaning (WCAG 1.4.1).  
+**Always add a secondary signal:**
+- Icon + text label alongside any color-coded status
+- Badge numbers: "(3)" not just a red dot
+- Pattern or structural cues in addition to color
+- "Online" status: green dot + text label "Online"
+
+---
+
+### 8. Accessibility Is Infrastructure
+
+**Focus indicators are not optional.** They are how keyboard users navigate.  
+**Screen reader support (ARIA labels, semantic HTML) is not "nice to have."**
+
+These aren't accessibility features — they're quality features that serve everyone.
+
+- All interactive elements must have a visible `:focus-visible` state using Forest green (`#2D5A4A`) outline, 2px width, 2px offset
+- All decorative icons must have `aria-hidden="true"`
+- All icon-only buttons must have `aria-label`
+- Active nav items must have `aria-current="page"`
+- Live regions (`aria-live`) must announce dynamic content changes (new posts, presence updates)
+
+---
+
 ## 16. Slideshow Feature
 
 Families can create planned slideshows from their shared images, with filters and auto-scroll. Slideshows feel like private family broadcasts — curated, warm, and cinematic.

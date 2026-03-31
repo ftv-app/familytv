@@ -218,5 +218,109 @@ describe("/api/reactions", () => {
       const json = await res.json();
       expect(json.success).toBe(true);
     });
+
+    it("returns 404 when post not found (DELETE)", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      const mockPostsQuery = vi.mocked(db.query.posts);
+      mockPostsQuery.findFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/reactions?postId=nonexistent", {
+        method: "DELETE",
+      });
+      const res = await DELETE(req);
+      
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 403 when user is not a family member (DELETE)", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      const mockPostsQuery = vi.mocked(db.query.posts);
+      mockPostsQuery.findFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      
+      const mockMembershipsQuery = vi.mocked(db.query.familyMemberships);
+      mockMembershipsQuery.findFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/reactions?postId=post_123", {
+        method: "DELETE",
+      });
+      const res = await DELETE(req);
+      
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe("GET - error branches", () => {
+    it("returns 404 when post not found", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      const mockPostsQuery = vi.mocked(db.query.posts);
+      mockPostsQuery.findFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/reactions?postId=nonexistent");
+      const res = await GET(req);
+      
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 403 when user is not a family member (GET)", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      const mockPostsQuery = vi.mocked(db.query.posts);
+      mockPostsQuery.findFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      
+      const mockMembershipsQuery = vi.mocked(db.query.familyMemberships);
+      mockMembershipsQuery.findFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/reactions?postId=post_123");
+      const res = await GET(req);
+      
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe("POST - error branches", () => {
+    it("returns 404 when post not found", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      const mockPostsQuery = vi.mocked(db.query.posts);
+      mockPostsQuery.findFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/reactions", {
+        method: "POST",
+        body: JSON.stringify({ postId: "nonexistent", emoji: "👍" }),
+      });
+      const res = await POST(req);
+      
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 403 when user is not a family member (POST)", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      const mockPostsQuery = vi.mocked(db.query.posts);
+      mockPostsQuery.findFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      
+      const mockMembershipsQuery = vi.mocked(db.query.familyMemberships);
+      mockMembershipsQuery.findFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/reactions", {
+        method: "POST",
+        body: JSON.stringify({ postId: "post_123", emoji: "👍" }),
+      });
+      const res = await POST(req);
+      
+      expect(res.status).toBe(403);
+    });
   });
 });

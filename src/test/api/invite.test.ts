@@ -276,16 +276,45 @@ describe("/api/invite", () => {
       expect(res.status).toBe(401);
     });
 
-    it("returns 400 when token is missing", async () => {
+    it("accepts invite with only inviteId (UUID-based single-use links)", async () => {
+      const family = createMockFamily({ id: "fam_123", name: "The Smiths" });
+      const invite = createMockInvite({
+        familyId: "fam_123",
+        status: "pending",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        id: "invite_123",
+      });
+
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
-      
+      mockInvitesFindFirst.mockResolvedValue({
+        ...invite,
+        family,
+      } as any);
+      mockMembershipsFindFirst.mockResolvedValue(null);
+      mockTransaction.mockImplementation(async (cb) => {
+        const tx = {
+          update: vi.fn().mockReturnValue({
+            set: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue({}),
+            }),
+          }),
+          insert: vi.fn().mockReturnValue({
+            values: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([]),
+            }),
+          }),
+        };
+        return cb(tx);
+      });
+
+      // No token — inviteId alone is sufficient (UUID-based single-use links)
       const req = new NextRequest("http://localhost/api/invite", {
         method: "PATCH",
-        body: JSON.stringify({}),
+        body: JSON.stringify({ inviteId: "invite_123" }),
       });
       const res = await PATCH(req);
-      
-      expect(res.status).toBe(400);
+
+      expect(res.status).toBe(200);
     });
 
     it("accepts invite and creates membership", async () => {

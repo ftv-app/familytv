@@ -98,7 +98,7 @@ export default function FamilyInvitesPage() {
       // Add new invite to list with the plain-text code
       const newInvite: Invite = {
         id: data.id || `temp-${Date.now()}`,
-        code: data.code,
+        code: data.inviteId,
         expiresAt: data.expiresAt,
         createdAt: new Date().toISOString(),
         email: "",
@@ -298,18 +298,15 @@ export default function FamilyInvitesPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <code className="text-xs bg-muted px-2 py-1 rounded font-mono max-w-[120px] truncate block">
-                              {invite.code
-                                ? `${invite.code.slice(0, 8)}…`
-                                : invite.id.slice(0, 8)}
+                              {invite.id.slice(0, 8)}…
                             </code>
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-7 px-2"
-                              onClick={() => invite.code && copyInviteLink(invite.code)}
-                              disabled={!invite.code}
+                              onClick={() => copyInviteLink(invite.id)}
                             >
-                              {copiedId === invite.code ? (
+                              {copiedId === invite.id ? (
                                 <svg className="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
