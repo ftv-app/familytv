@@ -43,6 +43,14 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
+// Convert private blob URLs to our auth proxy
+function getMediaSrc(url: string): string {
+  if (url.includes(".vercel-storage.com")) {
+    return `/api/media?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 interface PostCardProps {
   post: PostWithAuthor;
 }
@@ -55,6 +63,7 @@ export function PostCard({ post }: PostCardProps) {
   const isVideo = post.contentType === "video";
   const isImage = post.contentType === "image";
   const hasMedia = post.mediaUrl && (isVideo || isImage);
+  const mediaSrc = post.mediaUrl ? getMediaSrc(post.mediaUrl) : null;
 
   return (
     <>
@@ -74,7 +83,7 @@ export function PostCard({ post }: PostCardProps) {
             style={{ backgroundColor: "#0D0D0F" }}
           >
             {isVideo ? (
-              <VideoPlayer url={post.mediaUrl!} />
+              <VideoPlayer url={mediaSrc!} />
             ) : (
               <>
                 {!imageLoaded && !imageError && (
@@ -105,7 +114,7 @@ export function PostCard({ post }: PostCardProps) {
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={post.mediaUrl!}
+                      src={mediaSrc!}
                       alt={post.caption ?? "Family moment"}
                       className={cn(
                         "w-full h-full object-cover transition-opacity duration-300",
@@ -197,7 +206,7 @@ export function PostCard({ post }: PostCardProps) {
 
       {lightboxOpen && post.mediaUrl && (
         <ImageLightbox
-          src={post.mediaUrl}
+          src={mediaSrc}
           alt={post.caption ?? "Family moment"}
           onClose={() => setLightboxOpen(false)}
         />
