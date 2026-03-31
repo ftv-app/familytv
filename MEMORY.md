@@ -21,9 +21,14 @@ Leader/follower model, UTC-anchored. Phase 1 MVP: 89 pts / 7-8 wks. Anti-creepy:
 Spec: `src/lib/family-tv-sync.md`
 
 ## Current Sprint
-**Sprint 008 🚀** — focus indicators, mobile hamburger, empty state CTAs, activity stories design, events tests, competitive analysis
+**Sprint 009 🚀** — auth WCAG (done 36b377a), Activity Stories, Activity API, proactive surfacing, mobile polish
+**Sprint 010 🚀** — CTM-223 sync clock (done 4a2d41a), CTM-220 invite perf, CTM-222 test infra, CTM-221 Cinema Black design, CTM-224 Clerk branding
 **Tests: 188 unit ✅** | Coverage: 99.24% stmts / 97.32% branches (97%+ bar met ✅)
-**Sprint 006 ✅** — CTM-204/205/206/207/208/210/213/214/215/216/217/218/219 (13 issues)
+
+## New Feature: Family Watch Party (CTM-228-233)
+Real-time social layer on TV page: presence dots, quick reactions (floating bubbles), live chat sidebar.
+PRD: `research/family-watch-party-prd.md` | WebSocket: Socket.IO 4 + Redis adapter | Chat: Neon Postgres (last 100 msgs)
+6 tickets filed: CTM-228 (spec) → CTM-229 (server) → CTM-230 (presence) → CTM-231 (chat) → CTM-232 (reactions) → CTM-233 (security)
 
 ## Security (ALL FIXED ✅)
 CTM-214: family membership on comments/reactions · CTM-215: invite token plaintext → O(1) hash lookup · CTM-216: bcrypt cost 12 · CTM-218: PII error boundary
@@ -40,11 +45,15 @@ TDD mandatory · 0 E2E failures · 97% coverage · `data-testid` on all interact
 - ESLint hangs locally (CI catches errors)
 
 ## New Today (2026-03-31)
+- **Dashboard cinematic redesign** (3dd7fad): placeholder data → real DB, Cinema Black, Broadcast Gold channel callsign, hero Share CTA, Theater Charcoal cards, real member names from Clerk
+- **Auth WCAG** (36b377a): skip nav, aria labels, Clerk wrapper labels → PROD
+- **Sync clock** (4a2d41a): server-authoritative playback timing → PROD
 - **Bugs fixed**: sign-in redirect loop, private blob 403, calendar crash, share CTA, CSP blocking Clerk, invite page blank
 - **Blob store**: `familytv-store` (iad1), `BLOB_READ_WRITE_TOKEN` live on all environments
 - **New route**: `/api/media` — private blob proxy (serves private Vercel Blobs with auth)
-- **3 automations shipped**: `deploy-gate.yml` (parallel quality gates), `changelog.yml` (conventional commits → Telegram+Release), `standup.yml` + `standup.sh` (automated standups)
+- **3 automations shipped**: `deploy-gate.yml`, `changelog.yml`, `standup.yml` + `standup.sh`
 - **Process change**: 97% coverage (raised from 80%), data-testid mandatory on all interactive elements
+- **Family Watch Party**: 6 tickets filed (CTM-228-233), PRD written, Socket.IO + Redis architecture
 
 ## Operating Tempo
 6-hr sprints · Daily reflection → memory/YYYY-MM-DD.md · Weekly consolidation · Monthly self-assessment
@@ -60,6 +69,7 @@ TDD mandatory · 0 E2E failures · 97% coverage · `data-testid` on all interact
 8. **data-testid is non-negotiable** — every interactive element needs `data-testid` from day 1; adding after the fact blocks PRs and wastes time (2026-03-31, confirmed by E2E selector failures).
 9. **CSP must allow Clerk CDN** — `script-src 'self' 'unsafe-eval' 'unsafe-inline'` blocks Clerk JS on private routes. Add `https://*.clerk.accounts.dev https://*.clerk.com` explicitly.
 10. **Private blob = private access + proxy** — Vercel private blobs return 403 when accessed directly. Need `/api/media` proxy that adds `Authorization: Bearer` header server-side.
+11. **Always deploy after every change** — founder wants to see changes immediately. Rule: push + deploy after every commit, no batching.
 
 ## Key Research Files (in Notion + familytv/research/)
 `research/family-tv-prd.md` · `family-tv-phase1.md` · `family-tv-user-stories.md` · `sync-latency-research.md` · `family-tv-positioning.md` · `family-tv-moat.md` · `family-tv-slos.md` · `design/family-tv-design-brief.md`
