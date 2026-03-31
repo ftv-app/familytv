@@ -1,3 +1,6 @@
+// NOTE: The application name shown in Clerk's hosted UI (sign-in, account portal, etc.)
+// is configured in Clerk's Dashboard (dashboard.clerk.com) > Settings > General > Application Name.
+// It cannot be set via the ClerkProvider SDK props. Set it to "FamilyTV" there.
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";

@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db, familyInvites, familyMemberships, families } from "@/db";
 import { eq, and, isNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { createHash } from "crypto";
 
 export const dynamic = 'force-dynamic';
 
@@ -27,24 +28,29 @@ export async function POST(req: NextRequest, context: RouteContext) {
       );
     }
 
-    // Find the invite by comparing bcrypt hashes
-    const activeInvites = await db.query.familyInvites.findMany({
-      where: isNull(familyInvites.revokedAt),
+    // O(1) lookup via indexed SHA256 hash, then verify with bcrypt
+    const lookupHash = createHash("sha256").update(code).digest("hex");
+    
+    const invite = await db.query.familyInvites.findFirst({
+      where: and(
+        eq(familyInvites.inviteCodeLookupHash, lookupHash),
+        isNull(familyInvites.revokedAt)
+      ),
       with: {
         family: true,
       },
     });
 
-    let matchedInvite = null;
-    for (const invite of activeInvites) {
-      const isValid = await bcrypt.compare(code, invite.inviteCodeHash);
-      if (isValid) {
-        matchedInvite = invite;
-        break;
-      }
+    if (!invite) {
+      return NextResponse.json(
+        { error: "Invalid invite code" },
+        { status: 404 }
+      );
     }
 
-    if (!matchedInvite) {
+    // Verify with bcrypt (handles timing-safe comparison)
+    const isValid = await bcrypt.compare(code, invite.inviteCodeHash);
+    if (!isValid) {
       return NextResponse.json(
         { error: "Invalid invite code" },
         { status: 404 }
@@ -52,17 +58,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
     }
 
     // Check if expired
-    if (new Date() > matchedInvite.expiresAt) {
+    if (new Date() > invite.expiresAt) {
       return NextResponse.json(
         { error: "This invite has expired" },
-        { status: 410 }
-      );
-    }
-
-    // Check if revoked
-    if (matchedInvite.revokedAt) {
-      return NextResponse.json(
-        { error: "This invite has been revoked" },
         { status: 410 }
       );
     }
@@ -71,7 +69,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const existingMembership = await db.query.familyMemberships.findFirst({
       where: and(
         eq(familyMemberships.userId, userId),
-        eq(familyMemberships.familyId, matchedInvite.familyId)
+        eq(familyMemberships.familyId, invite.familyId)
       ),
     });
 
@@ -84,7 +82,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
     // Accept the invite: create membership
     const [membership] = await db.insert(familyMemberships).values({
-      familyId: matchedInvite.familyId,
+      familyId: invite.familyId,
       userId,
       role: "member",
     }).returning();
@@ -92,13 +90,13 @@ export async function POST(req: NextRequest, context: RouteContext) {
     // Revoke the invite so it can't be used again
     await db.update(familyInvites)
       .set({ revokedAt: new Date() })
-      .where(eq(familyInvites.id, matchedInvite.id));
+      .where(eq(familyInvites.id, invite.id));
 
     return NextResponse.json({
       success: true,
-      familyId: matchedInvite.familyId,
-      familyName: matchedInvite.family.name,
-      familyAvatarUrl: matchedInvite.family.avatarUrl,
+      familyId: invite.familyId,
+      familyName: invite.family.name,
+      familyAvatarUrl: invite.family.avatarUrl,
       membershipId: membership.id,
     }, { status: 200 });
 

@@ -154,6 +154,7 @@ export const familyInvites = pgTable(
       .notNull()
       .references(() => families.id, { onDelete: "cascade" }),
     inviteCodeHash: text("invite_code_hash").notNull(),
+    inviteCodeLookupHash: text("invite_code_lookup_hash"),
     createdByUserId: text("created_by_user_id").notNull(),
     expiresAt: timestamp("expires_at").notNull(),
     revokedAt: timestamp("revoked_at"),
@@ -162,6 +163,7 @@ export const familyInvites = pgTable(
   (table) => [
     index("family_invites_family_idx").on(table.familyId),
     index("family_invites_created_by_idx").on(table.createdByUserId),
+    index("family_invites_lookup_hash_idx").on(table.inviteCodeLookupHash),
   ]
 );
 

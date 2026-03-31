@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db, familyInvites, familyMemberships, familyInviteRateLimits, families } from "@/db";
 import { eq, and } from "drizzle-orm";
-import { randomBytes } from "crypto";
+import { randomBytes, createHash } from "crypto";
 import bcrypt from "bcryptjs";
 
 const INVITE_CODE_LENGTH = 32;
@@ -69,8 +69,11 @@ export async function POST(req: NextRequest, context: RouteContext) {
     // Generate invite code (32-char hex)
     const inviteCode = randomBytes(INVITE_CODE_LENGTH / 2).toString("hex");
     
-    // Hash the invite code with bcrypt
+    // Hash the invite code with bcrypt (for secure comparison)
     const inviteCodeHash = await bcrypt.hash(inviteCode, BCRYPT_ROUNDS);
+
+    // Compute lookup hash (SHA256, for O(1) indexed lookup)
+    const inviteCodeLookupHash = createHash("sha256").update(inviteCode).digest("hex");
 
     // Calculate expiry date
     const expiresAt = new Date();
@@ -80,6 +83,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const [invite] = await db.insert(familyInvites).values({
       familyId,
       inviteCodeHash,
+      inviteCodeLookupHash,
       createdByUserId: userId,
       expiresAt,
     }).returning();
