@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PostCard } from "@/components/post-card";
 import { CreatePost } from "@/components/create-post";
+import { WarmEmptyState } from "@/components/warm-empty-state";
 import type { PostWithAuthor } from "@/components/post-card";
 
 interface FamilyFeedClientProps {
@@ -62,7 +63,7 @@ export function FamilyFeedClient({
     return (
       <div className="space-y-4">
         <CreatePost familyId={familyId} onPostCreated={handlePostCreated} />
-        <EmptyState />
+        <EmptyFeedState familyId={familyId} />
       </div>
     );
   }
@@ -106,19 +107,16 @@ export function FamilyFeedClient({
   );
 }
 
-function EmptyState() {
+function EmptyFeedState({ familyId }: { familyId: string }) {
   return (
-    <div className="text-center py-16 px-4">
-      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-        <span className="text-3xl">📷</span>
-      </div>
-      <h3 className="font-heading text-lg font-semibold text-foreground mb-2">
-        No moments shared yet
-      </h3>
-      <p className="text-muted-foreground text-sm mb-6 max-w-xs mx-auto">
-        Start sharing photos and videos with your family. Only the people you
-        invite can see what you post.
-      </p>
-    </div>
+    <WarmEmptyState
+      emoji="📷"
+      title="Your family feed is waiting"
+      description="Share your first photo or video and start filling this feed with the moments that matter most."
+      ctaLabel="Share your first memory"
+      ctaHref="#create-post"
+      secondaryLabel="Invite family members"
+      secondaryHref={`/app/family/${familyId}/invite`}
+    />
   );
 }

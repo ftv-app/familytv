@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Error({
   error,
@@ -9,6 +10,8 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const router = useRouter();
+
   useEffect(() => {
     // Log error server-side only
     if (typeof window === "undefined") {
@@ -17,18 +20,17 @@ export default function Error({
   }, [error]);
 
   // If auth-related, redirect to sign-in instead of showing error
-  if (
-    typeof error.message === "string" &&
-    (error.message.includes("Clerk") ||
-      error.message.includes("auth") ||
-      error.message.includes("session") ||
-      error.digest?.includes("clerk"))
-  ) {
-    if (typeof window !== "undefined") {
-      window.location.href = "/sign-in";
+  useEffect(() => {
+    if (
+      typeof error.message === "string" &&
+      (error.message.includes("Clerk") ||
+        error.message.includes("auth") ||
+        error.message.includes("session") ||
+        error.digest?.includes("clerk"))
+    ) {
+      router.replace("/sign-in");
     }
-    return null;
-  }
+  }, [error, router]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center">

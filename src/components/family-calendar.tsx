@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { WarmEmptyState } from "@/components/warm-empty-state";
 
 interface FamilyEvent {
   id: string;
@@ -158,12 +159,18 @@ function UpcomingEvents({ events, maxItems }: UpcomingEventsProps) {
 
   if (upcoming.length === 0) {
     return (
-      <div className="py-12 text-center">
-        <span className="text-3xl">📅</span>
-        <p className="text-sm text-muted-foreground mt-2">
-          No upcoming events
-        </p>
-      </div>
+      <WarmEmptyState
+        emoji="📅"
+        title="No upcoming events"
+        description="Add birthdays, gatherings, or trips so the whole family can see what&apos;s coming up."
+        ctaLabel="Add first event"
+        onCtaClick={() => {
+          // Scroll to / focus the Add event button at the top of the calendar section
+          const btn = document.querySelector('[data-calendar-add-event]') as HTMLButtonElement | null;
+          btn?.scrollIntoView({ behavior: "smooth", block: "center" });
+          btn?.focus();
+        }}
+      />
     );
   }
 
@@ -232,6 +239,7 @@ export function FamilyCalendar({ familyId, events: initialEvents }: FamilyCalend
       {/* Add event CTA */}
       <Button
         variant="outline"
+        data-calendar-add-event
         className="w-full gap-2 min-h-[44px] transition-all duration-150 border-0"
         style={{
           backgroundColor: "transparent",

@@ -50,9 +50,9 @@ export default function PrivacyPage() {
               2. How we use your data
             </h2>
             <p>
-              Your data is used solely to operate FamilyTV — displaying your family's
+              Your data is used solely to operate FamilyTV — displaying your family&apos;s
               content to the family members you choose to invite. We do not use your
-              family's photos or videos to train AI models. We do not sell your data to
+              family&apos;s photos or videos to train AI models. We do not sell your data to
               third parties. We do not display ads based on your content.
             </p>
           </section>
@@ -113,7 +113,7 @@ export default function PrivacyPage() {
               7. Changes to this policy
             </h2>
             <p>
-              If we make changes to this privacy policy, we will update the "Last updated"
+              If we make changes to this privacy policy, we will update the &quot;Last updated&quot;
               date above and, for significant changes, notify you by email or through the
               app. Your continued use of FamilyTV after any changes means you accept the
               updated policy.
