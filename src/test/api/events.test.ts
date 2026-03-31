@@ -210,8 +210,12 @@ describe("/api/events", () => {
       
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
       mockMembershipsFindFirst.mockResolvedValue(membership);
+      // Mock chain: db.insert(calendarEvents).values({...}).returning()
+      const returningMock = vi.fn().mockResolvedValue([event]);
       mockInsert.mockReturnValue({
-        returning: vi.fn().mockResolvedValue([event]),
+        values: vi.fn().mockImplementation(() => ({
+          returning: returningMock,
+        })),
       } as any);
       
       const req = new NextRequest("http://localhost/api/events", {
@@ -238,8 +242,11 @@ describe("/api/events", () => {
       
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
       mockMembershipsFindFirst.mockResolvedValue(membership);
+      const returningMock = vi.fn().mockResolvedValue([event]);
       mockInsert.mockReturnValue({
-        returning: vi.fn().mockResolvedValue([event]),
+        values: vi.fn().mockImplementation(() => ({
+          returning: returningMock,
+        })),
       } as any);
       
       const req = new NextRequest("http://localhost/api/events", {

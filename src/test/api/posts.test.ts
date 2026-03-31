@@ -201,10 +201,11 @@ describe("/api/posts", () => {
       
       mockAuth.mockResolvedValue({ userId: "user_123", user: { fullName: "John" } } as any);
       mockFindFirst.mockResolvedValue(membership);
+      const returningMock = vi.fn().mockResolvedValue([post]);
       mockInsert.mockReturnValue({
-        values: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([post]),
-        }),
+        values: vi.fn().mockImplementation(() => ({
+          returning: returningMock,
+        })),
       } as any);
       
       const req = new NextRequest("http://localhost/api/posts", {
@@ -216,6 +217,42 @@ describe("/api/posts", () => {
       expect(res.status).toBe(201);
       const json = await res.json();
       expect(json.post).toBeDefined();
+    });
+
+    it("returns 400 for video post with non-string mediaUrl", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      const req = new NextRequest("http://localhost/api/posts", {
+        method: "POST",
+        body: JSON.stringify({ familyId: "fam_123", contentType: "video", mediaUrl: 12345 }),
+      });
+      const res = await POST(req);
+      
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toContain("mediaUrl is required");
+    });
+
+    it("uses 'Family member' fallback when auth has no fullName or firstName", async () => {
+      const membership = createMockFamilyMembership({ userId: "user_456", familyId: "fam_123" });
+      const post = createMockPost({ familyId: "fam_123", authorId: "user_456", authorName: "Family member" });
+      
+      mockAuth.mockResolvedValue({ userId: "user_456" } as any);
+      mockFindFirst.mockResolvedValue(membership);
+      const returningMock = vi.fn().mockResolvedValue([post]);
+      mockInsert.mockReturnValue({
+        values: vi.fn().mockImplementation(() => ({
+          returning: returningMock,
+        })),
+      } as any);
+      
+      const req = new NextRequest("http://localhost/api/posts", {
+        method: "POST",
+        body: JSON.stringify({ familyId: "fam_123", contentType: "text" }),
+      });
+      const res = await POST(req);
+      
+      expect(res.status).toBe(201);
     });
   });
 });
