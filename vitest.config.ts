@@ -21,10 +21,10 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "text-summary", "lcov"],
       thresholds: {
-        statements: 80,
-        branches: 80,
-        functions: 80,
-        lines: 80,
+        statements: 97,
+        branches: 97,
+        functions: 97,
+        lines: 97,
       },
       // FamilyTV-specific components and utilities for coverage tracking
       include: [

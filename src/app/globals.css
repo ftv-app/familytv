@@ -152,6 +152,37 @@
   --ring: #2D5A3D; /* Forest green - CTM-221 focus ring */
 }
 
+/* ---- Accessibility: WCAG 2.1 AA ---- */
+/* Minimum 16px body text */
+body {
+  @apply bg-background text-foreground;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Minimum 48px tap targets for interactive elements (elderly users) */
+button,
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Links inside text flow inherit line-height instead of forcing 48px */
+p a, li a, span a, div a:not([class]) {
+  min-height: unset;
+  min-width: unset;
+}
+
+/* Forest green focus ring - WCAG AA compliant, CTM-221 */
+*:focus-visible {
+  outline: 2px solid #2D5A4A;
+  outline-offset: 2px;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

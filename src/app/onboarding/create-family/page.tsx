@@ -153,18 +153,19 @@ export default function OnboardingCreateFamilyPage() {
 
         {/* Name suggestions */}
         {suggestions.length > 0 && (
-          <div className="flex flex-wrap gap-2 justify-center mb-6">
+          <div className="flex flex-wrap gap-2 justify-center mb-6" role="group" aria-label="Suggested family names">
             {suggestions.slice(0, 3).map((suggestion) => (
               <button
                 key={suggestion}
                 type="button"
                 onClick={() => setFamilyName(suggestion)}
-                className="px-4 py-2 rounded-lg text-sm transition-colors"
+                className="px-4 py-3 rounded-lg text-base transition-colors min-h-[48px]"
                 style={{ 
                   backgroundColor: '#1A1A1E', 
                   border: '1px solid rgba(255, 255, 255, 0.06)',
                   color: '#E8E8EC'
                 }}
+                aria-label={`Use suggested name: ${suggestion}`}
               >
                 {suggestion}
               </button>
@@ -217,6 +218,8 @@ export default function OnboardingCreateFamilyPage() {
             type="submit"
             disabled={!isValid || loading}
             className="w-full font-medium rounded-lg transition-all duration-100 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-0"
+            aria-label={loading ? "Creating family..." : "Continue to invite family members"}
+            aria-disabled={!isValid || loading}
             style={{ 
               height: "52px", 
               fontSize: "16px",
@@ -225,11 +228,14 @@ export default function OnboardingCreateFamilyPage() {
             }}
           >
             {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+                Creating...
+              </>
             ) : (
               <>
                 Continue
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-5 h-5" aria-hidden="true" />
               </>
             )}
           </button>

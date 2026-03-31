@@ -36,27 +36,29 @@ export default function OnboardingPage() {
     <div 
       className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
       style={{ backgroundColor: '#0D0D0F' }}
+      aria-label="Welcome to FamilyTV"
     >
       {/* Back to home link */}
       <Link
         href="/"
         className="absolute top-4 left-4 flex items-center gap-2 transition-colors"
-        style={{ color: '#A8A8B0', minWidth: "44px", minHeight: "44px" }}
+        style={{ color: '#A8A8B0', minWidth: "48px", minHeight: "48px" }}
+        aria-label="Go back to home"
       >
         <ArrowRight className="w-5 h-5 rotate-180" />
-        <span className="sr-only sm:not-sr-only sm:text-sm">Back</span>
+        <span className="sr-only sm:not-sr-only sm:text-base">Back</span>
       </Link>
 
       <div className="w-full max-w-md mx-auto text-center">
         {step === "welcome" ? (
           <>
             {/* Logo — TV icon */}
-            <div className="flex items-center justify-center gap-2 mb-8">
+            <div className="flex items-center justify-center gap-2 mb-8" aria-hidden="true">
               <div 
                 className="w-12 h-12 rounded-xl flex items-center justify-center"
                 style={{ backgroundColor: '#C41E3A' }}
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FDF8F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FDF8F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <rect x="2" y="7" width="20" height="15" rx="2" ry="2"/>
                   <polyline points="17 2 12 7 7 2"/>
                 </svg>
@@ -64,8 +66,8 @@ export default function OnboardingPage() {
             </div>
 
             <p 
-              className="font-heading text-sm tracking-[0.2em] uppercase mb-4"
-              style={{ color: '#A8A8B0' }}
+              className="font-heading text-base tracking-[0.2em] uppercase mb-4"
+              style={{ color: '#C8C8CC' }}
             >
               Welcome to
             </p>
@@ -79,7 +81,7 @@ export default function OnboardingPage() {
             
             <p 
               className="text-base mb-10 leading-relaxed max-w-sm mx-auto"
-              style={{ color: '#A8A8B0' }}
+              style={{ color: '#C8C8CC' }}
             >
               Your private family channel. Share photos, videos, and live moments only with the people you invite.
             </p>
@@ -87,6 +89,7 @@ export default function OnboardingPage() {
             <button
               onClick={() => router.push("/sign-in")}
               className="w-full font-medium rounded-lg transition-all duration-100 active:scale-[0.98] border-0"
+              aria-label="Get started with FamilyTV"
               style={{ 
                 height: "52px", 
                 fontSize: "16px",
@@ -95,18 +98,19 @@ export default function OnboardingPage() {
               }}
             >
               Get started
-              <ArrowRight className="inline-block w-5 h-5 ml-2" />
+              <ArrowRight className="inline-block w-5 h-5 ml-2" aria-hidden="true" />
             </button>
 
             <p 
-              className="text-center text-sm mt-6"
-              style={{ color: '#A8A8B0' }}
+              className="text-center text-base mt-6"
+              style={{ color: '#C8C8CC' }}
             >
               New to FamilyTV?{" "}
               <Link 
                 href="/sign-up" 
                 className="font-medium hover:underline"
                 style={{ color: '#D4AF37' }}
+                aria-label="Create a new FamilyTV account"
               >
                 Create an account
               </Link>
@@ -114,7 +118,7 @@ export default function OnboardingPage() {
           </>
         ) : (
           // Redirecting state - should not happen since we redirect in useEffect
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center" aria-live="polite">
             <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#A8A8B0' }} />
           </div>
         )}
