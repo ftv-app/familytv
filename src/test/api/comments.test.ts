@@ -213,6 +213,41 @@ describe("/api/comments", () => {
       const json = await res.json();
       expect(json.comment).toBeDefined();
     });
+
+    it("uses email address as author name when firstName is missing", async () => {
+      const comment = createMockComment({ postId: "post_123", authorId: "user_123" });
+      
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockCurrentUser.mockResolvedValue({ 
+        firstName: null, 
+        emailAddresses: [{ emailAddress: "user@example.com" }] 
+      } as any);
+      
+      mockPostsFindFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      
+      mockMembershipsFindFirst.mockResolvedValue({
+        id: "membership_123",
+        familyId: "family_123",
+        userId: "user_123",
+      } as any);
+      
+      mockCommentsInsert.mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([comment]),
+        }),
+      } as any);
+      
+      const req = new NextRequest("http://localhost/api/comments", {
+        method: "POST",
+        body: JSON.stringify({ postId: "post_123", content: "Hello" }),
+      });
+      const res = await POST(req);
+      
+      expect(res.status).toBe(201);
+    });
   });
 
   describe("DELETE", () => {

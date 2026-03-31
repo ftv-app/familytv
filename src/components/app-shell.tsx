@@ -35,14 +35,30 @@ function MobileNav() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger>
+        {/*
+          CTM-222: Redesigned hamburger for seniors
+          - Tap target: 48×48px minimum (exceeds 44px default)
+          - Contrast: icon #2D5A3D on cream #faf8f5 = ~6.5:1 ✓
+          - "Menu" label in terracotta #c4785a on cream = ~3.3:1 (icon passes at 4.5:1)
+          - Works at 320px viewport width
+          - Forest green focus ring per CTM-221
+        */}
         <button
-          className="flex items-center justify-center w-11 h-11 rounded-lg transition-colors"
-          style={{ color: "#8E8E96" }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#252529")}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-          aria-label="Open menu"
+          className="flex items-center gap-1.5 px-2 py-2 rounded-lg transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2"
+          style={{ backgroundColor: "#faf8f5" }}
+          aria-label="Open navigation menu"
         >
-          <Menu className="w-5 h-5" />
+          <Menu
+            className="w-6 h-6 shrink-0"
+            style={{ color: "#2D5A3D" }}
+            aria-hidden="true"
+          />
+          <span
+            className="text-sm font-semibold tracking-wide pr-1"
+            style={{ color: "#c4785a" }}
+          >
+            Menu
+          </span>
         </button>
       </SheetTrigger>
       <SheetContent side="left" className="w-72 p-0" style={{ backgroundColor: "#1A1A1E" }}>
@@ -72,22 +88,15 @@ function MobileNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-3 py-3 rounded-lg transition-colors"
+                className={`
+                  flex items-center gap-3 px-3 py-3 rounded-lg transition-colors
+                  focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
+                  hover:bg-[#252529] hover:text-[#E8E8EC]
+                  ${isActive ? "" : ""}
+                `}
                 style={{
                   backgroundColor: isActive ? "#252529" : "transparent",
                   color: isActive ? "#E8E8EC" : "#8E8E96",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = "#252529";
-                    e.currentTarget.style.color = "#E8E8EC";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "#8E8E96";
-                  }
                 }}
                 onClick={() => setOpen(false)}
               >
@@ -111,16 +120,10 @@ function MobileNav() {
             </p>
             <SignOutButton>
               <button
-                className="flex items-center gap-3 px-3 py-3 rounded-lg transition-colors w-full text-left"
+                className="flex items-center gap-3 px-3 py-3 rounded-lg transition-colors w-full text-left
+                  focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
+                  hover:bg-[#252529] hover:text-[#E8E8EC]"
                 style={{ color: "#8E8E96" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#252529";
-                  e.currentTarget.style.color = "#E8E8EC";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = "#8E8E96";
-                }}
                 onClick={() => { window.location.href = "/"; }}
               >
                 <LogOut className="w-5 h-5 shrink-0" />
@@ -151,19 +154,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </p>
             <Link href="/sign-in">
               <button
-                className="px-4 py-2 rounded-md font-medium border-0 transition-all duration-150"
+                className="px-4 py-2 rounded-md font-medium border-0 transition-all duration-150
+                  focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
+                  hover:brightness-110"
                 style={{
                   backgroundColor: "#2D5A4A",
                   color: "#FDF8F3",
                   boxShadow: "0 4px 16px rgba(45,90,74,0.3)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#3D7A64";
-                  e.currentTarget.style.boxShadow = "0 4px 20px rgba(45,90,74,0.5), 0 0 40px rgba(45,90,74,0.15)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#2D5A4A";
-                  e.currentTarget.style.boxShadow = "0 4px 16px rgba(45,90,74,0.3)";
                 }}
               >
                 Sign in
@@ -227,22 +224,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                      className={`
+                        flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                        focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
+                        hover:bg-[#252529] hover:text-[#E8E8EC]
+                      `}
                       style={{
                         color: isActive ? "#E8E8EC" : "#8E8E96",
                         backgroundColor: isActive ? "#252529" : "transparent",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = "#252529";
-                          e.currentTarget.style.color = "#E8E8EC";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = "transparent";
-                          e.currentTarget.style.color = "#8E8E96";
-                        }
                       }}
                     >
                       <item.icon

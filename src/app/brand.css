@@ -48,6 +48,9 @@
   --color-destructive: oklch(50% 0.2 25);    /* warm red */
   --color-destructive-foreground: oklch(98% 0.01 25);
 
+  /* Focus ring: Forest green #2D5A3D - CTM-221 */
+  --color-ring: #2D5A3D;
+
   /* ---- Typography ---- */
   /* Font families - see globals.css for the font imports */
 
@@ -92,10 +95,12 @@ body {
   color: #1e1a17;
 }
 
-/* Focus visible - Forest green per design brief (P1 fix) */
+/* Focus visible - Forest green #2D5A3D, 2px solid, 2px offset */
+/* CTM-221: WCAG 2.1 AA focus ring for all interactive elements */
 *:focus-visible {
-  outline: 2px solid #2D5A4A;
+  outline: 2px solid #2D5A3D;
   outline-offset: 2px;
+  border-radius: calc(var(--radius) - 2px);
 }
 
 /* No generic blue links */

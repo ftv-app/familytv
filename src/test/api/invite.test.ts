@@ -359,5 +359,88 @@ describe("/api/invite", () => {
       const json = await res.json();
       expect(json.family.name).toBe("The Smiths");
     });
+
+    it("returns 400 when invite already used or revoked (PATCH)", async () => {
+      const family = createMockFamily({ id: "fam_123", name: "The Smiths" });
+      const invite = createMockInvite({ 
+        familyId: "fam_123", 
+        status: "accepted", // not pending
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        id: "invite_123",
+      });
+
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockInvitesFindFirst.mockResolvedValue({
+        ...invite,
+        family,
+      } as any);
+
+      const req = new NextRequest("http://localhost/api/invite", {
+        method: "PATCH",
+        body: JSON.stringify({ inviteId: "invite_123" }),
+      });
+      const res = await PATCH(req);
+      
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toBe("This invite has already been used or revoked");
+    });
+
+    it("returns 400 when invite is expired (PATCH)", async () => {
+      const family = createMockFamily({ id: "fam_123", name: "The Smiths" });
+      const invite = createMockInvite({ 
+        familyId: "fam_123", 
+        status: "pending",
+        expiresAt: new Date(Date.now() - 1000), // expired
+        id: "invite_123",
+      });
+
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockInvitesFindFirst.mockResolvedValue({
+        ...invite,
+        family,
+      } as any);
+
+      const req = new NextRequest("http://localhost/api/invite", {
+        method: "PATCH",
+        body: JSON.stringify({ inviteId: "invite_123" }),
+      });
+      const res = await PATCH(req);
+      
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toBe("This invite has expired");
+    });
+
+    it("returns 400 when user is already a member of the family (PATCH)", async () => {
+      const family = createMockFamily({ id: "fam_123", name: "The Smiths" });
+      const invite = createMockInvite({ 
+        familyId: "fam_123", 
+        status: "pending",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        id: "invite_123",
+      });
+      const existingMembership = createMockFamilyMembership({
+        familyId: "fam_123",
+        userId: "user_123",
+      });
+
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockInvitesFindFirst.mockResolvedValue({
+        ...invite,
+        family,
+      } as any);
+      mockMembershipsFindFirst.mockResolvedValue(existingMembership as any);
+
+      const req = new NextRequest("http://localhost/api/invite", {
+        method: "PATCH",
+        body: JSON.stringify({ inviteId: "invite_123" }),
+      });
+      const res = await PATCH(req);
+      
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toBe("You are already a member of this family");
+    });
   });
 });
