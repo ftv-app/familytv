@@ -59,13 +59,13 @@ test.describe("Landing Page Carousel", () => {
   });
 
   test("should display CTA buttons regardless of carousel position", async ({ page }) => {
-    // Start Family CTA should always be visible
-    const startFamilyBtn = page.getByRole("link", { name: /start your family/i });
-    await expect(startFamilyBtn).toBeVisible();
+    // Start free CTA should always be visible
+    const startFreeBtn = page.getByRole("link", { name: /Start free/i });
+    await expect(startFreeBtn).toBeVisible();
 
-    // Already have account link should always be visible
-    const alreadyHaveAccount = page.getByRole("link", { name: /already have an account/i });
-    await expect(alreadyHaveAccount).toBeVisible();
+    // Sign in link should always be visible
+    const signInBtn = page.getByRole("link", { name: /sign in/i }).first();
+    await expect(signInBtn).toBeVisible();
   });
 
   test("should auto-advance carousel if autoplay is enabled", async ({ page }) => {
@@ -80,7 +80,7 @@ test.describe("Landing Page Carousel", () => {
       await expect(page).toHaveURL(/\/$/);
 
       // CTA buttons should still be accessible
-      await expect(page.getByRole("link", { name: /start your family/i })).toBeVisible();
+      await expect(page.getByRole("link", { name: /Start free/i })).toBeVisible();
     } else {
       // Static hero — verify it's still rendered
       await expect(page.locator("h1")).toBeVisible();
@@ -100,7 +100,7 @@ test.describe("Landing Page - Mobile Responsive", () => {
     expect(heroVisible).toBeTruthy();
 
     // CTA buttons should be present (may be stacked)
-    await expect(page.getByRole("link", { name: /start your family/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Start free/i })).toBeVisible();
   });
 
   test("should have mobile-friendly navigation", async ({ page }) => {
@@ -110,7 +110,7 @@ test.describe("Landing Page - Mobile Responsive", () => {
     const hasMenuToggle = await page.locator("button[aria-label*='menu' i]").or(page.locator('[class*="menu"]')).isVisible().catch(() => false);
 
     // At minimum, sign in link should be accessible
-    const signInLink = page.getByRole("link", { name: /sign in/i });
+    const signInLink = page.getByRole("link", { name: /sign in/i }).first();
     if (hasMenuToggle) {
       await page.locator("button[aria-label*='menu' i]").click();
       await page.waitForTimeout(300);
