@@ -29,10 +29,17 @@ interface Family {
   memberCount: number;
 }
 
+export interface DashboardStats {
+  members: number;
+  postsThisWeek: number;
+  upcomingEvents: number;
+}
+
 interface DashboardClientProps {
   firstName: string;
   email: string;
   families: Family[];
+  stats?: DashboardStats;
 }
 
 function StatCard({
@@ -100,6 +107,7 @@ export function DashboardClient({
   firstName,
   email,
   families,
+  stats,
 }: DashboardClientProps) {
   const [selectedFamilyId, setSelectedFamilyId] = useState(
     families.length > 0 ? families[0].id : null
@@ -107,11 +115,11 @@ export function DashboardClient({
   const selectedFamily = families.find((f) => f.id === selectedFamilyId) ?? null;
   const hasMultipleFamilies = families.length > 1;
 
-  // Placeholder stats — wire up to real API when DB is ready
-  const stats = {
+  // Stats from server (real DB data)
+  const displayStats = stats ?? {
     members: selectedFamily?.memberCount ?? 0,
-    postsThisWeek: 3,
-    upcomingEvents: 1,
+    postsThisWeek: 0,
+    upcomingEvents: 0,
   };
 
   return (
@@ -173,19 +181,19 @@ export function DashboardClient({
         <StatCard
           icon={Users}
           label="Family members"
-          value={stats.members}
+          value={displayStats.members}
           sublabel="Active in your circle"
         />
         <StatCard
           icon={Image}
           label="Posts this week"
-          value={stats.postsThisWeek}
+          value={displayStats.postsThisWeek}
           sublabel="Shared moments"
         />
         <StatCard
           icon={Calendar}
           label="Upcoming events"
-          value={stats.upcomingEvents}
+          value={displayStats.upcomingEvents}
           sublabel="On the family calendar"
         />
       </div>

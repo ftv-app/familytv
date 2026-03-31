@@ -1,18 +1,18 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { db, families, familyMemberships, posts, calendarEvents } from "@/db";
+import { eq, desc, count } from "drizzle-orm";
 import { DashboardClient } from "./dashboard-client";
+import type { DashboardStats } from "./dashboard-client";
 
 export default async function DashboardPage() {
-  // auth() returns { userId } — null if no session, throws on Clerk config errors
   let userId: string | null = null;
   try {
     const authResult = await auth();
     userId = authResult.userId ?? null;
   } catch {
-    // Clerk threw (misconfigured key, network error, etc.) — redirect to sign-in
     redirect("/sign-in");
-    return; // never reached but satisfies TypeScript
+    return;
   }
 
   if (!userId) {
@@ -23,17 +23,63 @@ export default async function DashboardPage() {
   const firstName = user?.firstName ?? "there";
   const email = user?.primaryEmailAddress?.emailAddress ?? "";
 
-  // Use placeholder families for now (API not ready)
-  const families = [
-    { id: "fam_1", name: "The Smiths", memberCount: 4 },
-    { id: "fam_2", name: "The Conways", memberCount: 6 },
-  ];
+  // Fetch real families from DB
+  const memberships = await db.query.familyMemberships.findMany({
+    where: eq(familyMemberships.userId, userId),
+    with: { family: true },
+    orderBy: [desc(familyMemberships.joinedAt)],
+  });
+
+  const familiesData = await Promise.all(
+    memberships.map(async (m) => {
+      const memberResult = await db
+        .select({ cnt: count() })
+        .from(familyMemberships)
+        .where(eq(familyMemberships.familyId, m.familyId));
+
+      const postResult = await db
+        .select({ cnt: count() })
+        .from(posts)
+        .where(eq(posts.familyId, m.familyId));
+
+      return {
+        id: m.family.id,
+        name: m.family.name,
+        memberCount: memberResult[0]?.cnt ?? 0,
+        postCount: postResult[0]?.cnt ?? 0,
+      };
+    })
+  );
+
+  // Compute stats for the primary (first) family
+  let stats: DashboardStats = { members: 0, postsThisWeek: 0, upcomingEvents: 0 };
+  if (familiesData.length > 0) {
+    const primaryFamily = familiesData[0];
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const postsResult = await db
+      .select({ cnt: count() })
+      .from(posts)
+      .where(eq(posts.familyId, primaryFamily.id));
+
+    const eventsResult = await db
+      .select({ cnt: count() })
+      .from(calendarEvents)
+      .where(eq(calendarEvents.familyId, primaryFamily.id));
+
+    stats = {
+      members: primaryFamily.memberCount,
+      postsThisWeek: postsResult[0]?.cnt ?? 0,
+      upcomingEvents: eventsResult[0]?.cnt ?? 0,
+    };
+  }
 
   return (
     <DashboardClient
       firstName={firstName}
       email={email}
-      families={families}
+      families={familiesData}
+      stats={stats}
     />
   );
 }
