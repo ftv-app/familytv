@@ -145,7 +145,7 @@ export async function GET(req: NextRequest) {
       }
       return acc;
     }, {} as Record<string, { authorId: string; lastPostAt: Date }>)
-  );
+  ) as { authorId: string; lastPostAt: Date }[];
 
   const lastPostMap = new Map(lastPostDates.map(r => [r.authorId, r.lastPostAt]));
 
