@@ -15,8 +15,8 @@ export default async function ProfilePage() {
   const email = user?.emailAddresses?.[0]?.emailAddress || "No email";
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="font-heading text-3xl font-semibold mb-6 text-primary">My Profile</h1>
+    <div className="container max-w-2xl py-6 sm:py-8 px-4">
+      <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-primary mb-6">My Profile</h1>
       <Card>
         <CardHeader>
           <CardTitle>Profile Information</CardTitle>

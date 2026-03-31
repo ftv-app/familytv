@@ -48,12 +48,12 @@ export default function InvitePage() {
 
   if (success) {
     return (
-      <div className="max-w-lg mx-auto py-12">
+      <div className="max-w-lg mx-auto py-8 sm:py-12 px-4">
         <Card>
           <CardContent className="pt-6 text-center space-y-4">
             <div className="text-4xl">✉️</div>
             <div>
-              <h2 className="font-heading text-xl font-semibold text-foreground">
+              <h2 className="font-heading text-xl sm:text-2xl font-semibold text-foreground">
                 Invite sent!
               </h2>
               <p className="text-muted-foreground mt-1 text-sm">
@@ -93,7 +93,7 @@ export default function InvitePage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto py-12">
+    <div className="max-w-lg mx-auto py-8 sm:py-12 px-4">
       <div className="mb-6">
         <Link
           href={`/app/family/${familyId}`}
@@ -104,7 +104,7 @@ export default function InvitePage() {
       </div>
 
       <div className="text-center mb-8">
-        <h1 className="font-heading text-3xl font-semibold text-foreground mb-2">
+        <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-foreground mb-2">
           Invite family members
         </h1>
         <p className="text-muted-foreground">

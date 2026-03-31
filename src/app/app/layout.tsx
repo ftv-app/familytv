@@ -29,11 +29,11 @@ function MobileNav() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger className="md:hidden">
         <button
-          className="flex items-center justify-center w-11 h-11 rounded-lg hover:bg-muted transition-colors"
+          className="flex items-center justify-center w-12 h-12 rounded-lg hover:bg-muted transition-colors focus-visible:outline-2 focus-visible:outline focus-visible:outline-[#2D5A4A] focus-visible:offset-2"
           aria-label="Open menu"
           onClick={() => setOpen(true)}
         >
-          <Menu className="w-5 h-5 text-foreground" />
+          <Menu className="w-6 h-6 text-foreground" />
         </button>
       </SheetTrigger>
       <SheetContent side="left" className="w-72 p-0">
@@ -52,7 +52,7 @@ function MobileNav() {
         <nav className="p-3 space-y-1">
           <Link
             href="/app"
-            className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors focus-visible:outline-2 focus-visible:outline focus-visible:outline-[#2D5A4A] focus-visible:offset-2"
             onClick={() => setOpen(false)}
           >
             <Home className="w-5 h-5 text-muted-foreground" />
@@ -60,7 +60,7 @@ function MobileNav() {
           </Link>
           <Link
             href="/app/create-family"
-            className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors focus-visible:outline-2 focus-visible:outline focus-visible:outline-[#2D5A4A] focus-visible:offset-2"
             onClick={() => setOpen(false)}
           >
             <Plus className="w-5 h-5 text-muted-foreground" />
@@ -72,7 +72,7 @@ function MobileNav() {
             </p>
             <SignOutButton>
               <button
-                className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors w-full text-left"
+                className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors w-full text-left focus-visible:outline-2 focus-visible:outline focus-visible:outline-[#2D5A4A] focus-visible:offset-2"
                 onClick={() => { window.location.href = "/"; }}
               >
                 <LogOut className="w-5 h-5 text-muted-foreground" />
@@ -91,7 +91,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <Show
       when="signed-in"
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
           <div className="text-center space-y-4">
             <p className="text-muted-foreground">
               You need to sign in to access your family space.

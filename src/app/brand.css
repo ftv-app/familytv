@@ -1,372 +1,109 @@
-/* FamilyTV Brand Design Tokens - Cinema/Broadcast Language */
-/* FamilyTV is now "a private family TV station" */
+# FamilyTV Brand Design Tokens
+# Override shadcn/ui defaults with warm, family-appropriate palette
 
 /* =========================================
-   Cinema Black Palette - CSS Variables
-   ========================================= */
-
-:root {
-  /* ---- Color Palette ---- */
-  /* Background */
-  --cinema-black: #0D0D0F;
-  --theater-charcoal: #1A1A1E;
-  --shadow-gray: #252529;
-  --slate: #2E2E34;
-  
-  /* Borders */
-  --ghost-border: rgba(255, 255, 255, 0.06);
-  
-  /* Accents */
-  --velvet-red: #C41E3A;
-  --broadcast-gold: #D4AF37;
-  
-  /* Text */
-  --silver-white: #E8E8EC;
-  --muted-silver: #A8A8B0;
-  --dim: #5A5A62;
-  
-  /* Status */
-  --green-signal: #2ECC71;
-  --amber: #F39C12;
-  --alert-red: #E74C3C;
-  
-  /* Warmth Palette */
-  --cream: #FDF8F3;
-  --terracotta-warm: #C4785A;
-  --forest: #2D5A4A;
-  --forest-lighter: #3D7A64;
-  --forest-glow: rgba(45, 90, 74, 0.35);
-}
-
-/* =========================================
-   FamilyTV Design Tokens (for Tailwind/shadcn)
+   FamilyTV Design Tokens
+   These override shadcn/ui CSS variables
    ========================================= */
 
 @theme inline {
   /* ---- Radii ---- */
-  --radius: 0.5rem;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius: 0.5rem; /* soft but not bubbly */
 
-  /* ---- Colors ---- */
-  /* Primary: Forest green (CTA, action buttons) */
-  --color-primary: #2D5A4A;
-  --color-primary-foreground: #FDF8F3;
+  /* ---- Colors: Warm earth palette ---- */
+  /* Primary: warm terracotta/amber */
+  --color-primary: oklch(55% 0.12 50);        /* #c4785a - terracotta */
+  --color-primary-foreground: oklch(98% 0.01 50); /* off-white text on primary */
 
-  /* Secondary: Theater Charcoal */
-  --color-secondary: #1A1A1E;
-  --color-secondary-foreground: #E8E8EC;
+  /* Secondary: muted sage */
+  --color-secondary: oklch(65% 0.06 140);     /* #7a9a7a - sage green */
+  --color-secondary-foreground: oklch(98% 0.01 140);
 
-  /* Accent: Broadcast Gold */
-  --color-accent: #D4AF37;
-  --color-accent-foreground: #0D0D0F;
+  /* Accent: dusty gold */
+  --color-accent: oklch(70% 0.1 80);          /* #c49a3a - warm gold */
+  --color-accent-foreground: oklch(20% 0.05 80);
 
-  /* Muted: Cinema Black surface */
-  --color-muted: #1A1A1E;
-  --color-muted-foreground: #A8A8B0;
+  /* Muted: warm gray (not cold) */
+  --color-muted: oklch(90% 0.01 50);         /* #f0ede8 - warm off-white */
+  --color-muted-foreground: oklch(45% 0.02 50); /* warm medium gray */
 
-  /* Background: Cinema Black */
-  --color-background: #0D0D0F;
-  --color-foreground: #E8E8EC;
+  /* Background: warm cream (NOT pure white) */
+  --color-background: oklch(97% 0.005 50);   /* #faf8f5 - warm cream */
+  --color-foreground: oklch(18% 0.02 50);   /* #1e1a17 - warm soft black */
 
   /* Card */
-  --color-card: #1A1A1E;
-  --color-card-foreground: #E8E8EC;
+  --color-card: oklch(98% 0.005 50);         /* #fdfcfb */
+  --color-card-foreground: oklch(18% 0.02 50);
 
   /* Popover */
-  --color-popover: #1A1A1E;
-  --color-popover-foreground: #E8E8EC;
+  --color-popover: oklch(98% 0.005 50);
+  --color-popover-foreground: oklch(18% 0.02 50);
 
-  /* Borders */
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-input: rgba(255, 255, 255, 0.06);
-  --color-ring: #2D5A4A;
+  /* Borders: warm gray (not cold gray) */
+  --color-border: oklch(85% 0.01 50);        /* #d8d3cc - warm border */
+  --color-input: oklch(85% 0.01 50);
+  --color-ring: oklch(55% 0.12 50);          /* focus ring matches primary */
 
   /* Destructive */
-  --color-destructive: #E74C3C;
-  --color-destructive-foreground: #FDF8F3;
-
-  /* Velvet Red - LIVE indicators, play buttons only */
-  --color-live: #C41E3A;
-  
-  /* Broadcast Gold - names and callsigns */
-  --color-gold: #D4AF37;
-
-  /* Green Signal - online indicators */
-  --color-success: #2ECC71;
-
-  /* ---- Cinema Black Custom Colors ---- */
-  /* These map directly to the Cinema Black palette for easy utility class usage */
-  --color-cinema-black: #0D0D0F;
-  --color-theater-charcoal: #1A1A1E;
-  --color-shadow-gray: #252529;
-  --color-slate: #2E2E34;
-  --color-ghost-border: rgba(255, 255, 255, 0.06);
-  --color-velvet-red: #C41E3A;
-  --color-broadcast-gold: #D4AF37;
-  --color-silver-white: #E8E8EC;
-  --color-muted-silver: #A8A8B0;
-  --color-dim: #5A5A62;
-  --color-green-signal: #2ECC71;
-  --color-amber: #F39C12;
-  --color-alert-red: #E74C3C;
-  --color-cream: #FDF8F3;
-  --color-terracotta-warm: #C4785A;
-  --color-forest: #2D5A4A;
-  --color-forest-lighter: #3D7A64;
-  --color-forest-glow: rgba(45, 90, 74, 0.35);
+  --color-destructive: oklch(50% 0.2 25);    /* warm red */
+  --color-destructive-foreground: oklch(98% 0.01 25);
 
   /* ---- Typography ---- */
-  --font-heading: 'Oswald', 'Arial Narrow', sans-serif;
-  --font-sans: 'Source Sans 3', 'Source Sans Pro', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* Font families - see globals.css for the font imports */
 
   /* ---- Spacing/sizing ---- */
-  --target-min: 48px;
+  /* Touch targets: minimum 44px for mobile accessibility */
+  --target-min: 44px;
 }
 
 /* =========================================
    FamilyTV Brand Styles
    ========================================= */
 
-/* Cinema Black background */
+/* Warm background for entire app */
 body {
-  background-color: #0D0D0F;
-  color: #E8E8EC;
-  font-family: var(--font-sans), system-ui, sans-serif;
+  background-color: #faf8f5;
+  color: #1e1a17;
+  font-family: var(--font-body), system-ui, sans-serif;
 }
 
-/* Film grain overlay - fixed, does not scroll */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  opacity: 0.04;
-  pointer-events: none;
-  z-index: 9999;
-  mix-blend-mode: overlay;
-}
-
-/* Custom scrollbar (cinema dark tones) */
+/* Custom scrollbar (warm tones) */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0D0D0F;
+  background: #f0ede8;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3A3A3E;
+  background: #c4b8ad;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4A4A4E;
+  background: #a89a8c;
 }
 
 /* Selection color */
 ::selection {
-  background-color: rgba(45, 90, 74, 0.4);
-  color: #FDF8F3;
+  background-color: oklch(70% 0.1 80 / 0.3);
+  color: #1e1a17;
 }
 
-/* Focus visible - Forest green ring */
+/* Focus visible - Forest green per design brief (P1 fix) */
 *:focus-visible {
   outline: 2px solid #2D5A4A;
   outline-offset: 2px;
 }
 
-/* Links - muted silver by default */
+/* No generic blue links */
 a {
-  color: #A8A8B0;
+  color: oklch(55% 0.12 50);
   text-decoration: none;
-  transition: color 200ms ease;
 }
 
 a:hover {
-  color: #E8E8EC;
   text-decoration: underline;
-}
-
-/* =========================================
-   Glow Effects
-   ========================================= */
-
-/* Velvet Red glow - play button hover, live dot */
-.glow-red {
-  box-shadow: 0 0 20px rgba(196, 30, 58, 0.5), 0 0 40px rgba(196, 30, 58, 0.2);
-}
-
-/* Broadcast Gold glow - channel callsign, family name */
-.glow-gold {
-  text-shadow: 0 0 30px rgba(212, 175, 55, 0.6), 0 0 60px rgba(212, 175, 55, 0.3);
-}
-
-/* Forest glow - primary CTA buttons */
-.glow-forest {
-  box-shadow: 0 4px 20px rgba(45, 90, 74, 0.4), 0 0 40px rgba(45, 90, 74, 0.15);
-}
-
-/* =========================================
-   LIVE Indicator Animation
-   ========================================= */
-
-.live-dot {
-  animation: live-pulse 2s ease-in-out infinite;
-}
-
-@keyframes live-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.85); }
-}
-
-/* =========================================
-   CRT Scan Line Effect (TV Guide only)
-   ========================================= */
-
-.tv-guide-screen::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.08) 2px,
-    rgba(0, 0, 0, 0.08) 4px
-  );
-  pointer-events: none;
-  z-index: 100;
-}
-
-/* =========================================
-   Video Player Vignette
-   ========================================= */
-
-.player-container::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse at center,
-    transparent 55%,
-    rgba(13, 13, 15, 0.5) 100%
-  );
-  pointer-events: none;
-  z-index: 10;
-}
-
-/* =========================================
-   Card Styles
-   ========================================= */
-
-/* Card with subtle ghost border */
-.cinema-card {
-  background: #1A1A1E;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
-}
-
-.cinema-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-}
-
-/* =========================================
-   Button Styles
-   ========================================= */
-
-/* Primary CTA - Forest green */
-.btn-primary {
-  background: #2D5A4A;
-  color: #FDF8F3;
-  border-radius: 6px;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  transition: all 150ms ease-out;
-}
-
-.btn-primary:hover {
-  background: #3D7A64;
-  box-shadow: 0 4px 16px rgba(45, 90, 74, 0.4);
-}
-
-.btn-primary:active {
-  transform: scale(0.98);
-}
-
-/* Secondary - ghost style */
-.btn-secondary {
-  background: transparent;
-  color: #A8A8B0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  transition: all 150ms ease-out;
-}
-
-.btn-secondary:hover {
-  color: #E8E8EC;
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Velvet Red - LIVE/play only */
-.btn-live {
-  background: #C41E3A;
-  color: #FDF8F3;
-  border-radius: 6px;
-  font-family: var(--font-sans);
-  font-weight: 600;
-}
-
-.btn-live:hover {
-  box-shadow: 0 0 20px rgba(196, 30, 58, 0.5);
-}
-
-/* =========================================
-   Typography Helpers
-   ========================================= */
-
-/* Broadcast Gold text */
-.text-gold {
-  color: #D4AF37;
-}
-
-/* Velvet Red text (LIVE indicators) */
-.text-live {
-  color: #C41E3A;
-}
-
-/* Silver White text */
-.text-silver {
-  color: #E8E8EC;
-}
-
-/* Muted Silver text */
-.text-muted-silver {
-  color: #A8A8B0;
-}
-
-/* Oswald headings */
-.heading {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  color: #E8E8EC;
-  letter-spacing: 0;
-}
-
-/* JetBrains Mono for timecodes */
-.timecode {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  color: #A8A8B0;
 }

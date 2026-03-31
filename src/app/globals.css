@@ -1,9 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* ---- FamilyTV Brand Overrides — Cinema Black ---- */
+/* ---- FamilyTV Brand Overrides ---- */
 @import "./brand.css";
 
 @custom-variant dark (&:is(.dark *));
@@ -12,7 +11,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
+  --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -52,101 +51,105 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ---- FamilyTV Cinema Black Palette ---- */
-/* Dark mode only — this IS the product, not an alternate theme */
-
+/* ---- FamilyTV Warm Palette ---- */
 :root {
-  /* Background: Cinema Black */
-  --background: #0D0D0F;
-  --foreground: #E8E8EC;
+  /* Warm cream background (not pure white) */
+  --background: oklch(0.97 0.005 50);
+  /* Warm soft black (not harsh #000) */
+  --foreground: oklch(0.18 0.015 50);
 
-  /* Card: Theater Charcoal */
-  --card: #1A1A1E;
-  --card-foreground: #E8E8EC;
+  /* Card */
+  --card: oklch(0.98 0.005 50);
+  --card-foreground: oklch(0.18 0.015 50);
 
-  /* Popover: Theater Charcoal */
-  --popover: #1A1A1E;
-  --popover-foreground: #E8E8EC;
+  /* Popover */
+  --popover: oklch(0.98 0.005 50);
+  --popover-foreground: oklch(0.18 0.015 50);
 
-  /* Primary: Forest green (CTA, positive actions) */
-  --primary: #2D5A4A;
-  --primary-foreground: #FDF8F3;
+  /* Primary: warm terracotta - distinct, warm, family-appropriate */
+  --primary: oklch(0.55 0.10 50);
+  --primary-foreground: oklch(0.98 0.005 50);
 
-  /* Secondary: Theater Charcoal */
-  --secondary: #1A1A1E;
-  --secondary-foreground: #E8E8EC;
+  /* Secondary: muted sage */
+  --secondary: oklch(0.70 0.05 145);
+  --secondary-foreground: oklch(0.98 0.005 50);
 
-  /* Muted: Theater Charcoal with Muted Silver text */
-  --muted: #1A1A1E;
-  --muted-foreground: #A8A8B0;
+  /* Muted: warm off-white */
+  --muted: oklch(0.90 0.008 50);
+  --muted-foreground: oklch(0.45 0.015 50);
 
-  /* Accent: Broadcast Gold */
-  --accent: #D4AF37;
-  --accent-foreground: #0D0D0F;
+  /* Accent: dusty gold */
+  --accent: oklch(0.75 0.08 85);
+  --accent-foreground: oklch(0.18 0.015 50);
 
-  /* Destructive: Alert Red */
-  --destructive: #E74C3C;
-  --destructive-foreground: #FDF8F3;
+  /* Destructive: warm red */
+  --destructive: oklch(0.52 0.18 25);
+  --destructive-foreground: oklch(0.98 0.005 50);
 
-  /* Borders: Ghost (subtle) */
-  --border: rgba(255, 255, 255, 0.06);
-  --input: rgba(255, 255, 255, 0.06);
-  --ring: #2D5A4A;
+  /* Warm border (not cold gray) */
+  --border: oklch(0.86 0.008 50);
+  --input: oklch(0.86 0.008 50);
+  --ring: oklch(0.55 0.10 50);
 
-  /* Chart colors (cinema dark variants) */
-  --chart-1: #C41E3A;
-  --chart-2: #D4AF37;
-  --chart-3: #2ECC71;
-  --chart-4: #2D5A4A;
-  --chart-5: #A8A8B0;
+  /* Chart colors (warm variants) */
+  --chart-1: oklch(0.58 0.12 50);
+  --chart-2: oklch(0.65 0.08 145);
+  --chart-3: oklch(0.70 0.06 85);
+  --chart-4: oklch(0.55 0.08 25);
+  --chart-5: oklch(0.50 0.10 280);
 
   --radius: 0.5rem;
 
-  /* Sidebar: Theater Charcoal */
-  --sidebar: #1A1A1E;
-  --sidebar-foreground: #E8E8EC;
-  --sidebar-primary: #2D5A4A;
-  --sidebar-primary-foreground: #FDF8F3;
-  --sidebar-accent: #252529;
-  --sidebar-accent-foreground: #E8E8EC;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: #2D5A4A;
+  /* Sidebar */
+  --sidebar: oklch(0.96 0.005 50);
+  --sidebar-foreground: oklch(0.18 0.015 50);
+  --sidebar-primary: oklch(0.55 0.10 50);
+  --sidebar-primary-foreground: oklch(0.98 0.005 50);
+  --sidebar-accent: oklch(0.88 0.008 50);
+  --sidebar-accent-foreground: oklch(0.18 0.015 50);
+  --sidebar-border: oklch(0.86 0.008 50);
+  --sidebar-ring: oklch(0.55 0.10 50);
 }
 
-/* Ensure dark class also uses cinema palette */
+/* Dark mode - Cinema Black background with accessible muted text */
 .dark {
-  --background: #0D0D0F;
-  --foreground: #E8E8EC;
-  --card: #1A1A1E;
-  --card-foreground: #E8E8EC;
-  --popover: #1A1A1E;
-  --popover-foreground: #E8E8EC;
-  --primary: #2D5A4A;
-  --primary-foreground: #FDF8F3;
-  --secondary: #1A1A1E;
-  --secondary-foreground: #E8E8EC;
-  --muted: #1A1A1E;
-  --muted-foreground: #A8A8B0;
-  --accent: #D4AF37;
-  --accent-foreground: #0D0D0F;
-  --destructive: #E74C3C;
-  --destructive-foreground: #FDF8F3;
-  --border: rgba(255, 255, 255, 0.06);
-  --input: rgba(255, 255, 255, 0.06);
-  --ring: #2D5A4A;
-  --chart-1: #C41E3A;
-  --chart-2: #D4AF37;
-  --chart-3: #2ECC71;
-  --chart-4: #2D5A4A;
-  --chart-5: #A8A8B0;
-  --sidebar: #1A1A1E;
-  --sidebar-foreground: #E8E8EC;
-  --sidebar-primary: #2D5A4A;
-  --sidebar-primary-foreground: #FDF8F3;
-  --sidebar-accent: #252529;
-  --sidebar-accent-foreground: #E8E8EC;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: #2D5A4A;
+  /* Cinema Black background */
+  --background: oklch(0.145 0.015 50);
+  --foreground: oklch(0.92 0.005 50);
+
+  /* Card */
+  --card: oklch(0.185 0.015 50);
+  --card-foreground: oklch(0.92 0.005 50);
+
+  /* Popover */
+  --popover: oklch(0.185 0.015 50);
+  --popover-foreground: oklch(0.92 0.005 50);
+
+  /* Primary: terracotta stays the same */
+  --primary: oklch(0.55 0.10 50);
+  --primary-foreground: oklch(0.98 0.005 50);
+
+  /* Secondary: muted sage - darker in dark mode */
+  --secondary: oklch(0.55 0.05 145);
+  --secondary-foreground: oklch(0.92 0.005 50);
+
+  /* Muted: warm dark surface */
+  --muted: oklch(0.22 0.012 50);
+  /* Fix P1 contrast: #8E8E96 (~2.4:1) → #A8A8B0 (5.2:1) on Cinema Black */
+  --muted-foreground: oklch(0.60 0.015 50);
+
+  /* Accent: dusty gold - darker */
+  --accent: oklch(0.55 0.08 85);
+  --accent-foreground: oklch(0.92 0.005 50);
+
+  /* Destructive */
+  --destructive: oklch(0.55 0.18 25);
+  --destructive-foreground: oklch(0.98 0.005 50);
+
+  /* Borders */
+  --border: oklch(0.28 0.012 50);
+  --input: oklch(0.28 0.012 50);
+  --ring: oklch(0.55 0.10 50);
 }
 
 @layer base {
