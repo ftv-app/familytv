@@ -14,11 +14,14 @@ export default function SignInPage() {
   if (!mounted) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-background px-4" aria-label="Sign in to FamilyTV">
-        <div className="w-full max-w-md">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+          Skip to main content
+        </a>
+        <div id="main-content" className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center" aria-hidden="true">
-                <span className="text-primary-foreground font-heading font-bold text-lg">
+                <span aria-hidden="true" className="text-primary-foreground font-heading font-bold text-lg">
                   F
                 </span>
               </div>
@@ -40,11 +43,15 @@ export default function SignInPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background px-4" aria-label="Sign in to FamilyTV">
-      <div className="w-full max-w-md">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+        Skip to main content
+      </a>
+      <div id="main-content" className="w-full max-w-md" aria-labelledby="auth-heading">
+        <h2 id="auth-heading" className="sr-only">Sign in to FamilyTV</h2>
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center" aria-hidden="true">
-              <span className="text-primary-foreground font-heading font-bold text-lg">
+              <span aria-hidden="true" className="text-primary-foreground font-heading font-bold text-lg">
                 F
               </span>
             </div>
@@ -60,9 +67,7 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <div aria-label="Sign in form">
-          <SignIn fallbackRedirectUrl="/app" />
-        </div>
+        <SignIn fallbackRedirectUrl="/app" />
 
         <p className="text-center text-base text-muted-foreground mt-6 leading-relaxed">
           Share photos, plan events, and stay connected with the people who matter most.
