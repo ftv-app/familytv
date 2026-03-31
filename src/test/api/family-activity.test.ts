@@ -51,6 +51,9 @@ vi.mock("@clerk/nextjs/server", () => ({
 vi.mock("@/db", () => ({
   db: {
     query: {
+      posts: {
+        findMany: (...args: unknown[]) => mockFindMany(...args),
+      },
       familyMemberships: {
         findFirst: (...args: unknown[]) => mockFindFirst(...args),
         findMany: (...args: unknown[]) => mockFindMany(...args),
@@ -72,7 +75,7 @@ import { GET } from "@/app/api/family/activity/route";
 
 describe("/api/family/activity", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   describe("Authentication", () => {
@@ -187,39 +190,43 @@ describe("/api/family/activity", () => {
 
     beforeEach(() => {
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+
+      // Default mockSelect implementation - returns chainable object for db.select().from().where().orderBy().limit()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockSelect as any).mockImplementation(() => ({
+        from: () => ({
+          where: () => ({
+            orderBy: () => ({
+              limit: () => Promise.resolve([]),
+            }),
+          }),
+        }),
+      }));
+
+      // Don't set mockFindMany implementation here - tests that use mockImplementation need a clean slate
+      // Just ensure any unresolved mockReturnValue/resolvedValue is cleared
+      mockFindMany.mockClear();
     });
 
     it("returns activities, quietMembers, and upcomingEvents", async () => {
       mockFindFirst.mockResolvedValue(mockMembership);
 
-      // Mock posts query (from select)
-      const mockSelectFn = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([mockPost]),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockSelect as any).mockImplementation(() => ({
+        from: () => ({
+          where: () => ({
+            orderBy: () => ({
+              limit: () => Promise.resolve([mockPost]),
             }),
           }),
         }),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(mockSelectFn);
+      }));
 
-      // Mock calendarEvents.findMany for upcoming events
       mockFindMany
+        .mockResolvedValueOnce([mockPost]) // posts for activities
         .mockResolvedValueOnce([mockEvent]) // upcoming events
-        .mockResolvedValueOnce([mockMember]); // family members
-
-      // Mock posts max query for quiet members calculation
-      mockSelectFn.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            groupBy: vi.fn().mockResolvedValue([
-              { authorId: "user_123", lastPostAt: new Date() },
-            ]),
-          }),
-        }),
-      });
+        .mockResolvedValueOnce([mockMember]) // family members
+        .mockResolvedValueOnce([{ authorId: "user_123", lastPostAt: new Date(), createdAt: new Date() }]); // posts for lastPostDates
 
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
       const res = await GET(req);
@@ -234,17 +241,16 @@ describe("/api/family/activity", () => {
     it("returns empty arrays when no data exists", async () => {
       mockFindFirst.mockResolvedValue(mockMembership);
 
-      const mockSelectFn = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([]),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockSelect as any).mockImplementation(() => ({
+        from: () => ({
+          where: () => ({
+            orderBy: () => ({
+              limit: () => Promise.resolve([]),
             }),
           }),
         }),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(mockSelectFn);
+      }));
 
       mockFindMany.mockResolvedValue([]);
 
@@ -285,24 +291,26 @@ describe("/api/family/activity", () => {
     it("calculates daysAway correctly for upcoming events", async () => {
       mockFindFirst.mockResolvedValue(mockMembership);
 
-      const mockSelectFn = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([]),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockSelect as any).mockImplementation(() => ({
+        from: () => ({
+          where: () => ({
+            orderBy: () => ({
+              limit: () => Promise.resolve([]),
             }),
           }),
         }),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(mockSelectFn);
+      }));
 
       // Event happening in exactly 7 days
       const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      mockFindMany.mockResolvedValueOnce([
-        { ...mockEvent, startDate: sevenDaysFromNow },
-      ]);
-      mockFindMany.mockResolvedValueOnce([]); // family members
+      let findManyCallCount = 0;
+      mockFindMany.mockImplementation(() => {
+        findManyCallCount++;
+        // Call order: 1=familyMemberships, 2=posts, 3=calendarEvents(upcoming)
+        if (findManyCallCount === 3) return Promise.resolve([{ ...mockEvent, startDate: sevenDaysFromNow }]); // calendarEvents - upcoming events
+        return Promise.resolve([]);
+      });
 
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
       const res = await GET(req);
@@ -315,21 +323,25 @@ describe("/api/family/activity", () => {
     it("marks members as quiet when they have no posts", async () => {
       mockFindFirst.mockResolvedValue(mockMembership);
 
-      const mockSelectFn = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([]),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockSelect as any).mockImplementation(() => ({
+        from: () => ({
+          where: () => ({
+            orderBy: () => ({
+              limit: () => Promise.resolve([]),
             }),
           }),
         }),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(mockSelectFn);
+      }));
 
-      mockFindMany
-        .mockResolvedValueOnce([]) // no upcoming events
-        .mockResolvedValueOnce([mockMember]); // family members with no posts
+      let findManyCallCount = 0;
+      mockFindMany.mockImplementation(() => {
+        findManyCallCount++;
+        // Call order: 1=familyMemberships, 2=posts, 3=calendarEvents
+        if (findManyCallCount === 1) return Promise.resolve([mockMember]); // familyMemberships - family members
+        if (findManyCallCount === 2) return Promise.resolve([]); // posts - no posts
+        return Promise.resolve([]); // calendarEvents - no upcoming events
+      });
 
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
       const res = await GET(req);
@@ -344,33 +356,27 @@ describe("/api/family/activity", () => {
     it("marks members as quiet when last post was 21+ days ago", async () => {
       mockFindFirst.mockResolvedValue(mockMembership);
 
-      const mockSelectFn = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([]),
+      // 25 days ago
+      const oldDate = new Date(Date.now() - 25 * 24 * 60 * 60 * 1000);
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockSelect as any).mockImplementation(() => ({
+        from: () => ({
+          where: () => ({
+            orderBy: () => ({
+              limit: () => Promise.resolve([]),
             }),
           }),
         }),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(mockSelectFn);
+      }));
 
-      // 25 days ago
-      const oldDate = new Date(Date.now() - 25 * 24 * 60 * 60 * 1000);
-      mockFindMany
-        .mockResolvedValueOnce([]) // no upcoming events
-        .mockResolvedValueOnce([{ ...mockMember }]); // family members
-
-      // Return old last post date
-      mockSelectFn.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            groupBy: vi.fn().mockResolvedValue([
-              { authorId: "user_new", lastPostAt: oldDate },
-            ]),
-          }),
-        }),
+      let findManyCallCount = 0;
+      mockFindMany.mockImplementation(() => {
+        findManyCallCount++;
+        // Call order: 1=familyMemberships, 2=posts, 3=calendarEvents
+        if (findManyCallCount === 1) return Promise.resolve([{ ...mockMember }]); // familyMemberships - family members
+        if (findManyCallCount === 2) return Promise.resolve([{ authorId: "user_new", lastPostAt: oldDate, createdAt: oldDate }]); // posts - old post
+        return Promise.resolve([]); // calendarEvents - no upcoming events
       });
 
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
@@ -384,31 +390,24 @@ describe("/api/family/activity", () => {
     it("does not mark active members as quiet", async () => {
       mockFindFirst.mockResolvedValue(mockMembership);
 
-      const mockSelectFn = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([]),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockSelect as any).mockImplementation(() => ({
+        from: () => ({
+          where: () => ({
+            orderBy: () => ({
+              limit: () => Promise.resolve([]),
             }),
           }),
         }),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(mockSelectFn);
+      }));
 
-      mockFindMany
-        .mockResolvedValueOnce([]) // no upcoming events
-        .mockResolvedValueOnce([mockMember]); // family members
-
-      // Recent last post (just now)
-      mockSelectFn.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            groupBy: vi.fn().mockResolvedValue([
-              { authorId: "user_new", lastPostAt: new Date() },
-            ]),
-          }),
-        }),
+      let findManyCallCount = 0;
+      mockFindMany.mockImplementation(() => {
+        findManyCallCount++;
+        // Call order: 1=familyMemberships, 2=posts, 3=calendarEvents
+        if (findManyCallCount === 1) return Promise.resolve([mockMember]); // familyMemberships - family members
+        if (findManyCallCount === 2) return Promise.resolve([{ authorId: "user_new", lastPostAt: new Date(), createdAt: new Date() }]); // posts - recent post
+        return Promise.resolve([]); // calendarEvents - no upcoming events
       });
 
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
@@ -533,17 +532,16 @@ describe("/api/family/activity", () => {
     it("includes event type activities", async () => {
       mockFindFirst.mockResolvedValue(mockMembership);
 
-      const mockSelectFn = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([]),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockSelect as any).mockImplementation(() => ({
+        from: () => ({
+          where: () => ({
+            orderBy: () => ({
+              limit: () => Promise.resolve([]),
             }),
           }),
         }),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(mockSelectFn);
+      }));
 
       const futureEvent = {
         id: "event_1",
@@ -557,9 +555,13 @@ describe("/api/family/activity", () => {
         createdAt: new Date(),
       };
 
-      mockFindMany
-        .mockResolvedValueOnce([futureEvent])
-        .mockResolvedValueOnce([]);
+      let findManyCallCount = 0;
+      mockFindMany.mockImplementation(() => {
+        findManyCallCount++;
+        // Call order: 1=familyMemberships, 2=posts, 3=calendarEvents
+        if (findManyCallCount === 3) return Promise.resolve([futureEvent]); // calendarEvents - upcoming events
+        return Promise.resolve([]);
+      });
 
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
       const res = await GET(req);

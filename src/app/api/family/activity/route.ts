@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db, posts, calendarEvents, familyMemberships } from "@/db";
-import { eq, and, desc, lt, gte, lte, max } from "drizzle-orm";
+import { eq, and, desc, lt, gte, lte } from "drizzle-orm";
 
 // GET /api/family/activity?familyId=xxx&cursor=string&limit=20
 // Returns: { activities[], quietMembers[], upcomingEvents[] }
@@ -132,15 +132,20 @@ export async function GET(req: NextRequest) {
     where: eq(familyMemberships.familyId, familyId),
   });
 
-  // Get last post date for each member
-  const lastPostDates = await db
-    .select({
-      authorId: posts.authorId,
-      lastPostAt: max(posts.createdAt),
-    })
-    .from(posts)
-    .where(eq(posts.familyId, familyId))
-    .groupBy(posts.authorId);
+  // Get last post date for each member using db.query (avoids groupBy chaining issues)
+  const allPosts = await db.query.posts.findMany({
+    where: eq(posts.familyId, familyId),
+  });
+  
+  // Group manually to get max(createdAt) per authorId
+  const lastPostDates = Object.values(
+    allPosts.reduce((acc, post) => {
+      if (!acc[post.authorId] || new Date(post.createdAt) > new Date(acc[post.authorId].lastPostAt)) {
+        acc[post.authorId] = { authorId: post.authorId, lastPostAt: post.createdAt };
+      }
+      return acc;
+    }, {} as Record<string, { authorId: string; lastPostAt: Date }>)
+  );
 
   const lastPostMap = new Map(lastPostDates.map(r => [r.authorId, r.lastPostAt]));
 
