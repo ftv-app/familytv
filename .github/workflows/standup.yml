@@ -1,0 +1,90 @@
+name: Standup
+
+on:
+  schedule:
+    # 9:00 AM UTC daily
+    - cron: "0 9 * * *"
+    # 7:00 PM UTC daily
+    - cron: "0 19 * * *"
+  workflow_dispatch:  # manual trigger
+
+jobs:
+  standup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            memory
+            familytv
+          sparse-checkout-cone-mode: false
+
+      - name: Get today's and yesterday's memory
+        run: |
+          YESTERDAY=$(date -u -d 'yesterday' +'%Y-%m-%d')
+          TODAY=$(date -u +'%Y-%m-%d')
+
+          echo "yesterday_content<<EOF" >> $GITHUB_ENV
+          cat memory/${YESTERDAY}.md 2>/dev/null || echo "(no log for ${YESTERDAY})"
+          echo "EOF" >> $GITHUB_ENV
+
+          echo "today_content<<EOF" >> $GITHUB_ENV
+          cat memory/${TODAY}.md 2>/dev/null || echo "(no log for ${TODAY})"
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Query Linear for sprint status
+        id: linear
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+        run: |
+          if [ -n "$LINEAR_API_KEY" ]; then
+            curl -s -X POST https://api.linear.app/graphql \
+              -H "Authorization: $LINEAR_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{"query":"{ me { name } team { name activeProjects { name } } issues(first: 20, filter: {state: {in: [\"in_progress\",\"todo\"]}}) { nodes { identifier title state { name } } } }"}' \
+              > /tmp/linear-status.json 2>/dev/null || echo "{}" > /tmp/linear-status.json
+          else
+            echo "{}" > /tmp/linear-status.json
+          fi
+
+      - name: Determine standup type
+        id: standup_type
+        run: |
+          HOUR=$(date -u +'%H')
+          if [ "$HOUR" = "09" ]; then
+            echo "type=Morning Standup 🌅" >> $GITHUB_OUTPUT
+          else
+            echo "type=Evening Recap 🌙" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Format and post standup to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          TYPE="${{ steps.standup_type.outputs.type }}"
+          YESTERDAY="${{ env.yesterday_content }}"
+          TODAY="${{ env.today_content }}"
+
+          # Format the standup message
+          MSG="*${TYPE} — $(date -u +'%Y-%m-%d %H:%M UTC')*"
+          MSG+="\n\n"
+
+          if [ "${{ steps.standup_type.outputs.type }}" = "Morning Standup 🌅" ]; then
+            MSG+="📋 *Yesterday:*\n$(echo "$YESTERDAY" | grep -E "^\-\-|^\-\s|^\*|Done|completed|passed|✅" | head -10 || echo 'Check memory file')"
+            MSG+="\n\n📋 *Today:*\n$(echo "$TODAY" | grep -E "^\-\-|^\-\s|^\*|planned|Doing|🚧" | head -10 || echo 'See sprint board')"
+          else
+            MSG+="✅ *Done today:*\n$(echo "$TODAY" | grep -E "Done|completed|passed|✅|deployed" | head -10 || echo 'Logged in memory')"
+            MSG+="\n\n🚧 *Blockers:*\n$(echo "$YESTERDAY $TODAY" | grep -iE "blocker|blocked|stuck|waiting" | head -5 || echo 'None')"
+          fi
+
+          # Post to Telegram
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d "chat_id=${TELEGRAM_CHAT_ID}" \
+              -d "text=${MSG}" \
+              -d "parse_mode=Markdown" \
+              -d "disable_web_page_preview=true"
+          fi
+
+          echo "Posted standup to Telegram"

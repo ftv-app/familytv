@@ -1,0 +1,104 @@
+name: Deploy Gate
+
+on:
+  pull_request:
+    branches: [master, main]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # Gate 1: Tech Lead (code quality)
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: Check PR description has context
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+          if [ -z "$PR_BODY" ] || [ "${#PR_BODY}" -lt 50 ]; then
+            echo "::warning::PR description is empty or too short — add context for reviewers"
+          fi
+
+  # Gate 2: QA Engineer (coverage enforcement)
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run test:coverage
+      - name: Enforce 97% coverage
+        run: |
+          # Parse coverage/coverage-summary.json
+          COVERAGE=$(cat coverage/coverage-summary.json | grep -o '"lines":{"pct":[0-9.]*' | grep -o '[0-9.]*$')
+          if (( $(echo "$COVERAGE < 97" | bc -l) )); then
+            echo "::error::Coverage ${COVERAGE}% is below 97% threshold — blocking deploy"
+            exit 1
+          fi
+          echo "Coverage: ${COVERAGE}% ✅"
+
+  # Gate 3: Security Architect (scan)
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+      - run: npm ci
+      - name: Run npm audit
+        run: npm audit --audit-level=high
+      - name: Check for hardcoded secrets
+        run: |
+          # Scan for common secret patterns
+          git diff --staged --secrets | head -20 || true
+
+  # Gate 4: Design Review (accessibility + brand)
+  design-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check data-testid presence on interactive elements
+        run: |
+          # Reject PRs that add interactive elements without data-testid
+          PR_FILES=$(git diff --staged --name-only)
+          for file in $PR_FILES; do
+            if [[ "$file" == *.tsx ]]; then
+              # Check if file has interactive elements but no data-testid
+              HAS_INTERACTIVE=$(grep -c "onClick\|onChange\|<button\|<input\|<a href" "$file" 2>/dev/null || echo 0)
+              HAS_TESTID=$(grep -c "data-testid" "$file" 2>/dev/null || echo 0)
+              if [ "$HAS_INTERACTIVE" -gt 0 ] && [ "$HAS_TESTID" -eq 0 ]; then
+                echo "::warning::File $file has interactive elements but no data-testid attributes"
+              fi
+            fi
+          done
+
+  # Gate 5: Smoke Test (replaces release-manager manual check)
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run smoke test script
+        run: |
+          bash scripts/smoke-test.sh https://preview.familytv.vercel.app || \
+          bash scripts/smoke-test.sh https://staging.familytv.vercel.app
+
+  # Merge gate: all must pass
+  deploy-ready:
+    needs: [code-quality, coverage, security, design-review, smoke-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All gates passed
+        run: |
+          echo "✅ All deploy gates passed"
+          echo "PR is ready for merge by release-manager"

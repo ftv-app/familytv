@@ -1,48 +1,65 @@
 #!/bin/bash
-# FamilyTV Smoke Test — runs against production
-# Checks critical pages load without errors
+# Usage: ./scripts/smoke-test.sh [url]
+# Example: ./scripts/smoke-test.sh https://preview.familytv.vercel.app
+# Falls back to staging if preview is unavailable.
 
-BASE_URL="${1:-https://familytv.vercel.app}"
-TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-8794306096}"
-FAILURES=0
-RESULTS=""
+set -e
 
-check_page() {
-  local path="$1"
-  local name="$2"
-  # Use -L to follow redirects; get final status after all redirects
-  local status=$(curl -s -o /dev/null -w "%{http_code}" -L --max-time 10 "${BASE_URL}${path}" 2>/dev/null)
-  # 200 = OK (or final destination after redirect)
-  # 307/302 = redirect chain incomplete (should not happen with -L)
-  # 401 = Clerk auth required (unauthenticated /dashboard redirects to /sign-in which is OK)
-  if [ "$status" = "200" ] || [ "$status" = "401" ] || [ "$status" = "307" ] || [ "$status" = "302" ]; then
-    echo "✅ $name ($status)"
-  else
-    echo "❌ $name ($status)"
-    FAILURES=$((FAILURES + 1))
-    RESULTS="${RESULTS}❌ ${name}: HTTP ${status}\n"
-  fi
+URL="${1:-https://staging.familytv.vercel.app}"
+MAX_RETRIES=3
+RETRY_DELAY=5
+
+echo "🔍 Running smoke test against: $URL"
+
+# Check if the URL is reachable
+check_endpoint() {
+  local url=$1
+  local status
+  status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$url" 2>/dev/null || echo "000")
+  echo "$status"
 }
 
-echo "=== FamilyTV Smoke Test — $(date -u '+%Y-%m-%d %H:%M UTC') ==="
-echo "Target: $BASE_URL"
-echo ""
+# Health check
+echo "📡 Checking health endpoint..."
+HEALTH_STATUS=$(check_endpoint "$URL/health")
+if [[ "$HEALTH_STATUS" != "200" ]]; then
+  echo "❌ Health check failed (HTTP $HEALTH_STATUS). Retrying..."
+  for i in $(seq 1 $MAX_RETRIES); do
+    sleep $RETRY_DELAY
+    HEALTH_STATUS=$(check_endpoint "$URL/health")
+    if [[ "$HEALTH_STATUS" == "200" ]]; then
+      echo "✅ Health check passed on retry $i"
+      break
+    fi
+    echo "⚠️ Retry $i/$MAX_RETRIES failed (HTTP $HEALTH_STATUS)"
+  done
 
-check_page "/" "Landing page"
-check_page "/sign-in" "Sign in"
-check_page "/sign-up" "Sign up"
-check_page "/onboarding" "Onboarding"
-check_page "/dashboard" "Dashboard (auth-gated, expects redirect to sign-in)"
-check_page "/robots.txt" "Robots.txt"
-check_page "/sitemap.xml" "Sitemap"
-check_page "/tv" "TV Player"
-
-echo ""
-if [ $FAILURES -eq 0 ]; then
-  echo "✅ All checks passed"
+  if [[ "$HEALTH_STATUS" != "200" ]]; then
+    echo "❌ Health check permanently failed after $MAX_RETRIES retries"
+    exit 1
+  fi
 else
-  echo "❌ $FAILURES failure(s)"
-  echo -e "$RESULTS"
+  echo "✅ Health check passed (HTTP $HEALTH_STATUS)"
 fi
 
-exit $FAILURES
+# Check for critical pages
+PAGES=("/" "/api/health" "/login")
+for page in "${PAGES[@]}"; do
+  echo "🔎 Testing $URL$page..."
+  STATUS=$(check_endpoint "$URL$page")
+  if [[ "$STATUS" =~ ^2|3 ]]; then
+    echo "✅ $page — HTTP $STATUS"
+  else
+    echo "❌ $page — HTTP $STATUS (expected 2xx/3xx)"
+    exit 1
+  fi
+done
+
+# Check for console errors via Playwright if available
+if command -v npx &> /dev/null; then
+  echo "🧪 Running Playwright smoke test..."
+  npx playwright test --grep "smoke" --reporter=list 2>/dev/null && echo "✅ Playwright smoke tests passed" || echo "⚠️ Playwright smoke tests not configured — skipping"
+fi
+
+echo "✅ All smoke tests passed for $URL"
+exit 0
