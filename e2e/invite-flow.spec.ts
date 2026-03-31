@@ -14,7 +14,7 @@ test.describe("Invite Flow: Create Invite → Receive Link → Accept Invite", (
     });
 
     test("should show progress step 3 indicator", async ({ page }) => {
-      await page.goto("/onboarding/invite?familyId=test-family-123", { waitUntil: "networkidle" });
+      await page.goto("/onboarding/invite?familyId=test-family-123", { waitUntil: "load" });
 
       // Step 3 of 3 indicator
       const hasStep3 = await page.locator("text=/Step 3|step 3/i").isVisible().catch(() => false) ||
@@ -29,7 +29,7 @@ test.describe("Invite Flow: Create Invite → Receive Link → Accept Invite", (
       await invitePage.goto("test-family-123");
 
       // Wait for any loading to complete
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("load");
 
       // Either shows invite link container, copy button, or share options
       const hasInviteUI = await page.locator("text=/invite|link|copy|share/i").isVisible().catch(() => false) ||
@@ -39,7 +39,7 @@ test.describe("Invite Flow: Create Invite → Receive Link → Accept Invite", (
     });
 
     test("should have skip option to go to dashboard", async ({ page }) => {
-      await page.goto("/onboarding/invite?familyId=test-family", { waitUntil: "networkidle" });
+      await page.goto("/onboarding/invite?familyId=test-family", { waitUntil: "load" });
 
       // Look for skip or "I'll do this later" type link
       const hasSkipOption = await page.locator("text=/skip|later|remind me/i").isVisible().catch(() => false) ||
@@ -75,7 +75,7 @@ test.describe("Invite Flow: Create Invite → Receive Link → Accept Invite", (
     });
 
     test("should show error for clearly invalid token format", async ({ page }) => {
-      await page.goto("/invite/not-a-real-token", { waitUntil: "networkidle" });
+      await page.goto("/invite/not-a-real-token", { waitUntil: "load" });
 
       // Wait for any API response
       await page.waitForTimeout(2000);
@@ -91,7 +91,7 @@ test.describe("Invite Flow: Create Invite → Receive Link → Accept Invite", (
       const inviteAcceptancePage = new InviteAcceptancePage(page);
       await inviteAcceptancePage.goto("test-token-12345");
 
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("load");
 
       // Should show CTA for unauthenticated user
       const hasCTA = await page.getByRole("button", { name: /sign up|join/i }).isVisible().catch(() => false) ||
@@ -103,7 +103,7 @@ test.describe("Invite Flow: Create Invite → Receive Link → Accept Invite", (
 
     test("should display family name in invite page when available", async ({ page }) => {
       // This would require a real invite token with family data
-      await page.goto("/invite/test-token-xyz", { waitUntil: "networkidle" });
+      await page.goto("/invite/test-token-xyz", { waitUntil: "load" });
 
       await page.waitForTimeout(1500);
 
@@ -140,7 +140,7 @@ test.describe("Invite Flow: Create Invite → Receive Link → Accept Invite", (
     test("should redirect authenticated user away from sign-up on invite page", async ({ page }) => {
       // This tests that the invite page correctly identifies auth state
       // We can't easily mock auth in E2E without Clerk test mode
-      await page.goto("/invite/test-token", { waitUntil: "networkidle" });
+      await page.goto("/invite/test-token", { waitUntil: "load" });
 
       // Page should load without redirecting to sign-in (it handles invite state)
       await expect(page).not.toHaveURL(/404/);
@@ -150,7 +150,7 @@ test.describe("Invite Flow: Create Invite → Receive Link → Accept Invite", (
 
   test.describe("Invite Link Edge Cases", () => {
     test("should handle empty token gracefully", async ({ page }) => {
-      await page.goto("/invite/", { waitUntil: "networkidle" });
+      await page.goto("/invite/", { waitUntil: "load" });
 
       // Should either 404 or show error — not crash
       const hasBody = await page.locator("body").isVisible();
@@ -159,14 +159,14 @@ test.describe("Invite Flow: Create Invite → Receive Link → Accept Invite", (
 
     test("should handle very long token gracefully", async ({ page }) => {
       const longToken = "a".repeat(500);
-      await page.goto(`/invite/${longToken}`, { waitUntil: "networkidle" });
+      await page.goto(`/invite/${longToken}`, { waitUntil: "load" });
 
       // Should show error or loading — not crash
       await expect(page.locator("body")).toBeVisible();
     });
 
     test("should handle special characters in token", async ({ page }) => {
-      await page.goto("/invite/token-with-special-chars-!@#$%", { waitUntil: "networkidle" });
+      await page.goto("/invite/token-with-special-chars-!@#$%", { waitUntil: "load" });
 
       // Should URL-encode and handle gracefully
       await expect(page.locator("body")).toBeVisible();
