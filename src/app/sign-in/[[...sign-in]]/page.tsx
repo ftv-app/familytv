@@ -60,7 +60,7 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <SignIn fallbackRedirectUrl="/onboarding/create-family" />
+        <SignIn fallbackRedirectUrl="/app" />
 
         <p className="text-center text-sm text-muted-foreground mt-6 leading-relaxed">
           Share photos, plan events, and stay connected with the people who matter most.
