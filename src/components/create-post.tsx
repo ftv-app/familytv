@@ -133,6 +133,7 @@ export function CreatePost({ familyId, onPostCreated }: CreatePostProps) {
     <>
       {/* Trigger card */}
       <Card
+        id="create-post"
         className="border-dashed border-2 border-border/60 hover:border-primary/40 transition-colors cursor-pointer"
         onClick={() => setOpen(true)}
       >
