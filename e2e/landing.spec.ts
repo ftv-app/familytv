@@ -14,44 +14,69 @@ test.describe("Landing Page", () => {
     // Header branding
     await expect(page.locator("text=FamilyTV").first()).toBeVisible();
 
-    // Sign in and get started buttons
-    await expect(page.getByRole("link", { name: /sign in/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /get started/i })).toBeVisible();
+    // Sign in and get started buttons - use first() to avoid strict mode violation
+    await expect(page.getByRole("link", { name: /sign in/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /get started/i }).first()).toBeVisible();
   });
 
   test("should have hero section with CTA buttons", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
 
-    // Hero text
-    await expect(page.locator("text=Your family's private place")).toBeVisible();
+    // Hero text - matches the actual production content
+    await expect(page.locator("h1")).toContainText("Your family's");
+    await expect(page.locator("h1")).toContainText("private channel");
 
-    // CTA buttons
-    await expect(page.getByRole("link", { name: /start your family/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /already have an account/i })).toBeVisible();
+    // CTA buttons - actual production buttons
+    await expect(page.getByRole("link", { name: /start free/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /sign in/i }).first()).toBeVisible();
+  });
+
+  test("should have testimonials section", async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    // Testimonials heading
+    await expect(page.locator("text=Families love FamilyTV")).toBeVisible();
+
+    // Family names in testimonials
+    await expect(page.locator("text=The Richardson Family")).toBeVisible();
+    await expect(page.locator("text=The Nakamura Family")).toBeVisible();
+    await expect(page.locator("text=The O'Brien Family")).toBeVisible();
+  });
+
+  test("should have how it works section", async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    // HOW IT WORKS heading
+    await expect(page.locator("text=HOW IT WORKS")).toBeVisible();
+
+    // Step headings
+    await expect(page.locator("text=Create your family channel")).toBeVisible();
+    await expect(page.locator("text=Invite your family")).toBeVisible();
+    await expect(page.locator("text=Share what matters")).toBeVisible();
   });
 
   test("should have features section", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
 
     // Features heading
-    await expect(page.locator("text=Everything your family needs")).toBeVisible();
+    await expect(page.locator("text=YOUR CHANNEL INCLUDES")).toBeVisible();
 
     // Feature cards
-    await expect(page.locator("text=Share privately")).toBeVisible();
-    await expect(page.locator("text=Chronological feed")).toBeVisible();
-    await expect(page.locator("text=Shared calendar")).toBeVisible();
+    await expect(page.locator("text=Photo & Video")).toBeVisible();
+    await expect(page.locator("text=Live Broadcasting")).toBeVisible();
+    await expect(page.locator("text=Family Calendar")).toBeVisible();
   });
 
   test("should have privacy callout section", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
 
-    await expect(page.locator("text=Privacy isn't a feature")).toBeVisible();
+    await expect(page.locator("text=Family privacy, guaranteed.")).toBeVisible();
   });
 
   test("should navigate to sign-in page", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
 
-    await page.getByRole("link", { name: /sign in/i }).click();
+    await page.getByRole("link", { name: /sign in/i }).first().click();
     await page.waitForURL("**/sign-in", { waitUntil: "networkidle" });
 
     await expect(page).toHaveURL(/\/sign-in/);
@@ -60,7 +85,7 @@ test.describe("Landing Page", () => {
   test("should navigate to sign-up page", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
 
-    await page.getByRole("link", { name: /get started/i }).click();
+    await page.getByRole("link", { name: /get started/i }).first().click();
     await page.waitForURL("**/sign-up", { waitUntil: "networkidle" });
 
     await expect(page).toHaveURL(/\/sign-up/);
