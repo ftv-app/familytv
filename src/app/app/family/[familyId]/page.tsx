@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { db, families, familyMemberships, invites } from "@/db";
 import { eq, and } from "drizzle-orm";
-import { createClerkClient } from "@clerk/backend";
+import { createClerkClient, type User } from "@clerk/backend";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FamilyFeed } from "@/components/family-feed";
@@ -49,16 +49,20 @@ export default async function FamilyPage({
   // Map DB rows to component types — resolve real names from Clerk
   const userIds = allMemberships.map((m) => m.userId);
   const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
-  const clerkUsers = await clerk.users.getUserList({ userId: userIds });
-  const clerkUserMap = new Map(clerkUsers.map((u) => [u.id, u]));
+  const clerkResponse = await clerk.users.getUserList({ userId: userIds });
+  const clerkUserMap = new Map(
+    (clerkResponse.data as User[]).map((u) => [u.id, u])
+  );
 
   const members: FamilyMember[] = allMemberships.map((m) => {
-    const clerkUser = clerkUserMap.get(m.userId);
+    const clerkUser = clerkUserMap.get(m.userId) as User | undefined;
     return {
       id: m.id,
       userId: m.userId,
       name: clerkUser?.fullName ?? m.userId.slice(0, 8) + "...",
-      email: clerkUser?.primaryEmailAddress?.emailAddress ?? `${m.userId.slice(0, 8)}@example.com`,
+      email:
+        clerkUser?.primaryEmailAddress?.emailAddress ??
+        `${m.userId.slice(0, 8)}@example.com`,
       role: m.role as "owner" | "member",
       joinedAt: m.joinedAt,
     };

@@ -1,4 +1,4 @@
-import { test, expect, Page, BrowserContext } from "@playwright/test";
+import { test, expect, Page, BrowserContext, Locator } from "@playwright/test";
 import path from "path";
 
 /**
