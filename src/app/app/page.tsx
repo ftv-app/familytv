@@ -19,6 +19,6 @@ export default async function AppPage() {
     redirect("/app/create-family");
   }
 
-  // Redirect to first family
-  redirect(`/app/family/${memberships[0].family.id}`);
+  // Redirect to dashboard (the cinematic family TV home)
+  redirect("/dashboard");
 }

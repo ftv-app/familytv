@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { db, families, familyMemberships, invites } from "@/db";
 import { eq, and } from "drizzle-orm";
+import { clerkClient } from "@clerk/backend";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FamilyFeed } from "@/components/family-feed";
@@ -45,15 +46,22 @@ export default async function FamilyPage({
     where: and(eq(invites.familyId, familyId), eq(invites.status, "pending")),
   });
 
-  // Map DB rows to component types
-  const members: FamilyMember[] = allMemberships.map((m) => ({
-    id: m.id,
-    userId: m.userId,
-    name: m.userId.slice(0, 8) + "...", // Placeholder name
-    email: `${m.userId.slice(0, 8)}@example.com`, // Placeholder email
-    role: m.role as "owner" | "member",
-    joinedAt: m.joinedAt,
-  }));
+  // Map DB rows to component types — resolve real names from Clerk
+  const userIds = allMemberships.map((m) => m.userId);
+  const clerkUsers = await clerkClient.users.getUserList({ userId: userIds });
+  const clerkUserMap = new Map(clerkUsers.map((u) => [u.id, u]));
+
+  const members: FamilyMember[] = allMemberships.map((m) => {
+    const clerkUser = clerkUserMap.get(m.userId);
+    return {
+      id: m.id,
+      userId: m.userId,
+      name: clerkUser?.fullName ?? m.userId.slice(0, 8) + "...",
+      email: clerkUser?.primaryEmailAddress?.emailAddress ?? `${m.userId.slice(0, 8)}@example.com`,
+      role: m.role as "owner" | "member",
+      joinedAt: m.joinedAt,
+    };
+  });
 
   const pendingInvites: PendingInvite[] = pendingInvitesRaw.map((inv) => ({
     id: inv.id,

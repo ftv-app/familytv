@@ -10,6 +10,11 @@ interface RateLimitEntry {
 
 const storage = new Map<string, RateLimitEntry>();
 
+// For testing: reset all rate limit state
+export function resetRateLimitStorage(): void {
+  storage.clear();
+}
+
 /**
  * Check if an action is allowed under the rate limit
  * @param key Unique key for the rate limit (e.g., userId)
@@ -38,8 +43,9 @@ export function checkRateLimit(
     };
   }
 
-  // Within window, check count
-  if (entry.count >= maxEvents) {
+  // Within window, check count - must be STRICTLY GREATER than maxEvents to reject
+  // This means exactly maxEvents calls are allowed (e.g., 10 calls if max is 10)
+  if (entry.count > maxEvents) {
     return {
       allowed: false,
       remaining: 0,
@@ -48,6 +54,15 @@ export function checkRateLimit(
   }
 
   entry.count++;
+  // After increment, if we've exceeded, reject
+  if (entry.count > maxEvents) {
+    return {
+      allowed: false,
+      remaining: 0,
+      resetAt: entry.resetAt,
+    };
+  }
+
   return {
     allowed: true,
     remaining: maxEvents - entry.count,
