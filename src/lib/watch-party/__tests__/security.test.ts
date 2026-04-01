@@ -36,6 +36,7 @@ import {
   RateLimitError,
   ValidationError,
 } from "../security";
+import { resetRateLimitStorage } from "@/lib/rate-limiter";
 
 // =============================================================================
 // Test Fixtures
@@ -607,6 +608,7 @@ describe("verifyRoomFamilyScope", () => {
 
 describe("checkReactionRateLimit", () => {
   beforeEach(() => {
+    resetRateLimitStorage();
     vi.useFakeTimers();
     vi.resetModules();
   });
@@ -671,7 +673,9 @@ describe("checkReactionRateLimit", () => {
 
 describe("checkChatRateLimit", () => {
   beforeEach(() => {
+    resetRateLimitStorage();
     vi.useFakeTimers();
+    vi.resetModules();
   });
 
   afterEach(() => {
@@ -729,7 +733,9 @@ describe("checkChatRateLimit", () => {
 
 describe("getReactionRateLimitStatus", () => {
   beforeEach(() => {
+    resetRateLimitStorage();
     vi.useFakeTimers();
+    vi.resetModules();
   });
 
   afterEach(() => {
@@ -764,7 +770,9 @@ describe("getReactionRateLimitStatus", () => {
 
 describe("getChatRateLimitStatus", () => {
   beforeEach(() => {
+    resetRateLimitStorage();
     vi.useFakeTimers();
+    vi.resetModules();
   });
 
   afterEach(() => {
@@ -902,7 +910,9 @@ describe("Edge Cases", () => {
 
   describe("Rate limit race conditions", () => {
     beforeEach(() => {
+      resetRateLimitStorage();
       vi.useFakeTimers();
+      vi.resetModules();
     });
 
     afterEach(() => {

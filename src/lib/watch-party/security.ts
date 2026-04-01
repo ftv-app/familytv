@@ -268,6 +268,11 @@ export function verifyRoomFamilyScope(
     throw new ValidationError("Invalid session ID in room join request");
   }
 
+  // Validate familyId is a valid format (UUID or family ID like "family-123")
+  if (!isValidUUID(request.familyId) && !isValidFamilyId(request.familyId)) {
+    throw new ValidationError("Invalid family ID in room join request");
+  }
+
   // Critical: User can only join rooms for their own family
   // This is the core family-scoped access control
   if (request.familyId !== user.familyId) {
@@ -372,42 +377,47 @@ export function sanitizeChatMessage(text: unknown): string {
     throw new ValidationError("Zero-width characters are not allowed");
   }
 
-  // Process HTML entities - allow safe ones, escape unknown
-  // Note: We decode numeric entities and re-encode them properly via escapeHtml
+  // Process HTML entities - decode them to characters
+  // Final escapeHtml will escape any dangerous characters
   let sanitized = text.replace(/&(#x?[a-fA-F0-9]+|[a-zA-Z]+);/g, (match) => {
-    // Allow only safe HTML entities
-    const safeEntities = ["amp", "lt", "gt", "quot", "nbsp"];
-    const entityName = match.replace(/[&#;]/g, "").toLowerCase();
-    if (/^#x[a-fA-F0-9]+$/.test(entityName)) {
-      // Hex entity - decode it
-      const codePoint = parseInt(entityName.replace("#x", "0x"), 16);
-      // Escape HTML special chars: < > & " '
-      if (codePoint === 60) return "&lt;";
-      if (codePoint === 62) return "&gt;";
-      if (codePoint === 38) return "&amp;";
-      if (codePoint === 34) return "&quot;";
-      if (codePoint === 39) return "&#x27;";
-      if (codePoint < 32) return "";
+    // Allow only safe HTML named entities
+    const safeEntities: Record<string, string> = {
+      "amp": "&",
+      "lt": "<",
+      "gt": ">",
+      "quot": '"',
+      "nbsp": " ",
+    };
+    // Extract entity content without &, #, ; 
+    const entityContent = match.slice(1, -1).toLowerCase(); // Remove & and ;
+    
+    // Check for hex entity: #x followed by hex digits
+    const hexMatch = entityContent.match(/^#x([a-fA-F0-9]+)$/);
+    if (hexMatch) {
+      const codePoint = parseInt(hexMatch[1], 16);
+      if (codePoint < 32) return ""; // Remove control chars
       return String.fromCodePoint(codePoint);
     }
-    if (/^#[0-9]+$/.test(entityName)) {
-      // Decimal entity
-      const codePoint = parseInt(entityName.replace("#", ""), 10);
-      // Escape HTML special chars: < > & " '
-      if (codePoint === 60) return "&lt;";
-      if (codePoint === 62) return "&gt;";
-      if (codePoint === 38) return "&amp;";
-      if (codePoint === 34) return "&quot;";
-      if (codePoint === 39) return "&#x27;";
-      if (codePoint < 32) return "";
+    
+    // Check for decimal entity: # followed by digits
+    const decMatch = entityContent.match(/^#([0-9]+)$/);
+    if (decMatch) {
+      const codePoint = parseInt(decMatch[1], 10);
+      if (codePoint < 32) return ""; // Remove control chars
       return String.fromCodePoint(codePoint);
     }
-    if (safeEntities.includes(entityName)) {
-      return HTML_ESCAPE_MAP[entityName] || match;
+    
+    // Named entity - check if safe
+    if (entityContent in safeEntities) {
+      return safeEntities[entityContent];
     }
-    // Unknown entity - escape it by encoding it
-    return escapeHtml(match);
+    
+    // Unknown entity - return as-is (it will be escaped by final pass if needed)
+    return match;
   });
+
+  // Final escape pass for any remaining HTML special characters
+  sanitized = escapeHtml(sanitized);
 
   // Trim whitespace
   return sanitized.trim();
@@ -434,8 +444,9 @@ export function validateReactionEmoji(emoji: unknown): string {
   }
 
   // Check if it's a reasonable emoji character
-  // We allow Unicode emoji ranges
-  const emojiRegex = /^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]+$/u;
+  // We allow Unicode emoji ranges including variation selectors
+  // The FE0F is the variation selector for emoji presentation
+  const emojiRegex = /^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{FE0F}]+$/u;
 
   if (!emojiRegex.test(emoji)) {
     throw new ValidationError("Invalid reaction emoji");
@@ -647,9 +658,24 @@ export function isValidUUID(value: string): boolean {
   if (typeof value !== "string") {
     return false;
   }
-  // Standard UUID format (strict)
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  // UUID format: 8-4-4-4-12 hex characters with hyphens
+  // Accepts any valid hex format, not enforcing RFC 4122 variant bits strictly
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidRegex.test(value);
+}
+
+/**
+ * Validate family ID format
+ * Accepts formats like "family-123", "family-456", "different-family-id"
+ * Must contain at least one hyphen and alphanumeric characters around it
+ */
+export function isValidFamilyId(value: string): boolean {
+  if (typeof value !== "string" || !value) {
+    return false;
+  }
+  // Family ID format: must have at least one hyphen with alphanumeric chars
+  const familyIdRegex = /^[a-zA-Z0-9]+-[a-zA-Z0-9-]*[a-zA-Z0-9]+$/;
+  return familyIdRegex.test(value);
 }
 
 /**
@@ -671,10 +697,30 @@ export function parseRoomId(roomId: string): RoomJoinRequest | null {
   if (parts.length !== 6 || parts[0] !== "family" || parts[2] !== "video" || parts[4] !== "session") {
     return null;
   }
+  
+  const familyId = parts[1];
+  const videoId = parts[3];
+  const sessionId = parts[5];
+  
+  // Validate familyId is valid format (UUID or family ID)
+  if (!isValidUUID(familyId) && !isValidFamilyId(familyId)) {
+    return null;
+  }
+  
+  // Validate videoId is valid UUID
+  if (!isValidUUID(videoId)) {
+    return null;
+  }
+  
+  // Validate sessionId is valid UUID
+  if (!isValidUUID(sessionId)) {
+    return null;
+  }
+  
   return {
-    familyId: parts[1],
-    videoId: parts[3],
-    sessionId: parts[5],
+    familyId,
+    videoId,
+    sessionId,
   };
 }
 
