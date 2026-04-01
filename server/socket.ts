@@ -36,7 +36,6 @@ async function main() {
   // Create and attach Socket.IO server
   const io = await createWatchPartyServer(httpServer, {
     corsOrigin: CORS_ORIGIN,
-    redisUrl: process.env.REDIS_URL,
     standalone: true,
   });
 

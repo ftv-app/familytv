@@ -1,22 +1,24 @@
 /**
  * Watch Party Socket.IO Server
- * 
+ *
  * Main Socket.IO server setup with:
  * - Clerk JWT authentication middleware
- * - Redis adapter for horizontal scaling
  * - Presence, chat, and reaction handlers
  * - Family-scoped room access control
- * 
+ *
  * This module is used both for:
  * 1. Next.js API route integration (/api/socket)
  * 2. Standalone server mode (for development)
+ *
+ * NOTE: Redis adapter is NOT enabled in the MVP build.
+ * For horizontal scaling with multiple instances, add:
+ *   io.adapter(createAdapter(pubClient, subClient))
+ * and set REDIS_URL in environment.
  */
 
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { createAdapter } from '@socket.io/redis-adapter';
-import { createClient } from 'redis';
 import http from 'http';
-import { verifyClerkToken, extractAuthFromHandshake, AuthenticatedUser } from './security';
+import { verifyClerkToken, extractAuthFromHandshake } from './security';
 import { registerPresenceHandlers } from './socket-handlers';
 import { registerChatHandlers } from './chat-handler';
 import { registerReactionHandlers } from './reaction-handler';
@@ -38,17 +40,7 @@ declare module 'socket.io' {
 
 export interface ServerOptions {
   corsOrigin?: string;
-  redisUrl?: string;
   standalone?: boolean;
-}
-
-// ============================================
-// Redis Client Factory
-// ============================================
-
-function createRedisClient(): ReturnType<typeof createClient> {
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-  return createClient({ url: redisUrl });
 }
 
 // ============================================
@@ -59,7 +51,7 @@ function createRedisClient(): ReturnType<typeof createClient> {
  * Create and configure a Socket.IO server with all handlers
  */
 export async function createWatchPartyServer(
-  httpServer?: http.Server, // Node HTTP server for standalone mode
+  _httpServer?: http.Server, // Node HTTP server for standalone mode
   options: ServerOptions = {}
 ): Promise<SocketIOServer> {
   const corsOrigin = options.corsOrigin || process.env.SOCKET_CORS_ORIGIN || '*';
@@ -75,27 +67,6 @@ export async function createWatchPartyServer(
     pingInterval: 25000,      // 25s ping interval
     connectTimeout: 10000,   // 10s connection timeout
   });
-
-  // =========================================
-  // Redis Adapter Setup (for horizontal scaling)
-  // =========================================
-
-  if (options.redisUrl || process.env.REDIS_URL) {
-    try {
-      const pubClient = createRedisClient();
-      const subClient = createRedisClient();
-
-      await Promise.all([pubClient.connect(), subClient.connect()]);
-
-      io.adapter(createAdapter(pubClient, subClient));
-      console.log('[Socket.IO] Redis adapter connected for horizontal scaling');
-    } catch (error) {
-      console.error('[Socket.IO] Failed to connect Redis adapter:', error);
-      console.warn('[Socket.IO] Running WITHOUT Redis adapter - single instance only');
-    }
-  } else {
-    console.warn('[Socket.IO] REDIS_URL not set - running WITHOUT Redis adapter (single instance only)');
-  }
 
   // =========================================
   // Authentication Middleware

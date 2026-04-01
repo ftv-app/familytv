@@ -487,6 +487,7 @@ function PresencePopover({
                     isMultiDevice: false,
                     deviceCount: 1,
                     lastSeen: currentTimestamp,
+                    currentView: null,
                   }}
                   isCurrentUser
                 />

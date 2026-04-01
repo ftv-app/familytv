@@ -52,6 +52,7 @@ export interface MergedPresenceUser {
   isMultiDevice: boolean;
   deviceCount: number;
   lastSeen: number;
+  currentView: { roomId: string; videoId: string; sessionId: string } | null;
 }
 
 export interface PresenceState {
@@ -116,7 +117,91 @@ export class PresenceManager {
     }
     return this.mergePresenceState(room);
   }
-  
+
+  /**
+   * Get aggregated presence for all rooms belonging to a family.
+   * Returns online members from all watch party rooms for the given family.
+   */
+  getFamilyPresence(familyId: string): { onlineMembers: MergedPresenceUser[]; timestamp: number } {
+    const now = Date.now();
+    // Map userId -> { devices: PresenceUser[], primary: PresenceUser, mostRecentRoom: RoomPresence }
+    const familyUserMap = new Map<string, {
+      devices: PresenceUser[];
+      primary: PresenceUser;
+      mostRecentRoom: RoomPresence | null;
+    }>();
+
+    // Iterate all rooms and collect those belonging to this family
+    for (const room of this.rooms.values()) {
+      const parsed = parseRoomId(room.roomId);
+      if (!parsed || parsed.familyId !== familyId) continue;
+
+      for (const user of room.users.values()) {
+        const timeSinceLastSeen = now - user.lastSeen;
+
+        // Skip users that should be removed due to inactivity
+        if (timeSinceLastSeen >= REMOVAL_THRESHOLD_MS) {
+          continue;
+        }
+
+        if (!familyUserMap.has(user.userId)) {
+          familyUserMap.set(user.userId, { devices: [], primary: user, mostRecentRoom: null });
+        }
+        familyUserMap.get(user.userId)!.devices.push(user);
+
+        // Update primary if this device was seen more recently
+        if (user.lastSeen > familyUserMap.get(user.userId)!.primary.lastSeen) {
+          familyUserMap.get(user.userId)!.primary = user;
+        }
+
+        // Track the most recent room this user was active in
+        const entry = familyUserMap.get(user.userId)!;
+        if (!entry.mostRecentRoom || user.lastSeen > entry.mostRecentRoom.updatedAt) {
+          entry.mostRecentRoom = room;
+        }
+      }
+    }
+
+    // Build onlineMembers with currentView
+    const onlineMembers: MergedPresenceUser[] = [];
+    for (const [, { devices, primary, mostRecentRoom }] of familyUserMap) {
+      let overallStatus: PresenceStatus = 'offline';
+      const timeSinceLastSeen = now - primary.lastSeen;
+
+      if (timeSinceLastSeen >= IDLE_THRESHOLD_MS) {
+        overallStatus = 'idle';
+      } else {
+        overallStatus = 'active';
+      }
+
+      let currentView: { roomId: string; videoId: string; sessionId: string } | null = null;
+      if (mostRecentRoom) {
+        const roomParsed = parseRoomId(mostRecentRoom.roomId);
+        if (roomParsed) {
+          currentView = {
+            roomId: mostRecentRoom.roomId,
+            videoId: roomParsed.videoId,
+            sessionId: roomParsed.sessionId,
+          };
+        }
+      }
+
+      onlineMembers.push({
+        oderId: primary.oderId,
+        userId: primary.userId,
+        name: primary.name,
+        avatar: primary.avatar,
+        status: overallStatus,
+        isMultiDevice: devices.length > 1,
+        deviceCount: devices.length,
+        lastSeen: primary.lastSeen,
+        currentView,
+      });
+    }
+
+    return { onlineMembers, timestamp: now };
+  }
+
   /**
    * Add a user to a room
    */
@@ -295,6 +380,7 @@ export class PresenceManager {
         isMultiDevice: devices.length > 1,
         deviceCount: devices.length,
         lastSeen: primary.lastSeen,
+        currentView: null,
       });
     }
     
