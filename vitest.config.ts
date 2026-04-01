@@ -34,6 +34,7 @@ export default defineConfig({
         "src/app/api/comments/route.ts",
         "src/app/api/reactions/route.ts",
         "src/app/api/family/route.ts",
+        "src/app/api/family/activity/route.ts",
         "src/app/api/invite/route.ts",
         "src/app/api/events/route.ts",
         "src/components/progress-dots.tsx",

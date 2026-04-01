@@ -1,7 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
-// Mock Node.js built-in modules that cause issues in jsdom environment
+// Create mock functions
+const mockAuth = vi.fn();
+const mockMembershipsFindFirst = vi.fn();
+const mockMembershipsFindMany = vi.fn();
+const mockPostsFindMany = vi.fn();
+const mockEventsFindMany = vi.fn();
+const mockCommentsFindMany = vi.fn();
+const mockReactionsFindMany = vi.fn();
+const mockCheckRateLimit = vi.fn();
+
+// Mock Node.js built-in modules
 vi.mock("node:crypto", () => ({
   randomUUID: vi.fn().mockReturnValue("test-uuid"),
   createHash: vi.fn().mockReturnValue({
@@ -36,11 +46,10 @@ vi.mock("drizzle-orm/neon-http", () => ({
   drizzle: vi.fn().mockReturnValue({}),
 }));
 
-// Create mock functions
-const mockAuth = vi.fn();
-const mockFindFirst = vi.fn();
-const mockFindMany = vi.fn();
-const mockSelect = vi.fn();
+// Mock rate-limiter
+vi.mock("@/lib/rate-limiter", () => ({
+  checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
+}));
 
 // Mock Clerk auth
 vi.mock("@clerk/nextjs/server", () => ({
@@ -51,38 +60,51 @@ vi.mock("@clerk/nextjs/server", () => ({
 vi.mock("@/db", () => ({
   db: {
     query: {
-      posts: {
-        findMany: (...args: unknown[]) => mockFindMany(...args),
-      },
       familyMemberships: {
-        findFirst: (...args: unknown[]) => mockFindFirst(...args),
-        findMany: (...args: unknown[]) => mockFindMany(...args),
+        findFirst: (...args: unknown[]) => mockMembershipsFindFirst(...args),
+        findMany: (...args: unknown[]) => mockMembershipsFindMany(...args),
+      },
+      posts: {
+        findMany: (...args: unknown[]) => mockPostsFindMany(...args),
       },
       calendarEvents: {
-        findMany: (...args: unknown[]) => mockFindMany(...args),
+        findMany: (...args: unknown[]) => mockEventsFindMany(...args),
+      },
+      comments: {
+        findMany: (...args: unknown[]) => mockCommentsFindMany(...args),
+      },
+      reactions: {
+        findMany: (...args: unknown[]) => mockReactionsFindMany(...args),
       },
     },
-    select: (...args: unknown[]) => mockSelect(...args),
-    insert: vi.fn(),
   },
   posts: {},
+  comments: {},
+  reactions: {},
   calendarEvents: {},
-  familyMemberships: {},
   families: {},
+  familyMemberships: {},
 }));
 
 import { GET } from "@/app/api/family/activity/route";
+import { createMockFamilyMembership, createMockFamily, createMockPost, createMockComment, createMockReaction, createMockCalendarEvent } from "@/test/factories";
 
 describe("/api/family/activity", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    // Default rate limit to allowed
+    mockCheckRateLimit.mockReturnValue({
+      allowed: true,
+      remaining: 59,
+      resetAt: Date.now() + 60000,
+    });
   });
 
   describe("Authentication", () => {
     it("returns 401 when not authenticated", async () => {
       mockAuth.mockResolvedValue({ userId: null } as any);
 
-      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
+      const req = new NextRequest("http://localhost/api/family/activity");
       const res = await GET(req);
 
       expect(res.status).toBe(401);
@@ -91,21 +113,31 @@ describe("/api/family/activity", () => {
     });
   });
 
-  describe("Validation", () => {
-    it("returns 400 when familyId is missing", async () => {
+  describe("Rate Limiting", () => {
+    it("returns 429 when rate limit exceeded", async () => {
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockCheckRateLimit.mockReturnValue({
+        allowed: false,
+        remaining: 0,
+        resetAt: Date.now() + 30000,
+      });
 
-      const req = new NextRequest("http://localhost/api/family/activity");
+      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
       const res = await GET(req);
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(429);
       const json = await res.json();
-      expect(json.error).toBe("familyId is required");
+      expect(json.error).toBe("Rate limit exceeded");
+      expect(json.retryAfterMs).toBeDefined();
+    });
+  });
+
+  describe("Validation", () => {
+    beforeEach(() => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
     });
 
     it("returns 400 when limit is invalid (NaN)", async () => {
-      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
-
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123&limit=abc");
       const res = await GET(req);
 
@@ -115,8 +147,6 @@ describe("/api/family/activity", () => {
     });
 
     it("returns 400 when limit is less than 1", async () => {
-      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
-
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123&limit=0");
       const res = await GET(req);
 
@@ -126,8 +156,6 @@ describe("/api/family/activity", () => {
     });
 
     it("returns 400 when limit is greater than 50", async () => {
-      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
-
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123&limit=100");
       const res = await GET(req);
 
@@ -137,8 +165,10 @@ describe("/api/family/activity", () => {
     });
 
     it("returns 400 when cursor is invalid date", async () => {
-      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
-      mockFindFirst.mockResolvedValue({ userId: "user_123", familyId: "family_123" });
+      const family = createMockFamily({ id: "family_123", name: "The Smiths" });
+      const membership = createMockFamilyMembership({ familyId: "family_123", userId: "user_123" });
+      
+      mockMembershipsFindFirst.mockResolvedValue({ ...membership, family });
 
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123&cursor=invalid-date");
       const res = await GET(req);
@@ -150,11 +180,25 @@ describe("/api/family/activity", () => {
   });
 
   describe("Authorization", () => {
-    it("returns 403 when user is not a family member", async () => {
+    beforeEach(() => {
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
-      mockFindFirst.mockResolvedValue(null); // No membership found
+    });
+
+    it("returns 403 when user is not a family member (with familyId param)", async () => {
+      mockMembershipsFindFirst.mockResolvedValue(null);
 
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
+      const res = await GET(req);
+
+      expect(res.status).toBe(403);
+      const json = await res.json();
+      expect(json.error).toBe("Not a member of this family");
+    });
+
+    it("returns 403 when user has no family memberships (no familyId param)", async () => {
+      mockMembershipsFindMany.mockResolvedValue([]);
+
+      const req = new NextRequest("http://localhost/api/family/activity");
       const res = await GET(req);
 
       expect(res.status).toBe(403);
@@ -164,301 +208,199 @@ describe("/api/family/activity", () => {
   });
 
   describe("Successful Response", () => {
-    const mockMembership = { id: "mem_1", familyId: "family_123", userId: "user_123", role: "member", joinedAt: new Date() };
-    const mockPost = {
-      id: "post_1",
-      familyId: "family_123",
-      authorId: "user_123",
-      authorName: "John Doe",
-      contentType: "image",
-      mediaUrl: "https://blob.vercel.com/image.jpg",
-      caption: "Family photo",
-      createdAt: new Date(),
-    };
-    const mockEvent = {
-      id: "event_1",
-      familyId: "family_123",
-      title: "Family BBQ",
-      description: "Annual barbecue",
-      startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      endDate: null,
-      allDay: false,
-      createdBy: "user_123",
-      createdAt: new Date(),
-    };
-    const mockMember = { id: "mem_1", familyId: "family_123", userId: "user_new", role: "member", joinedAt: new Date() };
+    const mockFamily = createMockFamily({ id: "family_123", name: "The Smiths" });
+    const mockMembership = createMockFamilyMembership({ familyId: "family_123", userId: "user_123" });
 
     beforeEach(() => {
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
-
-      // Default mockSelect implementation - returns chainable object for db.select().from().where().orderBy().limit()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(() => ({
-        from: () => ({
-          where: () => ({
-            orderBy: () => ({
-              limit: () => Promise.resolve([]),
-            }),
-          }),
-        }),
-      }));
-
-      // Don't set mockFindMany implementation here - tests that use mockImplementation need a clean slate
-      // Just ensure any unresolved mockReturnValue/resolvedValue is cleared
-      mockFindMany.mockClear();
     });
 
-    it("returns activities, quietMembers, and upcomingEvents", async () => {
-      mockFindFirst.mockResolvedValue(mockMembership);
+    it("returns correct response shape with posts", async () => {
+      const membershipWithFamily = { ...mockMembership, family: mockFamily };
+      mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(() => ({
-        from: () => ({
-          where: () => ({
-            orderBy: () => ({
-              limit: () => Promise.resolve([mockPost]),
-            }),
-          }),
-        }),
-      }));
-
-      mockFindMany
-        .mockResolvedValueOnce([mockPost]) // posts for activities
-        .mockResolvedValueOnce([mockEvent]) // upcoming events
-        .mockResolvedValueOnce([mockMember]) // family members
-        .mockResolvedValueOnce([{ authorId: "user_123", lastPostAt: new Date(), createdAt: new Date() }]); // posts for lastPostDates
-
-      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
-      const res = await GET(req);
-
-      expect(res.status).toBe(200);
-      const json = await res.json();
-      expect(json).toHaveProperty("activities");
-      expect(json).toHaveProperty("quietMembers");
-      expect(json).toHaveProperty("upcomingEvents");
-    });
-
-    it("returns empty arrays when no data exists", async () => {
-      mockFindFirst.mockResolvedValue(mockMembership);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(() => ({
-        from: () => ({
-          where: () => ({
-            orderBy: () => ({
-              limit: () => Promise.resolve([]),
-            }),
-          }),
-        }),
-      }));
-
-      mockFindMany.mockResolvedValue([]);
-
-      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
-      const res = await GET(req);
-
-      expect(res.status).toBe(200);
-      const json = await res.json();
-      expect(json.activities).toEqual([]);
-      expect(json.quietMembers).toEqual([]);
-      expect(json.upcomingEvents).toEqual([]);
-    });
-
-    it("applies custom limit from query param", async () => {
-      mockFindFirst.mockResolvedValue(mockMembership);
-
-      const mockSelectFn = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([]),
-            }),
-          }),
-        }),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(mockSelectFn);
-
-      mockFindMany.mockResolvedValue([]);
-
-      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123&limit=5");
-      const res = await GET(req);
-
-      expect(res.status).toBe(200);
-      // The mock should have been called with limit 5
-    });
-
-    it("calculates daysAway correctly for upcoming events", async () => {
-      mockFindFirst.mockResolvedValue(mockMembership);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(() => ({
-        from: () => ({
-          where: () => ({
-            orderBy: () => ({
-              limit: () => Promise.resolve([]),
-            }),
-          }),
-        }),
-      }));
-
-      // Event happening in exactly 7 days
-      const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      let findManyCallCount = 0;
-      mockFindMany.mockImplementation(() => {
-        findManyCallCount++;
-        // Call order: 1=familyMemberships, 2=posts, 3=calendarEvents(upcoming)
-        if (findManyCallCount === 3) return Promise.resolve([{ ...mockEvent, startDate: sevenDaysFromNow }]); // calendarEvents - upcoming events
-        return Promise.resolve([]);
+      const mockPost = createMockPost({
+        familyId: "family_123",
+        authorName: "John Doe",
+        contentType: "image",
+        caption: "Family photo",
       });
 
+      mockPostsFindMany.mockResolvedValue([mockPost]);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([]);
+
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
       const res = await GET(req);
 
       expect(res.status).toBe(200);
       const json = await res.json();
-      expect(json.upcomingEvents[0].daysAway).toBe(7);
+      expect(json).toHaveProperty("items");
+      expect(json).toHaveProperty("nextCursor");
+      expect(json).toHaveProperty("familyName");
+      expect(json.familyName).toBe("The Smiths");
+      expect(json.items).toHaveLength(1);
+      expect(json.items[0].type).toBe("post");
+      expect(json.items[0].actor.name).toBe("John Doe");
     });
 
-    it("marks members as quiet when they have no posts", async () => {
-      mockFindFirst.mockResolvedValue(mockMembership);
+    it("returns empty items when no activity", async () => {
+      const membershipWithFamily = { ...mockMembership, family: mockFamily };
+      mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(() => ({
-        from: () => ({
-          where: () => ({
-            orderBy: () => ({
-              limit: () => Promise.resolve([]),
-            }),
-          }),
-        }),
-      }));
-
-      let findManyCallCount = 0;
-      mockFindMany.mockImplementation(() => {
-        findManyCallCount++;
-        // Call order: 1=familyMemberships, 2=posts, 3=calendarEvents
-        if (findManyCallCount === 1) return Promise.resolve([mockMember]); // familyMemberships - family members
-        if (findManyCallCount === 2) return Promise.resolve([]); // posts - no posts
-        return Promise.resolve([]); // calendarEvents - no upcoming events
-      });
+      mockPostsFindMany.mockResolvedValue([]);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([]);
 
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
       const res = await GET(req);
 
       expect(res.status).toBe(200);
       const json = await res.json();
-      expect(json.quietMembers).toHaveLength(1);
-      expect(json.quietMembers[0].memberId).toBe("user_new");
-      expect(json.quietMembers[0].lastActive).toBeNull();
-    });
-
-    it("marks members as quiet when last post was 21+ days ago", async () => {
-      mockFindFirst.mockResolvedValue(mockMembership);
-
-      // 25 days ago
-      const oldDate = new Date(Date.now() - 25 * 24 * 60 * 60 * 1000);
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(() => ({
-        from: () => ({
-          where: () => ({
-            orderBy: () => ({
-              limit: () => Promise.resolve([]),
-            }),
-          }),
-        }),
-      }));
-
-      let findManyCallCount = 0;
-      mockFindMany.mockImplementation(() => {
-        findManyCallCount++;
-        // Call order: 1=familyMemberships, 2=posts, 3=calendarEvents
-        if (findManyCallCount === 1) return Promise.resolve([{ ...mockMember }]); // familyMemberships - family members
-        if (findManyCallCount === 2) return Promise.resolve([{ authorId: "user_new", lastPostAt: oldDate, createdAt: oldDate }]); // posts - old post
-        return Promise.resolve([]); // calendarEvents - no upcoming events
-      });
-
-      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
-      const res = await GET(req);
-
-      expect(res.status).toBe(200);
-      const json = await res.json();
-      expect(json.quietMembers).toHaveLength(1);
-    });
-
-    it("does not mark active members as quiet", async () => {
-      mockFindFirst.mockResolvedValue(mockMembership);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(() => ({
-        from: () => ({
-          where: () => ({
-            orderBy: () => ({
-              limit: () => Promise.resolve([]),
-            }),
-          }),
-        }),
-      }));
-
-      let findManyCallCount = 0;
-      mockFindMany.mockImplementation(() => {
-        findManyCallCount++;
-        // Call order: 1=familyMemberships, 2=posts, 3=calendarEvents
-        if (findManyCallCount === 1) return Promise.resolve([mockMember]); // familyMemberships - family members
-        if (findManyCallCount === 2) return Promise.resolve([{ authorId: "user_new", lastPostAt: new Date(), createdAt: new Date() }]); // posts - recent post
-        return Promise.resolve([]); // calendarEvents - no upcoming events
-      });
-
-      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
-      const res = await GET(req);
-
-      expect(res.status).toBe(200);
-      const json = await res.json();
-      expect(json.quietMembers).toHaveLength(0);
+      expect(json.items).toEqual([]);
+      expect(json.nextCursor).toBeNull();
     });
 
     it("uses default limit of 20 when not specified", async () => {
-      mockFindFirst.mockResolvedValue(mockMembership);
+      const membershipWithFamily = { ...mockMembership, family: mockFamily };
+      mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
 
-      const mockSelectFn = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([]),
-            }),
-          }),
-        }),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(mockSelectFn);
-
-      mockFindMany.mockResolvedValue([]);
+      mockPostsFindMany.mockResolvedValue([]);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([]);
 
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
       const res = await GET(req);
 
       expect(res.status).toBe(200);
-      // Default limit of 20 should be used
+    });
+
+    it("includes comments in activity feed", async () => {
+      const membershipWithFamily = { ...mockMembership, family: mockFamily };
+      mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
+
+      const mockPost = createMockPost({ id: "post_123", familyId: "family_123" });
+      const mockComment = createMockComment({
+        postId: "post_123",
+        authorName: "Jane Doe",
+        content: "Great photo!",
+      });
+
+      mockPostsFindMany.mockResolvedValue([mockPost]);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([mockComment]);
+      mockReactionsFindMany.mockResolvedValue([]);
+
+      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
+      const res = await GET(req);
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      const commentActivity = json.items.find((item: { type: string }) => item.type === "comment");
+      expect(commentActivity).toBeDefined();
+      expect(commentActivity.actor.name).toBe("Jane Doe");
+      expect(commentActivity.content.content).toBe("Great photo!");
+    });
+
+    it("includes reactions in activity feed", async () => {
+      const membershipWithFamily = { ...mockMembership, family: mockFamily };
+      mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
+
+      const mockPost = createMockPost({ id: "post_123", familyId: "family_123" });
+      const mockReaction = createMockReaction({
+        postId: "post_123",
+        userId: "user_456",
+        emoji: "👍",
+      });
+
+      mockPostsFindMany.mockResolvedValue([mockPost]);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([mockReaction]);
+
+      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
+      const res = await GET(req);
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      const reactionActivity = json.items.find((item: { type: string }) => item.type === "reaction");
+      expect(reactionActivity).toBeDefined();
+      expect(reactionActivity.actor.name).toBe("user_456");
+      expect(reactionActivity.content.emoji).toBe("👍");
+    });
+
+    it("includes events in activity feed", async () => {
+      const membershipWithFamily = { ...mockMembership, family: mockFamily };
+      mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
+
+      const mockEvent = createMockCalendarEvent({
+        familyId: "family_123",
+        title: "Family BBQ",
+        description: "Annual barbecue",
+      });
+
+      mockPostsFindMany.mockResolvedValue([]);
+      mockEventsFindMany.mockResolvedValue([mockEvent]);
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([]);
+
+      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
+      const res = await GET(req);
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      const eventActivity = json.items.find((item: { type: string }) => item.type === "event");
+      expect(eventActivity).toBeDefined();
+      expect(eventActivity.content.title).toBe("Family BBQ");
+    });
+
+    it("sorts activities by createdAt descending", async () => {
+      const membershipWithFamily = { ...mockMembership, family: mockFamily };
+      mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
+
+      const now = new Date();
+      const olderPost = createMockPost({
+        familyId: "family_123",
+        id: "post_older",
+        createdAt: new Date(now.getTime() - 10000),
+      });
+      const newerPost = createMockPost({
+        familyId: "family_123",
+        id: "post_newer",
+        createdAt: new Date(now.getTime()),
+      });
+
+      mockPostsFindMany.mockResolvedValue([olderPost, newerPost]);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([]);
+
+      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
+      const res = await GET(req);
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.items[0].id).toBe("post_newer"); // newer post should be first
+      expect(json.items[1].id).toBe("post_older");
     });
 
     it("handles cursor-based pagination", async () => {
-      mockFindFirst.mockResolvedValue(mockMembership);
+      const membershipWithFamily = { ...mockMembership, family: mockFamily };
+      mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
 
       const cursorDate = "2026-03-15T10:00:00Z";
-      const mockSelectFn = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([mockPost]),
-            }),
-          }),
-        }),
+      const mockPost = createMockPost({
+        familyId: "family_123",
+        createdAt: new Date(cursorDate),
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(mockSelectFn);
 
-      mockFindMany.mockResolvedValue([]);
+      mockPostsFindMany.mockResolvedValue([mockPost]);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([]);
 
       const req = new NextRequest(
         `http://localhost/api/family/activity?familyId=family_123&cursor=${encodeURIComponent(cursorDate)}`
@@ -468,108 +410,90 @@ describe("/api/family/activity", () => {
       expect(res.status).toBe(200);
     });
 
-    it("sorts activities by createdAt descending", async () => {
-      mockFindFirst.mockResolvedValue(mockMembership);
+    it("returns nextCursor when there are more items than limit", async () => {
+      const membershipWithFamily = { ...mockMembership, family: mockFamily };
+      mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
 
-      const now = new Date();
-      const olderPost = { ...mockPost, id: "post_1", createdAt: new Date(now.getTime() - 1000) };
-      const newerPost = { ...mockPost, id: "post_2", createdAt: new Date(now.getTime()) };
+      // Create 25 posts (more than limit of 20)
+      const posts = Array.from({ length: 25 }, (_, i) =>
+        createMockPost({
+          familyId: "family_123",
+          id: `post_${i}`,
+          createdAt: new Date(Date.now() - i * 1000),
+        })
+      );
 
-      const mockSelectFn = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([newerPost, olderPost]),
-            }),
-          }),
-        }),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(mockSelectFn);
+      mockPostsFindMany.mockResolvedValue(posts);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([]);
 
-      mockFindMany.mockResolvedValue([]);
+      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123&limit=20");
+      const res = await GET(req);
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.items).toHaveLength(20);
+      expect(json.nextCursor).toBeDefined();
+    });
+
+    it("uses first family membership when no familyId provided", async () => {
+      const membershipWithFamily = { ...mockMembership, family: mockFamily };
+      mockMembershipsFindMany.mockResolvedValue([membershipWithFamily]);
+
+      mockPostsFindMany.mockResolvedValue([]);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([]);
+
+      const req = new NextRequest("http://localhost/api/family/activity");
+      const res = await GET(req);
+
+      expect(res.status).toBe(200);
+      expect(mockMembershipsFindMany).toHaveBeenCalled();
+    });
+
+    it("does not query comments/reactions when no posts exist", async () => {
+      const membershipWithFamily = { ...mockMembership, family: mockFamily };
+      mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
+
+      mockPostsFindMany.mockResolvedValue([]);
+      mockEventsFindMany.mockResolvedValue([]);
+      // These should NOT be called when postIds is empty
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([]);
 
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
       const res = await GET(req);
 
       expect(res.status).toBe(200);
-      const json = await res.json();
-      expect(json.activities[0].id).toBe("post_2"); // newer post first
+      // Comments and reactions should NOT be called when there are no posts
+      expect(mockCommentsFindMany).not.toHaveBeenCalled();
+      expect(mockReactionsFindMany).not.toHaveBeenCalled();
     });
 
-    it("caps activities at limit", async () => {
-      mockFindFirst.mockResolvedValue(mockMembership);
-
-      // Create more posts than the limit
-      const posts = Array.from({ length: 25 }, (_, i) => ({
-        ...mockPost,
-        id: `post_${i}`,
-        createdAt: new Date(Date.now() - i * 1000),
-      }));
-
-      const mockSelectFn = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue(posts),
-            }),
-          }),
-        }),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(mockSelectFn);
-
-      mockFindMany.mockResolvedValue([]);
-
-      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123&limit=10");
-      const res = await GET(req);
-
-      expect(res.status).toBe(200);
-      const json = await res.json();
-      expect(json.activities.length).toBeLessThanOrEqual(10);
-    });
-
-    it("includes event type activities", async () => {
-      mockFindFirst.mockResolvedValue(mockMembership);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSelect as any).mockImplementation(() => ({
-        from: () => ({
-          where: () => ({
-            orderBy: () => ({
-              limit: () => Promise.resolve([]),
-            }),
-          }),
-        }),
-      }));
-
-      const futureEvent = {
-        id: "event_1",
-        familyId: "family_123",
-        title: "Birthday Party",
-        description: "Mom's birthday",
-        startDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        endDate: null,
-        allDay: true,
-        createdBy: "user_123",
-        createdAt: new Date(),
-      };
-
-      let findManyCallCount = 0;
-      mockFindMany.mockImplementation(() => {
-        findManyCallCount++;
-        // Call order: 1=familyMemberships, 2=posts, 3=calendarEvents
-        if (findManyCallCount === 3) return Promise.resolve([futureEvent]); // calendarEvents - upcoming events
-        return Promise.resolve([]);
-      });
+    it("returns 500 on internal error", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockMembershipsFindFirst.mockRejectedValue(new Error("Database connection failed"));
 
       const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
       const res = await GET(req);
 
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(500);
       const json = await res.json();
-      expect(json.upcomingEvents).toHaveLength(1);
-      expect(json.upcomingEvents[0].title).toBe("Birthday Party");
+      expect(json.error).toBe("Internal server error");
+    });
+
+    it("does not include stack trace in error response", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockMembershipsFindFirst.mockRejectedValue(new Error("Database connection failed"));
+
+      const req = new NextRequest("http://localhost/api/family/activity?familyId=family_123");
+      const res = await GET(req);
+
+      const json = await res.json();
+      expect(json.error).not.toContain("stack");
+      expect(json.error).not.toContain("Error:");
     });
   });
 });
