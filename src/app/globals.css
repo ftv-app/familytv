@@ -194,3 +194,69 @@ p a, li a, span a, div a:not([class]) {
     @apply font-sans;
   }
 }
+
+/* ---- Watch Party Reaction Bubbles Animation ---- */
+/* 
+ * Float up animation for reaction bubbles
+ * - Duration: 2.8 seconds (as per PRD)
+ * - Floats up 200px with slight horizontal drift
+ * - Fades out in last 500ms
+ * - Easing: ease-out (fast start, slow float to stop)
+ */
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(var(--drift, 0px)) scale(0.5);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(-20px) translateX(var(--drift, 0px)) scale(1.1);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-50px) translateX(var(--drift, 0px)) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-180px) translateX(var(--drift, 0px)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-200px) translateX(var(--drift, 0px)) scale(0.8);
+  }
+}
+
+.animate-float-up {
+  animation: float-up 2.8s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+/* Reaction bubble base styles */
+.reaction-bubble {
+  z-index: 50;
+}
+
+/* Mobile safe area padding for fixed bottom bar */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Reaction button pulse on send (feedback animation) */
+@keyframes reaction-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+button[data-testid^="watch-party-reaction-"]:active {
+  animation: reaction-pulse 0.15s ease-out;
+}
