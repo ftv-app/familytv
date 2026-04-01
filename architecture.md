@@ -172,3 +172,186 @@ Future: Clerk's `sendEmail` or Resend API integration.
 - [ ] Multiple invite management UI
 - [ ] Invite expiration notifications
 - [ ] Invite link QR codes
+
+---
+
+# FamilyTV Architecture — Server-Authoritative Sync Clock (CTM-223)
+
+## Overview
+
+The server-authoritative sync clock is FamilyTV's core moat feature. It ensures all family members see content in the same chronological order, regardless of their device clocks or network latency. This is critical for shared family experiences like watching videos together or viewing the family feed.
+
+## Design Principles
+
+1. **Server is the Source of Truth**: Client clocks are never trusted for content ordering
+2. **ServerTimestamp on All Content**: Every post and event has a server-set timestamp
+3. **Family-Scoped Sync State**: Each family has its own sync state to track what's been synced
+4. **Delta Sync**: Clients request only new content since their last sync
+5. **Drift Detection**: Client timestamps are validated and flagged if too far off
+
+## Database Schema
+
+### `family_sync_states` Table
+
+Tracks per-family sync state for delta synchronization.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `family_id` | UUID | Primary key, FK to families |
+| `last_server_time` | TIMESTAMPTZ | Server's authoritative clock at last sync |
+| `last_synced_at` | TIMESTAMPTZ | When family last synced |
+| `drift_ms` | INTEGER | Known clock drift in milliseconds |
+| `updated_at` | TIMESTAMPTZ | Auto-updated on row change |
+
+### `posts.server_timestamp` Column
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `server_timestamp` | TIMESTAMPTZ | Server-authoritative timestamp for chronological ordering |
+
+### `calendar_events.server_timestamp` Column
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `server_timestamp` | TIMESTAMPTZ | Server-authoritative timestamp for chronological ordering |
+
+## API Endpoints
+
+### 1. Get Sync Clock Info
+```
+GET /api/sync/clock?familyId=<uuid>
+Authorization: Bearer <clerk_token>
+
+Query Params:
+- familyId (optional): If provided, returns family-specific sync state
+- lastSyncedAt (optional): ISO timestamp of last sync for computing drift
+
+Response 200 (global):
+{
+  "serverTime": 1743484500000,
+  "iso": "2026-04-01T06:35:00.000Z",
+  "offset": 0,
+  "uptime": 1234567,
+  "health": "OK"
+}
+
+Response 200 (family-specific):
+{
+  "familyId": "uuid",
+  "lastServerTime": "2026-04-01T06:35:00.000Z",
+  "lastSyncedAt": "2026-04-01T06:30:00.000Z",
+  "driftMs": 0,
+  "needsFullSync": false
+}
+
+Errors:
+- 400: Invalid familyId format
+- 401: Unauthorized
+- 403: Not a member of this family
+```
+
+### 2. Sync Family Content Delta
+```
+POST /api/sync/clock/sync
+Authorization: Bearer <clerk_token>
+Rate Limit: 30 requests/minute per user
+
+Body:
+{
+  "familyId": "uuid",
+  "lastSyncedAt": "2026-04-01T06:30:00.000Z",
+  "clientTimestamp": "2026-04-01T06:34:59.500Z", // Optional, for drift detection
+  "limit": 50 // Optional, default 50, max 100
+}
+
+Response 200:
+{
+  "posts": [
+    {
+      "id": "uuid",
+      "familyId": "uuid",
+      "authorName": "Dad",
+      "contentType": "image",
+      "mediaUrl": "https://...",
+      "caption": "Beach day!",
+      "serverTimestamp": "2026-04-01T06:32:00.000Z",
+      "createdAt": "2026-04-01T06:32:00.123Z"
+    }
+  ],
+  "events": [
+    {
+      "id": "uuid",
+      "familyId": "uuid",
+      "title": "Family BBQ",
+      "startDate": "2026-07-04T12:00:00.000Z",
+      "serverTimestamp": "2026-04-01T06:31:00.000Z"
+    }
+  ],
+  "serverTimestamp": "2026-04-01T06:35:00.000Z",
+  "syncedAt": "2026-04-01T06:35:00.000Z",
+  "hasMore": false,
+  "rateLimit": {
+    "remaining": 29,
+    "resetAt": 1743484560000
+  }
+}
+
+Errors:
+- 400: Invalid request body
+- 401: Unauthorized
+- 403: Not a member of this family
+- 429: Rate limit exceeded
+```
+
+## Client Synchronization Flow
+
+1. **Initial Sync**: Client calls `GET /api/sync/clock?familyId=xxx` with no `lastSyncedAt`
+   - Server returns `needsFullSync: true`
+   - Client fetches all content via `POST /api/sync/clock/sync` with `lastSyncedAt: null`
+
+2. **Incremental Sync**: Client calls `POST /api/sync/clock/sync` with `lastSyncedAt: <previous sync time>`
+   - Server returns only posts and events where `serverTimestamp > lastSyncedAt`
+   - Client merges delta into local state
+
+3. **Drift Detection**: Client optionally sends `clientTimestamp` in sync request
+   - Server calculates drift = clientTimestamp - serverTime
+   - If drift > 5 seconds, client should show warning or adjust
+
+## Key Implementation Details
+
+### ServerTimestamp Generation
+```typescript
+// In POST /api/posts, serverTimestamp is set server-side
+const [post] = await db
+  .insert(posts)
+  .values({
+    familyId,
+    authorId: userId,
+    authorName,
+    contentType,
+    mediaUrl: mediaUrl || null,
+    caption: caption || null,
+    // serverTimestamp is auto-set by DEFAULT NOW() in schema
+  })
+  .returning();
+```
+
+### Consistent Ordering
+Posts and events are always ordered by `serverTimestamp` (descending) to ensure all family members see the same order.
+
+### Rate Limiting
+Sync endpoint is rate-limited to 30 requests/minute per user to prevent abuse while allowing reasonable sync frequency on multiple devices.
+
+## Security Considerations
+
+- Family-scoped access control (can only sync families you're a member of)
+- Input validation on all timestamps (reject timestamps too far in future/past)
+- Rate limiting prevents sync abuse
+- No PII exposed in sync responses
+
+## Future Enhancements
+
+- [ ] Redis-backed sync state for horizontal scaling
+- [ ] Real-time sync via WebSocket for live TV watching
+- [ ] Offline-first sync with conflict resolution
+- [ ] Sync compression for slow connections
