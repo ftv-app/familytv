@@ -280,9 +280,7 @@ export class PresenceManager {
       const now = Date.now();
       const timeSinceLastSeen = now - primary.lastSeen;
       
-      if (timeSinceLastSeen >= REMOVAL_THRESHOLD_MS) {
-        overallStatus = 'offline';
-      } else if (timeSinceLastSeen >= IDLE_THRESHOLD_MS) {
+      if (timeSinceLastSeen >= IDLE_THRESHOLD_MS) {
         overallStatus = 'idle';
       } else {
         overallStatus = 'active';
