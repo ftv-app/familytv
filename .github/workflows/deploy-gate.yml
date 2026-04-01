@@ -93,9 +93,24 @@ jobs:
           bash scripts/smoke-test.sh https://preview.familytv.vercel.app || \
           bash scripts/smoke-test.sh https://staging.familytv.vercel.app
 
+  # Gate 6: Test Gate (unit + E2E tests - MUST PASS to deploy)
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+      - run: npm ci
+      - name: Run unit tests
+        run: npm run test
+      - name: Run Playwright E2E tests
+        run: npx playwright test
+
   # Merge gate: all must pass
   deploy-ready:
-    needs: [code-quality, coverage, security, design-review, smoke-test]
+    needs: [code-quality, coverage, security, design-review, smoke-test, tests]
     runs-on: ubuntu-latest
     steps:
       - name: All gates passed
