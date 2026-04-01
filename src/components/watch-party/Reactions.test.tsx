@@ -77,7 +77,7 @@ describe("Reactions Component", () => {
 
       const button = screen.getByTestId("watch-party-reaction-😂");
       expect(button).not.toBeDisabled();
-      expect(button.type).toBe("button");
+      expect((button as HTMLButtonElement).type).toBe("button");
     });
   });
 

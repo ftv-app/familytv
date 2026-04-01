@@ -80,8 +80,8 @@ describe('Socket Types', () => {
     });
 
     it('should not contain invalid emojis', () => {
-      expect(VALID_EMOJIS.includes('💩')).toBe(false);
-      expect(VALID_EMOJIS.includes('👎')).toBe(false);
+      expect((VALID_EMOJIS as readonly string[]).includes('💩')).toBe(false);
+      expect((VALID_EMOJIS as readonly string[]).includes('👎')).toBe(false);
     });
   });
 

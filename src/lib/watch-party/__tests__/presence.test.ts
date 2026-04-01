@@ -373,7 +373,6 @@ describe('presence', () => {
       it('startCleanup handles setInterval being undefined', () => {
         // Save original setInterval
         const originalSetInterval = globalThis.setInterval;
-        // @ts-expect-error - intentionally undefined for testing
         globalThis.setInterval = undefined;
         
         try {

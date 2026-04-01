@@ -124,7 +124,7 @@ describe('Socket Authentication', () => {
           auth: { token: 'my-token' },
           headers: {},
         },
-      } as Socket;
+      } as unknown as Socket;
 
       const token = 
         socket.handshake.auth?.token || 

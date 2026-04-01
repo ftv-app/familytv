@@ -1,6 +1,5 @@
-"use client";
-
-import { useParams } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { WatchPartyContainer } from "@/components/watch-party/WatchPartyContainer";
 
 /* ============================================================
@@ -24,37 +23,32 @@ const DEMO_VIDEO = {
 };
 
 /* ============================================================
-   Page Component
+   Page Component (Server Component with Auth)
    ============================================================ */
 
-export default function WatchPartyPage({ params }: WatchPartyPageProps) {
-  // Unwrap params in Next.js 15+
-  // In Next.js 14: const { sessionId } = useParams();
-  // In Next.js 15+: params is a Promise
-  const resolvedParams = useParams();
+export default async function WatchPartyPage({ params }: WatchPartyPageProps) {
+  // Auth check - redirect unauthenticated users to sign-in
+  const { userId } = await auth();
+  
+  if (!userId) {
+    redirect("/sign-in/");
+  }
 
-  // Build room ID from sessionId
-  // In production, sessionId maps to family:{familyId}:video:{videoId}:session:{sessionId}
-  // For demo, we construct a plausible room ID
-  const sessionId = resolvedParams.sessionId as string;
+  // Resolve params
+  const resolvedParams = await params;
+  const sessionId = resolvedParams.sessionId;
 
-  // In production, you'd fetch user info from Clerk and room details from API
-  // For now, use placeholder values - replace with actual auth in production
-  const userId = "demo-user-id"; // Replace with: const { userId } = auth();
-  const userName = "Demo User"; // Replace with: const { userName } = auth();
-  const avatarUrl = undefined; // Replace with: const { avatarUrl } = auth();
-
-  // Room ID format: family:{familyId}:video:{videoId}:session:{sessionId}
-  // For demo, we use a placeholder family ID
+  // In production, fetch room details from API to verify family membership
+  // For now, construct room ID from sessionId
   const roomId = `family:demo-family:video:demo-video:session:${sessionId}`;
 
   return (
-    <div className="w-full h-screen overflow-hidden" style={{ backgroundColor: "#0D0D0F" }}>
+    <div className="w-full h-screen overflow-hidden" data-testid="watch-party-redirect-signin" style={{ backgroundColor: "#0D0D0F" }}>
       <WatchPartyContainer
         roomId={roomId}
         userId={userId}
-        userName={userName}
-        avatarUrl={avatarUrl}
+        userName={"Family Member"}
+        avatarUrl={undefined}
         videoUrl={DEMO_VIDEO.videoUrl}
         videoTitle={DEMO_VIDEO.videoTitle}
         videoChosenBy={DEMO_VIDEO.videoChosenBy}

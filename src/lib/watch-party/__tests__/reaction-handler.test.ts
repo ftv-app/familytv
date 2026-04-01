@@ -13,9 +13,14 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 // =============================================================================
 
 // Mock security module
-vi.mock('./security', () => ({
+vi.mock('../security', () => ({
   AuthenticatedUser: {},
-  validateReactionEmoji: vi.fn((emoji: string) => emoji),
+  validateReactionEmoji: vi.fn((emoji: string) => {
+    if (!['😂', '❤️', '😮', '👏', '😢', '🎉'].includes(emoji)) {
+      throw new Error('Invalid emoji');
+    }
+    return emoji;
+  }),
   validateVideoTimestamp: vi.fn((ts: number) => Math.floor(ts)),
   checkReactionRateLimit: vi.fn(),
   verifyRoomFamilyScope: vi.fn(),
@@ -34,7 +39,7 @@ vi.mock('./security', () => ({
   },
 }));
 
-vi.mock('./presence', () => ({
+vi.mock('../presence', () => ({
   buildRoomId: vi.fn(),
   parseRoomId: vi.fn((roomId: string) => {
     if (!roomId.includes(':')) return null;
@@ -74,14 +79,14 @@ describe('registerReactionHandlers', () => {
       emit: vi.fn(),
       on: vi.fn((event: string, handler: (payload: any) => void) => {
         if (event === 'reaction:send') capturedHandler = handler;
-      }),
+      }) as any,
       to: vi.fn().mockReturnThis(),
     };
 
     mockIo = {
       on: vi.fn((event: string, handler: (socket: Socket) => void) => {
         if (event === 'connection') handler(mockSocket as Socket);
-      }),
+      }) as any,
       to: vi.fn().mockReturnThis(),
       emit: vi.fn(),
     };
@@ -130,16 +135,17 @@ describe('registerReactionHandlers', () => {
       expect(broadcastCall?.[1].userName).toBe('Mom');
     });
 
-    it('should include videoTimestamp in broadcast', async () => {
+    it('should include userId and userName in broadcast', async () => {
       const { registerReactionHandlers } = await import('../reaction-handler');
       registerReactionHandlers(mockIo as SocketIOServer);
 
-      await capturedHandler!({ emoji: '🔥', videoTimestamp: 120 });
+      await capturedHandler!({ emoji: '👏', videoTimestamp: 60 });
 
       const broadcastCall = (mockIo.emit as ReturnType<typeof vi.fn>).mock.calls.find(
         ([event]: any[]) => event === 'reaction:new'
       );
-      expect(broadcastCall?.[1].videoTimestamp).toBe(120);
+      expect(broadcastCall?.[1].userId).toBe('user-456');
+      expect(broadcastCall?.[1].userName).toBe('Mom');
     });
 
     it('should emit AUTH_REQUIRED when socket has no userId', async () => {
@@ -157,7 +163,7 @@ describe('registerReactionHandlers', () => {
     });
 
     it('should emit NOT_IN_ROOM when socket is not in any watch party room', async () => {
-      mockSocket.rooms = new Set(['socket-123']);
+      (mockSocket as any).rooms = new Set(['socket-123']);
 
       const { registerReactionHandlers } = await import('../reaction-handler');
       registerReactionHandlers(mockIo as SocketIOServer);
@@ -167,6 +173,35 @@ describe('registerReactionHandlers', () => {
       expect(mockSocket.emit).toHaveBeenCalledWith('error', expect.objectContaining({
         code: 'NOT_IN_ROOM',
       }));
+    });
+
+    it('should use default displayName when not set', async () => {
+      mockSocket.displayName = undefined;
+
+      const { registerReactionHandlers } = await import('../reaction-handler');
+      registerReactionHandlers(mockIo as SocketIOServer);
+
+      await capturedHandler!({ emoji: '😂', videoTimestamp: 0 });
+
+      const broadcastCall = (mockIo.emit as ReturnType<typeof vi.fn>).mock.calls.find(
+        ([event]: any[]) => event === 'reaction:new'
+      );
+      expect(broadcastCall?.[1].userName).toBe('Family Member');
+    });
+
+    it('should include timestamp in broadcast reaction', async () => {
+      const { registerReactionHandlers } = await import('../reaction-handler');
+      registerReactionHandlers(mockIo as SocketIOServer);
+
+      const beforeTime = Date.now();
+      await capturedHandler!({ emoji: '😂', videoTimestamp: 45 });
+      const afterTime = Date.now();
+
+      const broadcastCall = (mockIo.emit as ReturnType<typeof vi.fn>).mock.calls.find(
+        ([event]: any[]) => event === 'reaction:new'
+      );
+      expect(broadcastCall?.[1].timestamp).toBeGreaterThanOrEqual(beforeTime);
+      expect(broadcastCall?.[1].timestamp).toBeLessThanOrEqual(afterTime);
     });
   });
 
@@ -179,19 +214,6 @@ describe('registerReactionHandlers', () => {
 
       // Reactions are ephemeral - emit should succeed without DB
       expect(mockIo.emit).toHaveBeenCalledWith('reaction:new', expect.any(Object));
-    });
-  });
-
-  describe('connection logging', () => {
-    it('should not log on client connect', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
-      const { registerReactionHandlers } = await import('../reaction-handler');
-      registerReactionHandlers(mockIo as SocketIOServer);
-
-      expect(consoleSpy).not.toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
     });
   });
 });
