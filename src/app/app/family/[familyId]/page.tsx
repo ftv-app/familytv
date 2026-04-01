@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { db, families, familyMemberships, invites } from "@/db";
 import { eq, and } from "drizzle-orm";
-import { clerkClient } from "@clerk/backend";
+import { createClerkClient } from "@clerk/backend";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FamilyFeed } from "@/components/family-feed";
@@ -48,7 +48,8 @@ export default async function FamilyPage({
 
   // Map DB rows to component types — resolve real names from Clerk
   const userIds = allMemberships.map((m) => m.userId);
-  const clerkUsers = await clerkClient.users.getUserList({ userId: userIds });
+  const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+  const clerkUsers = await clerk.users.getUserList({ userId: userIds });
   const clerkUserMap = new Map(clerkUsers.map((u) => [u.id, u]));
 
   const members: FamilyMember[] = allMemberships.map((m) => {
