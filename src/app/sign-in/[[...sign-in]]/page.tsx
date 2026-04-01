@@ -19,20 +19,20 @@ export default function SignInPage() {
         </a>
         <div id="main-content" className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center" aria-hidden="true">
+            <div className="inline-flex items-center gap-2 mb-4" role="img" aria-label="FamilyTV logo">
+              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center" aria-hidden="true" data-testid="auth-logo">
                 <span aria-hidden="true" className="text-primary-foreground font-heading font-bold text-lg">
                   F
                 </span>
               </div>
-              <span className="font-heading text-xl font-semibold text-foreground">
+              <span className="font-heading text-xl font-semibold text-foreground" data-testid="auth-brand-name">
                 FamilyTV
               </span>
             </div>
-            <h1 className="font-heading text-2xl font-semibold text-foreground">
+            <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="auth-heading">
               Welcome back
             </h1>
-            <p className="text-muted-foreground mt-1 text-base">
+            <p className="text-muted-foreground mt-1 text-base" data-testid="auth-subheading">
               Your family is waiting for you
             </p>
           </div>
@@ -49,27 +49,29 @@ export default function SignInPage() {
       <div id="main-content" className="w-full max-w-md" aria-labelledby="auth-heading">
         <h2 id="auth-heading" className="sr-only">Sign in to FamilyTV</h2>
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center" aria-hidden="true">
+          <div className="inline-flex items-center gap-2 mb-4" role="img" aria-label="FamilyTV logo">
+            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center" aria-hidden="true" data-testid="auth-logo">
               <span aria-hidden="true" className="text-primary-foreground font-heading font-bold text-lg">
                 F
               </span>
             </div>
-            <span className="font-heading text-xl font-semibold text-foreground">
+            <span className="font-heading text-xl font-semibold text-foreground" data-testid="auth-brand-name">
               FamilyTV
             </span>
           </div>
-          <h1 className="font-heading text-2xl font-semibold text-foreground">
+          <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="auth-heading">
             Welcome back
           </h1>
-          <p className="text-muted-foreground mt-1 text-base">
+          <p className="text-muted-foreground mt-1 text-base" data-testid="auth-subheading">
             Your family is waiting for you
           </p>
         </div>
 
-        <SignIn fallbackRedirectUrl="/app" />
+        <div data-testid="auth-signin-clerk-component">
+          <SignIn fallbackRedirectUrl="/app" />
+        </div>
 
-        <p className="text-center text-base text-muted-foreground mt-6 leading-relaxed">
+        <p className="text-center text-base text-muted-foreground mt-6 leading-relaxed" data-testid="auth-tagline">
           Share photos, plan events, and stay connected with the people who matter most.
         </p>
       </div>

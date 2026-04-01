@@ -8,6 +8,11 @@ export class SignInPage {
   readonly signUpLink: Locator;
   readonly branding: Locator;
   readonly welcomeHeading: Locator;
+  readonly logo: Locator;
+  readonly brandName: Locator;
+  readonly subheading: Locator;
+  readonly tagline: Locator;
+  readonly clerkComponent: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -17,6 +22,12 @@ export class SignInPage {
     this.signUpLink = page.locator("a[href*='sign-up']").first();
     this.branding = page.locator("text=FamilyTV").first();
     this.welcomeHeading = page.getByRole("heading", { name: /welcome back/i });
+    // data-testid attributes for WCAG 2.1 AA compliance testing
+    this.logo = page.locator('[data-testid="auth-logo"]');
+    this.brandName = page.locator('[data-testid="auth-brand-name"]');
+    this.subheading = page.locator('[data-testid="auth-subheading"]');
+    this.tagline = page.locator('[data-testid="auth-tagline"]');
+    this.clerkComponent = page.locator('[data-testid="auth-signin-clerk-component"]');
   }
 
   async goto() {
@@ -34,6 +45,13 @@ export class SignInPage {
   async expectBrandingVisible() {
     await expect(this.branding).toBeVisible();
   }
+
+  async expectTestIdAttributes() {
+    // Verify WCAG 2.1 AA testid attributes are present
+    await expect(this.logo).toBeAttached();
+    await expect(this.brandName).toBeAttached();
+    await expect(this.welcomeHeading).toBeAttached();
+  }
 }
 
 export class SignUpPage {
@@ -45,6 +63,11 @@ export class SignUpPage {
   readonly branding: Locator;
   readonly taglineNoAds: Locator;
   readonly taglineNoAlgorithms: Locator;
+  readonly logo: Locator;
+  readonly brandName: Locator;
+  readonly subheading: Locator;
+  readonly tagline: Locator;
+  readonly clerkComponent: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -55,6 +78,12 @@ export class SignUpPage {
     this.branding = page.locator("text=FamilyTV").first();
     this.taglineNoAds = page.locator("text=No ads");
     this.taglineNoAlgorithms = page.locator("text=no algorithms");
+    // data-testid attributes for WCAG 2.1 AA compliance testing
+    this.logo = page.locator('[data-testid="auth-logo"]');
+    this.brandName = page.locator('[data-testid="auth-brand-name"]');
+    this.subheading = page.locator('[data-testid="auth-subheading"]');
+    this.tagline = page.locator('[data-testid="auth-tagline"]');
+    this.clerkComponent = page.locator('[data-testid="auth-signup-clerk-component"]');
   }
 
   async goto() {
@@ -67,5 +96,12 @@ export class SignUpPage {
 
   async expectToBeOnSignInPage() {
     await expect(this.page).toHaveURL(/\/sign-in/);
+  }
+
+  async expectTestIdAttributes() {
+    // Verify WCAG 2.1 AA testid attributes are present
+    await expect(this.logo).toBeAttached();
+    await expect(this.brandName).toBeAttached();
+    await expect(this.taglineNoAds).toBeAttached();
   }
 }
