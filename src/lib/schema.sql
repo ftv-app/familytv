@@ -143,3 +143,36 @@ CREATE TABLE IF NOT EXISTS family_invite_rate_limits (
     invite_count INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (family_id, created_date)
 );
+
+-- ============================================
+-- Sprint 012: Watch Party (CTM-229)
+-- ============================================
+
+-- Watch Party Chat Messages
+-- Ephemeral by design - last 100 messages per room retained for 7 days max
+CREATE TABLE IF NOT EXISTS family_chat_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    room_id TEXT NOT NULL,
+    family_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    user_name TEXT NOT NULL,
+    user_avatar TEXT,
+    text TEXT NOT NULL CHECK (char_length(text) <= 500),
+    video_timestamp_seconds INTEGER,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_room_messages ON family_chat_messages (room_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_family_messages ON family_chat_messages (family_id, created_at DESC);
+
+-- Background job to prune old messages (run via pgcron every 5 minutes):
+-- DELETE FROM family_chat_messages WHERE created_at < NOW() - INTERVAL '7 days';
+
+-- OR when exceeding 100 messages per room (run every 5 minutes via pgcron):
+-- DELETE FROM family_chat_messages
+-- WHERE id NOT IN (
+--   SELECT id FROM family_chat_messages
+--   WHERE room_id = family_chat_messages.room_id
+--   ORDER BY created_at DESC
+--   LIMIT 100
+-- );

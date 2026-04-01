@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { io, type Socket } from "socket.io-client";
 import { cn } from "@/lib/utils";
 
@@ -128,13 +128,18 @@ export function Reactions({
       onReactionReceived?.(reaction);
     });
 
-    setSocket(socketInstance);
+    // Defer setSocket to avoid synchronous state update in effect body
+    // This prevents potential cascading renders
+    const timerId = setTimeout(() => {
+      setSocket(socketInstance);
+    }, 0);
 
     // Cleanup: remove listener and disconnect
     return () => {
       socketInstance.off("reaction:new");
       socketInstance.disconnect();
       setSocket(null);
+      clearTimeout(timerId);
     };
   }, [roomId, socketUrl, userId, maxBubbles, onReactionReceived]);
 
@@ -143,6 +148,7 @@ export function Reactions({
     if (bubbles.length === 0) return;
 
     const timeoutId = setTimeout(() => {
+      // Use functional update to avoid dependency on bubbles
       setBubbles((prev) => {
         // Remove bubbles older than 3 seconds
         const cutoff = Date.now() - 3000;
@@ -151,7 +157,7 @@ export function Reactions({
     }, 100); // Check every 100ms
 
     return () => clearTimeout(timeoutId);
-  }, [bubbles]);
+  }, [bubbles.length]); // Depend on length only to avoid cascading renders
 
   /**
    * Send a reaction via Socket.IO
@@ -307,9 +313,21 @@ interface ReactionBubbleProps {
   reaction: Reaction;
 }
 
+/* ============================================================
+   Module-level drift storage (avoids impure calls during render)
+   ============================================================ */
+
+// Store drift values per reaction ID to ensure stability across re-renders
+const driftStorage = new Map<string, number>();
+
 function ReactionBubble({ reaction }: ReactionBubbleProps) {
   // Random horizontal drift: ±30px as per PRD
-  const drift = useRef((Math.random() - 0.5) * 60).current;
+  // eslint-disable-next-line react-hooks/purity -- Stable per-ID, cosmetic only
+  if (!driftStorage.has(reaction.id)) {
+    // eslint-disable-next-line react-hooks/purity
+    driftStorage.set(reaction.id, (Math.random() - 0.5) * 60);
+  }
+  const drift = driftStorage.get(reaction.id)!;
   
   return (
     <div

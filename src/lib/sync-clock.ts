@@ -81,7 +81,7 @@ export function getSyncClockResponse(): SyncClockResponse {
 export function getFamilySyncStateResponse(familyId: string, lastSyncedAt?: Date): FamilySyncState {
   const serverTime = serverNow();
   
-  let driftMs = 0;
+  const driftMs = 0;
   let needsFullSync = false;
   
   if (lastSyncedAt) {

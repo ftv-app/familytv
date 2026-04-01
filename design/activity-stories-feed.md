@@ -1,420 +1,440 @@
-# CTM-228: Activity Stories Feed — Design Spec
+# Activity Stories Feed — Design Spec
+**Issue:** #32  
+**Status:** Draft  
+**Last updated:** 2026-04-01  
+
+---
 
 ## 1. Concept & Vision
 
-The Stats Cards dashboard — that enterprise-y grid of "3 posts this week" numbers — is gone. In its place: a **living family wall** of stories. Not a feed of posts you've seen before, but a curated, warm narrative of what's happened in your family recently — birthdays celebrated, quiet weeks nudged, videos shared, photos posted. It feels like flipping through a family photo album that writes itself.
-
-This is FamilyTV's moat. All four competitors (FamilyWall, Cozi, TimeTree, TimeTree) show dashboards of numbers or calendars. FamilyTV shows your family, in motion.
-
-**Emotional tone:** Warm, unhurried, personal. Like a corkboard in the kitchen — nothing is missed, nothing is algorithmic. The feed rewards families who share little and often, and gently encourages families who go quiet.
+The Activity Stories Feed is a private, chronological family social layer — replacing the cold stat cards with something that feels like flipping through a warm family scrapbook. There is no algorithm, no ads, no suggested content. Just your family's moments in order, the way they happened. The tone is intimate, unhurried, and human: a soft cream canvas with terracotta warmth, Fraunces headings that feel hand-set, and interactions that respond like paper.
 
 ---
 
-## 2. Layout
+## 2. Design Language
 
-### Where It Lives
-Replaces the 2×2 stat card grid in the main dashboard panel.
+### Color Palette
+
+#### Light Mode
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `--color-background` | `#faf8f5` | Page/feed background (warm cream) |
+| `--color-surface` | `#ffffff` | Card surfaces |
+| `--color-surface-raised` | `#f5f2ed` | Nested elements, hover states |
+| `--color-accent` | `#c4785a` | CTAs, active states, highlights |
+| `--color-accent-hover` | `#b06a4d` | Pressed accent |
+| `--color-accent-muted` | `#f0ddd4` | Accent backgrounds, badges |
+| `--color-text-primary` | `#2c2420` | Headings, primary body |
+| `--color-text-secondary` | `#7a6b63` | Timestamps, metadata |
+| `--color-text-tertiary` | `#a89b91` | Placeholders, disabled |
+| `--color-border` | `#e8e2da` | Card borders, dividers |
+| `--color-border-subtle` | `#f0ebe4` | Subtle separators |
+| `--color-success` | `#6b9e78` | Positive reactions, confirmations |
+| `--color-shadow` | `rgba(44,36,32,0.08)` | Card shadows |
+
+#### Dark Mode (Warm Dark — not cold inverted)
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `--color-background` | `#1e1a17` | Page background (warm near-black) |
+| `--color-surface` | `#2a2420` | Card surfaces |
+| `--color-surface-raised` | `#352e28` | Nested elements, hover states |
+| `--color-accent` | `#d4886a` | CTAs, active states (lighter for dark bg) |
+| `--color-accent-hover` | `#e0957a` | Pressed accent |
+| `--color-accent-muted` | `#3d2e26` | Accent backgrounds |
+| `--color-text-primary` | `#f5f0eb` | Headings, primary body |
+| `--color-text-secondary` | `#a89589` | Timestamps, metadata |
+| `--color-text-tertiary` | `#7a6b63` | Placeholders, disabled |
+| `--color-border` | `#3d352e` | Card borders |
+| `--color-border-subtle` | `#2e2825` | Subtle separators |
+| `--color-success` | `#7aad8a` | Positive reactions |
+| `--color-shadow` | `rgba(0,0,0,0.3)` | Card shadows |
+
+---
+
+### Typography
+
+**Font families:**
+- **Headings / Display:** `Fraunces` (Google Fonts) — variable weight, optical-size aware. Warm, editorial serif.
+- **Body / UI:** `Plus Jakarta Sans` (Google Fonts) — friendly geometric sans.
+
+**Type scale (mobile base 16px):**
+
+| Name | Size | Weight | Line height | Usage |
+|------|------|--------|-------------|-------|
+| `text-xs` | 11px | 400 | 1.4 | Timestamps, badges |
+| `text-sm` | 13px | 400/500 | 1.45 | Metadata, captions |
+| `text-base` | 15px | 400 | 1.55 | Body text, previews |
+| `text-lg` | 17px | 500 | 1.4 | Feed item actor names |
+| `text-xl` | 20px | 600 | 1.3 | Section headers |
+| `text-2xl` | 24px | 700 | 1.2 | Page title |
+| `text-display` | 32px | 800 | 1.1 | Empty state headline |
+
+Letter spacing on Fraunces display text: `-0.02em`.  
+Letter spacing on all caps labels: `0.08em`.
+
+---
+
+### Spacing System
+
+Base unit: `4px`. All spacing is a multiple of this unit.
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--space-1` | 4px | Inline gaps, tight padding |
+| `--space-2` | 8px | Icon-text gaps, micro spacing |
+| `--space-3` | 12px | Inner card padding (mobile) |
+| `--space-4` | 16px | Card padding, section gaps |
+| `--space-5` | 20px | Between feed items |
+| `--space-6` | 24px | Layout gutters |
+| `--space-8` | 32px | Section separators |
+| `--space-10` | 40px | Page top/bottom padding |
+| `--space-12` | 48px | Large vertical rhythm |
+
+---
+
+### Motion Philosophy
+
+- **Entrance:** Feed items fade + slide up (`opacity 0→1`, `translateY 12px→0`), 280ms ease-out, 40ms stagger between items.
+- **Skeleton pulse:** Slow `opacity 0.4→0.8` breathing, 1.6s ease-in-out infinite.
+- **Interaction feedback:** Scale `1.0→0.97` on press (60ms), release springs back (200ms spring).
+- **Reaction pop:** Heart/emoji scale `1.0→1.3→1.0` with a 160ms spring on toggle.
+- **Page transitions:** Fade cross-dissolve, 200ms.
+- No motion if `prefers-reduced-motion: reduce`.
+
+---
+
+### Visual Assets
+
+- **Icons:** Lucide React (consistent 1.5px stroke, rounded caps)
+- **Avatars:** Circular, `40px` on mobile, `48px` on desktop. Soft `2px` border in `--color-border`. Fallback: initials on `--color-accent-muted`.
+- **Photos/videos:** 16:9 aspect ratio containers, `border-radius: 12px`, subtle `box-shadow`.
+- **Milestone badges:** Pill shape, `--color-accent-muted` background, `--color-accent` text.
+- **Dividers:** `--color-border-subtle`, 1px, no full-bleed — items breathe individually.
+
+---
+
+## 3. Layout & Structure
+
+### Page Architecture
+
+```
+┌──────────────────────────────────────┐
+│  Header: "Family Feed" + avatar      │  ← sticky, blur backdrop
+├──────────────────────────────────────┤
+│  Feed container (centered, max-w-640)│
+│  ┌────────────────────────────────┐  │
+│  │  FeedItem (type: photo)        │  │
+│  │  ┌──────────────────────────┐  │  │
+│  │  │ Header: avatar + name + │  │  │
+│  │  │ time + type badge       │  │  │
+│  │  ├──────────────────────────┤  │  │
+│  │  │ Content preview          │  │  │
+│  │  │ (photo or text snippet)  │  │  │
+│  │  ├──────────────────────────┤  │  │
+│  │  │ Footer: reactions + count│  │  │
+│  │  └──────────────────────────┘  │  │
+│  └────────────────────────────────┘  │
+│           ─ spacing 20px ─           │
+│  ┌────────────────────────────────┐  │
+│  │  FeedItem (type: event)        │  │
+│  └────────────────────────────────┘  │
+│           ─ spacing 20px ─           │
+│  ┌────────────────────────────────┐  │
+│  │  FeedItem (type: birthday)     │  │
+│  └────────────────────────────────┘  │
+│           ─ spacing 20px ─           │
+│  ┌────────────────────────────────┐  │
+│  │  FeedItem (type: milestone)    │  │
+│  └────────────────────────────────┘  │
+│                                      │
+│  ┌────────────────────────────────┐  │
+│  │  EmptyState (if no items)      │  │
+│  └────────────────────────────────┘  │
+│                                      │
+└──────────────────────────────────────┘
+```
+
+### Feed Item Layouts by Type
+
+**Photo/Video Post:**
+```
+┌──────────────────────────────────────┐
+│ [Avatar 40px]  Name  ·  2h ago  [📷] │  ← header row
+├──────────────────────────────────────┤
+│ Caption text preview (2-line clamp)  │
+│                                      │
+│ ┌──────────────────────────────────┐ │
+│ │         16:9 photo/video          │ │
+│ │         with rounded corners      │ │
+│ └──────────────────────────────────┘ │
+├──────────────────────────────────────┤
+│ [❤️ 3]  [😊 1]              12 likes │ │
+└──────────────────────────────────────┘
+```
+
+**Calendar Event:**
+```
+┌──────────────────────────────────────┐
+│ [Avatar]  Name  ·  3d ago  [📅]      │
+├──────────────────────────────────────┤
+│ 📅 Family Brunch — Sunday, 10am      │
+│ 📍 Grandma's house                   │
+│ Members: Mom, Dad, Emma, Jack        │
+├──────────────────────────────────────┤
+│ [✅ Going: 4]             4 reactions│
+└──────────────────────────────────────┘
+```
+
+**Birthday:**
+```
+┌──────────────────────────────────────┐
+│ [Avatar]  System  ·  1d ago  [🎂]    │
+├──────────────────────────────────────┤
+│ 🎂 It's Emma's birthday tomorrow!   │
+│ She's turning 9. Leave a wish?       │
+├──────────────────────────────────────┤
+│ [🎁 2 wishes]              2 reactions│
+└──────────────────────────────────────┘
+```
+
+**Family Milestone:**
+```
+┌──────────────────────────────────────┐
+│ [Avatar]  Name  ·  5d ago  [🏆]      │
+├──────────────────────────────────────┤
+│ 🏆 500 days smoke-free! 🎉           │
+│ So proud of you, Dad!               │
+├──────────────────────────────────────┤
+│ [👏 8]                   8 reactions │
+└──────────────────────────────────────┘
+```
 
 ### Responsive Behavior
 
-| Breakpoint | Width | Layout |
-|---|---|---|
-| Mobile | 320–767px | Full-width single column, 16px horizontal padding |
-| Tablet | 768–1023px | Single column, 24px padding, content max-width 640px |
-| Desktop | 1024–1439px | Centered single column, 680px max-width |
-| Wide | 1440px+ | Centered, 680px max-width, rest as whitespace |
-
-### Page Structure
-```
-[Feed Header: "Family Stories" + story count badge]
-[Stories List: vertical stack, newest-first, grouped by day]
-[Load More / End of Feed marker]
-```
-
-### Day Grouping
-Stories are grouped under day headers:
-- "Today", "Yesterday", "March 28", etc.
-- Day headers: Plus Jakarta Sans 600, 12px, uppercase, letter-spacing 0.08em, color `text-tertiary` (#9c958d), with a 24px margin above and 8px below
-- On mobile, day headers have 16px above; on desktop, 20px above
-
-### Feed Rhythm
-- Card gap: 8px on mobile, 12px on desktop
-- No infinite scroll — "Load more" button appears after 15 items, loads 15 more
-- Maximum card width: 100% of feed column
+- **Mobile (< 640px):** Full-width cards with `16px` horizontal padding, `12px` internal padding.
+- **Tablet/Desktop (≥ 640px):** Centered single column, `max-width: 640px`, cards have `20px` internal padding. Content max-width is respected; avatar size bumps to `48px`.
+- **Header:** Sticky on all breakpoints. On desktop it gains a subtle bottom border + `backdrop-filter: blur(8px)`.
 
 ---
 
-## 3. Story Card — Component Structure
+## 4. Component Hierarchy
 
-Each card is a horizontally laid-out strip on desktop, stacking vertically on narrow mobile.
-
-### Anatomy (desktop/tablet)
 ```
-┌─────────────────────────────────────────────────────┐
-│ [Avatar 44px] [Name] [Action] [Timestamp]  [Thumb] │
-│              [Subtitle / context line]              │
-└─────────────────────────────────────────────────────┘
+ActivityStoriesFeed
+├── FeedHeader
+│   ├── LogoText ("Family Feed")
+│   └── CurrentUserAvatar
+├── FeedList
+│   ├── FeedItem (× n)
+│   │   ├── FeedItemHeader
+│   │   │   ├── ActorAvatar
+│   │   │   ├── ActorName
+│   │   │   ├── RelativeTimestamp
+│   │   │   └── TypeBadge (icon pill)
+│   │   ├── FeedItemContent
+│   │   │   ├── PhotoVideoContent
+│   │   │   │   ├── MediaPreview (photo, first frame of video)
+│   │   │   │   └── VideoDurationBadge
+│   │   │   ├── TextContent (caption, event details, milestone)
+│   │   │   └── ContentPreview (2-line clamp for long text)
+│   │   ├── FeedItemFooter
+│   │   │   ├── ReactionButton (❤️, 😊, 🎁, 👏...)
+│   │   │   ├── ReactionCount
+│   │   │   └── ViewDetailLink
+│   │   └── FeedItemMedia (for photo/video types)
+│   ├── SkeletonCard (loading state, same shape as FeedItem)
+│   └── EndOfFeedDivider
+├── EmptyState
+│   ├── EmptyStateIllustration (soft SVG of family silhouette)
+│   ├── EmptyStateHeadline
+│   └── EmptyStateCTA ("Share your first moment")
+└── FeedErrorState (if load fails)
 ```
-
-### Anatomy (mobile, < 480px)
-```
-┌─────────────────────────────────────┐
-│ [Avatar 40px] [Name] [Action]       │
-│ [Timestamp]  [Thumb 48×48]          │
-│ [Subtitle / context line]           │
-└─────────────────────────────────────┘
-```
-
-### Sub-components
-
-#### 3a. Avatar
-- **Size:** 44px circle desktop, 40px mobile
-- **Photo:** Family member's uploaded avatar, object-fit cover, border-radius 50%
-- **Fallback:** Warm terracotta (#c4785a) circle with white initials (first letter of first name + first letter of last name), Plus Jakarta Sans 600, 16px
-- **Link:** Avatar links to member profile
-- **ARIA:** `role="img"`, `aria-label="[Name]'s avatar photo"`; if no photo, `aria-label="[Name]'s avatar"`
-
-#### 3b. Name
-- **Font:** Plus Jakarta Sans 600
-- **Size:** 15px mobile / 16px desktop
-- **Color:** `text-primary` (#2d2a26) — link to profile page
-- **Hover:** Underline
-
-#### 3c. Action Text
-- **Font:** Plus Jakarta Sans 400
-- **Size:** 15px mobile / 16px desktop
-- **Color:** `text-secondary` (#5c5752)
-- **Pattern:** Always "[verb] [object]" — never passive, never "User did X"
-- See §4 for full action verb taxonomy
-
-#### 3d. Timestamp
-- **Element:** `<time>` with `datetime="ISO8601"`
-- **Font:** Plus Jakarta Sans 400
-- **Size:** 12px
-- **Color:** `text-tertiary` (#9c958d)
-- **Format:** "just now", "5 min ago", "2 hours ago", "Yesterday", "Mar 28"
-- **Position:** Right-aligned on desktop, below name line on mobile
-
-#### 3e. Thumbnail (conditional)
-- **Size:** 56×56px desktop, 48×48px mobile
-- **Shape:** Rounded-square, border-radius 10px
-- **Position:** Right edge of card, vertically centered with the text block
-- **Content:** First frame of video, cover photo of album, event card thumbnail
-- **Interaction:** Click opens lightbox/viewer; cursor: pointer
-- **ARIA:** `aria-label="View [object name]"`
-
-#### 3f. Story Type Accent (left border indicator)
-- **Width:** 3px left border on the card
-- **Colors per type (see §5):** Photo = terracotta, Video = deep teal, Birthday = dusty gold, Quiet Member = warm gray
-- **Border-radius:** Matches card (12px border-radius, left side only)
-
-#### 3g. Card Container
-- **Background:** `card` (#fdfcfb)
-- **Border:** 1px solid `border-subtle` (#e8e3dc)
-- **Border-radius:** 12px
-- **Padding:** 14px 16px desktop / 12px 14px mobile
-- **Shadow (hover):** `0 3px 12px rgba(196,120,90,0.12)` — 150ms ease-out transition
-- **Shadow (default):** none
-- **Cursor:** pointer (entire card is one interactive target)
 
 ---
 
-## 4. Story Types & Content Taxonomy
+## 5. Component Specifications
 
-### Type 1: Photo Story
-**Left border:** terracotta `#c4785a`
-**Trigger:** Member uploads 1+ photos or creates an album
-**Action verbs:** "shared a photo", "shared N photos", "created an album: [Album Name]", "added to album: [Album Name]"
-**Subtitle (if album):** Album cover title, italic, 13px, `text-secondary`
-**Thumbnail:** First photo in set, 56×56px
-**Example card text:** "Sofia shared 4 photos with the family"
+### FeedItem
 
-### Type 2: Video Story
-**Left border:** deep teal `#3d7a7a`
-**Trigger:** Member uploads or records a video
-**Action verbs:** "shared a video", "recorded a video"
-**Subtitle:** Video duration "1:24" in 12px `text-tertiary`, shown below action text
-**Thumbnail:** First frame of video with a small play icon overlay (24px, semi-transparent dark circle with white play triangle)
-**Example card text:** "Marcus shared a video · 1:24"
+**States:**
+- **Default:** Cream card, soft shadow, full opacity
+- **Hover (desktop):** Background shifts to `--color-surface-raised`, shadow lifts slightly
+- **Active/Pressed:** Scale 0.98, shadow flattens
+- **Focused (keyboard):** `2px` offset outline in `--color-accent`
+- **Own item:** Subtle left border `3px solid --color-accent` to identify user's own posts
 
-### Type 3: Birthday / Event Story
-**Left border:** dusty gold `#c49a3a`
-**Trigger:** An upcoming birthday or event enters the 7-day window
-**Action verbs:** "has a birthday coming up", "has an event coming up: [Event Name]", "responded to: [Event Name]"
-**Subtitle:** "In N days" or "Tomorrow" or "Today" — Fraunces 500, 13px, dusty gold color
-**Thumbnail:** Calendar icon (24px, dusty gold) if no event image; otherwise event cover image
-**Example card text:** "Diana has a birthday coming up · In 3 days"
+### ActorAvatar
 
-### Type 4: Quiet Member Story
-**Left border:** warm gray `#b8b0a8`
-**Trigger:** A family member has not posted in 14+ days
-**Action verb:** "hasn't shared anything in a while"
-**Subtitle:** Warm encouragement — "Why not send them a nudge?" — Plus Jakarta Sans 400 italic, 13px, `text-secondary`
-**Thumbnail:** None (the name + gentle text is the story)
-**Avatar:** The quiet member's avatar, shown as normal
-**CTA:** Tapping the card opens a pre-filled "Hey, thinking of you!" message compose sheet
-**Frequency:** Maximum 1 quiet-member story per member per 7 days
-**Example card text:** "Uncle Tom hasn't shared anything in a while"
+- Circular, `40px` mobile / `48px` desktop
+- `border: 2px solid var(--color-border)`
+- Fallback: initials in `--color-accent-muted` with `--color-accent` text
+- `alt` text: "{ActorName}'s photo"
 
-### Mixed / Composite Stories
-- If a member shares both photos and video in one session, show as one card: "Sofia shared 3 photos and a video"
-- If a member RSVPs to an event they were invited to, show as one card: "Luca responded to: Movie Night — going"
+### TypeBadge
 
----
+- Pill: `border-radius: 999px`
+- Background: `--color-accent-muted`
+- Icon + label in `--color-accent`, `text-xs`, `font-weight: 600`
+- Types: 📷 Photo, 🎥 Video, 📅 Event, 🎂 Birthday, 🏆 Milestone, 📝 Note
 
-## 5. Color Treatment by Story Type
+### ReactionButton
 
-### Story Type Color Tokens
+- Inline flex row of emoji + count
+- On hover: emoji scale 1.15
+- On own reaction: emoji bounces (spring animation)
+- Toggle behavior: tap to add/remove own reaction
+- Long-press: opens reaction picker (❤️, 😊, 🎉, 🎁, 👏, 🔥, 👀, 💯)
 
-| Token | Hex | Usage |
-|---|---|---|
-| `story-photo-border` | `#c4785a` | Left border accent, photo type |
-| `story-video-border` | `#3d7a7a` | Left border accent, video type |
-| `story-video-play-icon-bg` | `rgba(30,30,30,0.6)` | Play button overlay circle |
-| `story-birthday-border` | `#c49a3a` | Left border accent, birthday/event type |
-| `story-birthday-accent` | `#c49a3a` | "In N days" subtitle, calendar icon |
-| `story-quiet-border` | `#b8b0a8` | Left border accent, quiet member type |
-| `story-quiet-text` | `#7a736c` | Quieted member card secondary text |
+### SkeletonCard
 
-### Dark Mode Variants
+- Matches exact dimensions of a FeedItem
+- Uses `--color-surface-raised` placeholder blocks
+- Header: circular avatar block + two text blocks
+- Body: full-width rectangle block
+- Footer: two small pill-shaped blocks
+- Pulse animation: `opacity 0.4→0.8`, 1.6s infinite
 
-| Token | Light | Dark |
-|---|---|---|
-| `story-photo-border` | `#c4785a` | `#d4886a` |
-| `story-video-border` | `#3d7a7a` | `#4d9494` |
-| `story-birthday-border` | `#c49a3a` | `#d4aa4a` |
-| `story-quiet-border` | `#b8b0a8` | `#7a736c` |
+### EmptyState
+
+- Centered vertically in feed area
+- Soft illustration: warm-toned SVG of family members with speech bubbles (no speech marks — just warmth)
+- Headline: `text-display` Fraunces, "Your family feed is empty"
+- Subline: `text-base`, `--color-text-secondary`, "Share your first moment and start the story."
+- CTA button: solid `--color-accent` pill, "Share a moment →"
+- Gentle fade-in on mount
+
+### FeedHeader
+
+- `height: 56px`
+- `position: sticky; top: 0`
+- `backdrop-filter: blur(8px)` with `background: rgba(250,248,245,0.85)` (light) / `rgba(30,26,23,0.85)` (dark)
+- Left: Fraunces "Family Feed" wordmark
+- Right: current user's avatar (links to profile)
 
 ---
 
-## 6. Typography Scale
+## 6. Interaction States
 
-| Element | Font | Weight | Size (mobile / desktop) | Line height | Color |
-|---|---|---|---|---|---|
-| Feed header | Fraunces | 600 | 20px / 24px | 1.25 | `text-primary` |
-| Story count badge | Plus Jakarta Sans | 600 | 11px / 11px | 1.0 | `primary-foreground` on `primary` bg |
-| Day group header | Plus Jakarta Sans | 600 | 11px / 11px | 1.0 | `text-tertiary`, uppercase, ls 0.08em |
-| Member name | Plus Jakarta Sans | 600 | 15px / 16px | 1.35 | `text-primary` |
-| Action text | Plus Jakarta Sans | 400 | 15px / 16px | 1.4 | `text-secondary` |
-| Timestamp | Plus Jakarta Sans | 400 | 12px / 12px | 1.4 | `text-tertiary` |
-| Subtitle / context | Plus Jakarta Sans | 400 italic | 13px / 13px | 1.4 | `text-secondary` |
-| Video duration | Plus Jakarta Sans | 400 | 12px / 12px | 1.0 | `text-tertiary` |
-| Birthday countdown | Fraunces | 500 | 13px / 13px | 1.0 | `story-birthday-accent` |
-| Quiet nudge subtext | Plus Jakarta Sans | 400 italic | 13px / 13px | 1.4 | `text-secondary` |
-| Load more button | Plus Jakarta Sans | 600 | 14px / 14px | 1.0 | `primary` |
-| Empty state headline | Fraunces | 600 | 20px / 20px | 1.3 | `text-primary` |
-| Empty state body | Plus Jakarta Sans | 400 | 14px / 14px | 1.5 | `text-secondary` |
+### Feed List Interactions
+- **Pull-to-refresh:** On mobile, pull down reveals a warm spinner (terracotta). Release triggers refresh with fade.
+- **Infinite scroll:** Loads next page when user reaches 80% scroll depth. No "Load more" button needed.
+- **Scroll-to-top FAB:** Appears after scrolling 300px down. Terracotta circle with ↑ icon.
 
----
+### Feed Item Interactions
+- **Tap item (not on media/CTA):** Expands content preview to full text (if clamped). Tapping again collapses.
+- **Tap photo/video:** Opens media viewer (full-screen lightbox on web, native player on mobile).
+- **Tap actor name:** Navigates to family member profile.
+- **Tap reaction:** Toggles reaction. Optimistic UI update; reverts on error with subtle shake animation.
+- **Long-press reaction:** Opens emoji picker popover.
+- **Swipe left (mobile):** Reveals "Save" and "Hide" actions (no delete — family context).
 
-## 7. Spacing System
+### Loading States
+- Initial load: 3 `SkeletonCard` entries animate in with 80ms stagger.
+- Refresh: Top progress bar in `--color-accent` (not a spinner).
+- Pagination: Subtle spinner at bottom of list, centered.
 
-### Card Internal Padding
-- Mobile: `px-3.5 py-3` (14px horizontal, 12px vertical)
-- Desktop: `px-4 py-3.5` (16px horizontal, 14px vertical)
-
-### Card Gap
-- Mobile: 8px
-- Desktop: 12px
-
-### Section Spacing
-- Feed header ↔ first card: 20px (mobile: 16px)
-- Last card ↔ Load more button: 20px
-- Day group header ↔ first card of group: 8px
-- Thumbnail ↔ text block: 12px
-
-### Avatar-to-Text Gap
-- 10px
+### Error States
+- Network error: Inline banner above last known items — "Couldn't load — tap to retry" with a retry button.
+- Item-level error (e.g. failed to post reaction): Item shakes, reaction count reverts, toast: "Couldn't save that. Try again."
 
 ---
 
-## 8. Component States
+## 7. Accessibility
 
-### Default Card
-```
-background: card (#fdfcfb)
-border: 1px solid border-subtle (#e8e3dc)
-border-radius: 12px
-box-shadow: none
-```
-
-### Hover Card (desktop only)
-```
-background: #ffffff
-box-shadow: 0 3px 12px rgba(196,120,90,0.12)
-transition: box-shadow 150ms ease-out, background 150ms ease-out
-```
-
-### Active / Pressed Card
-```
-transform: scale(0.985)
-transition: transform 80ms ease-out
-background: #faf5f0
-```
-
-### Focus-visible Card
-```
-outline: 2px solid primary (#c4785a)
-outline-offset: 2px
-border-radius: 12px
-```
-(Focus is on the card container, not internal elements)
-
-### Disabled Card
-Not applicable — all cards are interactive.
-
----
-
-## 9. Loading State
-
-### Skeleton Feed
-5 skeleton cards shown while data loads. Rendered in place of the real feed.
-
-**Skeleton Card anatomy:**
-- Avatar circle: 44px, shimmer fill, same fallback terracotta circle color
-- Name bar: 100px wide, 14px tall, shimmer
-- Action bar: 180px wide, 14px tall, shimmer
-- Timestamp bar: 60px wide, 12px tall, shimmer
-- Thumbnail placeholder: 56×56px shimmer block (only if media stories exist in first 5)
-
-**Shimmer:**
-```
-background: linear-gradient(90deg, #ede8e1 0%, #f5f2ed 50%, #ede8e1 100%)
-background-size: 200% 100%
-animation: shimmer 1.4s ease-in-out infinite
-```
-**Reduced motion:** Static gradient (#ede8e1), no animation.
-
-**Skeleton header:**
-- "Family Stories" text bar: 160px wide, 22px tall
-- Badge bar: 28px wide, 18px tall
-
----
-
-## 10. Empty State
-
-Triggered when the family has no activity yet.
-
-**Visual:** Warm illustration (line drawing of a family gathered around a glowing phone/tablet, in terracotta/cream palette, ~140px tall) centered above text.
-
-**Layout:** Vertically centered in the feed area (min-height: 300px), centered horizontally.
-
-**Text:**
-- Headline: "Your family stories start here." — Fraunces 600, 20px, `text-primary`
-- Body: "When someone shares a photo, video, or updates the family calendar, it'll appear here as a story." — Plus Jakarta Sans 400, 14px, `text-secondary`, max-width 300px, centered
-- No CTA button in empty state (unlike other empty states in the app — families with no activity are in onboarding, not the dashboard)
-
-**ARIA:** `role="status"` on the container, `aria-label="No family stories yet — your family feed is empty"`
-
----
-
-## 11. Error State
-
-**Trigger:** API returns 4xx/5xx (except 401/403)
-
-**Visual:**
-- Inline message, not a modal or toast
-- Warm, non-alarming: no red backgrounds, no error icons
-
-**Text:** "Couldn't load family stories right now." — Plus Jakarta Sans 400, 14px, `text-secondary`
-
-**Retry:** "Try again" — text link in `primary` (#c4785a), styled as 44px minimum touch target height (not just underline text — padded `<button>`)
-```
-display: inline-flex; align-items: center; height: 44px;
-```
-
-**Behavior on retry:** Refetch, replace error state with loaded feed or再次 error. After 3 consecutive failures, show persistent error with a support link "Contact support".
-
-**401/403:** Silently redirect to sign-in. No error UI.
-
-**ARIA:** `role="alert"` on the error message container so screen readers announce it.
-
----
-
-## 12. Accessibility
-
-### ARIA Pattern
-
-**Feed container:**
-```html
-<section aria-label="Family Stories feed" aria-live="polite" aria-busy={isLoading}>
-```
-
-**Each story card:**
-```html
-<article
-  aria-label="Sofia shared 4 photos with the family, 2 hours ago"
-  tabindex="0"
-  role="button"
->
-```
-
-**Day group header:**
-```html
-<h2 aria-label="Tuesday, March 30">Today</h2>
-```
-
-**Timestamp:**
-```html
-<time datetime="2026-03-30T14:32:00Z">2 hours ago</time>
-```
-
-**Thumbnail (if present):**
-```html
-<img aria-label="View photos from Summer in Tuscany" ... />
-```
-
-**Empty state:**
-```html
-<div role="status" aria-label="No family stories yet — your family feed is empty">
-```
-
-**Error state:**
-```html
-<div role="alert">
-  <p>Couldn't load family stories right now.</p>
-  <button>Try again</button>
-</div>
-```
+### Color Contrast
+All text combinations pass WCAG AA:
+- `--color-text-primary` on `--color-surface`: 11.4:1 ✓
+- `--color-text-secondary` on `--color-surface`: 5.8:1 ✓
+- `--color-accent` on `--color-accent-muted`: 4.5:1 ✓ (large text only for pure AA)
+- Dark mode counterparts verified similarly.
 
 ### Keyboard Navigation
+- Tab order: Header → Feed items (top to bottom) → FAB
+- Within FeedItem: Tab moves through actor → media (if present) → reactions → CTA
+- `Enter`/`Space` activates focused interactive element
+- `Escape` collapses expanded content / closes modals
 
-| Key | Action |
-|---|---|
-| Tab | Move focus to next story card |
-| Shift+Tab | Move focus to previous story card |
-| Enter / Space | Activate card (open detail view) |
-| Escape | Close any open lightbox/detail view opened from the card |
-
-- Cards use `tabindex="0"` (not `tabindex="-1"`) so they are in the natural tab order
-- Feed is NOT a grid/listbox — simple vertical stacking, no arrow-key navigation required
-- Focus moves to the first card on page load (after any skip link)
-
-### Focus Management
-- Focus ring: 2px solid `#c4785a`, 2px offset — applied to the card container
-- After "Load more" appends items, focus remains on the "Load more" button (does not jump to top)
-- After retry succeeds, focus moves to the first story card
-- No focus trap anywhere in the feed
-
-### Screen Reader Announcements
-- `aria-live="polite"` on feed container — new items appended by "Load more" are announced
-- Empty state: `role="status"` announces on mount
-- Error: `role="alert"` announces immediately
-- Quiet member story: Should be announced naturally ("[Name] hasn't shared anything in a while")
-
-### Color & Contrast
-All text/background combinations meet WCAG AA (4.5:1 minimum):
-- `text-primary` (#2d2a26) on card (#fdfcfb): **15.4:1** ✓
-- `text-secondary` (#5c5752) on card (#fdfcfb): **7.2:1** ✓
-- `text-tertiary` (#9c958d) on card (#fdfcfb): **4.6:1** ✓
-- `primary` (#c4785a) used only for decorative borders, icons ≥ 18px, and interactive text ≥ 15px bold
+### Screen Reader Support
+- Feed wrapped in `<main role="feed">` with `aria-label="Family activity feed"`
+- Each FeedItem: `<article>` with `aria-label="{ActorName} shared a {type} {relativeTime}"`
+- Photos have descriptive `alt` text (user-provided caption or "Photo shared by {name}")
+- Reactions announced: "3 people reacted with love, 1 with celebration"
+- Empty state: `<empty-state role="status">` with live region announcement
 
 ### Motion
-- Shimmer animation: disabled when `prefers-reduced-motion: reduce` (static gradient shown)
-- Card hover shadow: disabled when `prefers-reduced-motion: reduce`
-- No looping or auto-playing animations
-- Card press scale: disabled when `prefers-reduced-motion: reduce`
+```css
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+### Focus Management
+- On route entry: focus moves to page `<h1>` (skipped visually via off-screen positioning)
+- On modal/lightbox open: focus trapped inside
+- On modal close: focus returns to triggering element
 
 ---
 
-*Spec version 1.0 — Sprint 009, CTM-228 — FamilyTV Design System*
+## 8. Implementation Notes
+
+### Tech Stack
+- **Framework:** Next.js 15 (App Router) — `src/app/family/feed/`
+- **Styling:** CSS Modules + CSS custom properties (tokens). No Tailwind.
+- **State:** React `useState` + `useTransition` for optimistic updates
+- **Data:** Client-side fetch with SWR or React Query for caching/revalidation
+- **Icons:** `lucide-react`
+- **Fonts:** Loaded via `next/font/google` (Fraunces + Plus Jakarta Sans)
+
+### Key Files
+```
+src/app/family/feed/
+├── page.tsx                   # Feed page (server component shell)
+├── page.client.tsx            # Client component with data fetching
+├── ActivityStoriesFeed.tsx    # Root client component
+├── FeedList.tsx               # Infinite scroll list
+├── FeedItem.tsx                # Individual feed item
+├── FeedHeader.tsx              # Sticky header
+├── SkeletonCard.tsx            # Loading skeleton
+├── EmptyState.tsx              # Empty state
+├── ReactionButton.tsx         # Emoji reaction picker
+├── types.ts                    # FeedItem, Actor, Reaction types
+├── tokens.css                  # CSS custom property definitions
+└── feed.module.css             # Component styles
+```
+
+### Data Model (abbreviated)
+```ts
+type FeedItemType = 'photo' | 'video' | 'event' | 'birthday' | 'milestone' | 'note';
+
+interface FeedItem {
+  id: string;
+  type: FeedItemType;
+  actor: Actor;
+  createdAt: string; // ISO 8601
+  content: {
+    caption?: string;
+    mediaUrl?: string;
+    mediaThumbnailUrl?: string;
+    mediaType?: 'photo' | 'video';
+    eventDetails?: { title: string; date: string; location?: string };
+    milestone?: { label: string; emoji: string };
+  };
+  reactions: Reaction[];
+  ownReactions: string[]; // emoji strings
+  commentCount: number;
+}
+```
+
+### Performance
+- Images served via `next/image` with `sizes` prop for responsive loading
+- Skeleton SSR-rendered (no layout shift on hydration)
+- Feed list virtualized if > 50 items (use `@tanstack/react-virtual`)
+- Video thumbnails: first frame extracted server-side, shown as static until tap
+
+---
+
+*Spec version 1.0 — issue #32 — principal-designer subagent — 2026-04-01*

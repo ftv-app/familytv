@@ -374,6 +374,7 @@ export function useWatchPartySocket({
     sendReaction,
     sendHeartbeat,
     disconnect,
+    // eslint-disable-next-line react-hooks/refs -- Custom hook pattern: returning ref value is intentional
     socket: socketRef.current,
   };
 }

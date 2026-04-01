@@ -129,6 +129,14 @@ function ProgressBar({
   const trackRef = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
   const [hoverX, setHoverX] = useState(0);
+  const [trackWidth, setTrackWidth] = useState(0);
+
+  // Update trackWidth when track becomes available
+  useEffect(() => {
+    if (trackRef.current) {
+      setTrackWidth(trackRef.current.offsetWidth);
+    }
+  }, []);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const bufferedPct = duration > 0 ? (buffered / duration) * 100 : 0;
@@ -153,8 +161,8 @@ function ProgressBar({
   );
 
   const hoverTime =
-    trackRef.current && duration > 0
-      ? formatTime((hoverX / trackRef.current.offsetWidth) * duration)
+    trackWidth > 0 && duration > 0
+      ? formatTime((hoverX / trackWidth) * duration)
       : null;
 
   return (
@@ -476,10 +484,14 @@ export default function TVPlayerPage() {
   }, [togglePlay, skip, showControls]);
 
   /* ---- Responsive: disable hover-persist on mobile ---- */
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    // Lazy initializer - only runs once on mount, not during render
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia("(hover: none)").matches;
+  });
   useEffect(() => {
     const mq = window.matchMedia("(hover: none)");
-    setIsMobile(mq.matches);
+    // Don't call setIsMobile synchronously - just set up listener
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);

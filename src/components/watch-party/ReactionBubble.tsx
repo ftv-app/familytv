@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 /* ============================================================
@@ -49,20 +49,51 @@ function getEmojiLabel(emoji: string): string {
 }
 
 /* ============================================================
+   Drift generator (outside component to avoid impure calls in render)
+   ============================================================ */
+
+/**
+ * Generate a random drift value for reaction bubble animation.
+ * Called once per component mount, not during render.
+ */
+function generateDrift(): number {
+  // Use crypto.getRandomValues for better randomness if available
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    return ((arr[0] / 0xffffffff) - 0.5) * 60; // ±30px
+  }
+  // Fallback to Math.random (still runs outside render, so it's OK)
+  return (Math.random() - 0.5) * 60;
+}
+
+/* ============================================================
    Component
    ============================================================ */
 
 function ReactionBubble({ reaction, duration = 2800, className }: ReactionBubbleProps) {
   const [isVisible, setIsVisible] = useState(true);
-  const driftRef = useRef((Math.random() - 0.5) * 60); // ±30px random drift
-  const prefersReducedMotion =
-    typeof window !== "undefined"
-      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      : false;
+  // Initialize drift with useMemo to avoid impure call during render
+  // useMemo with empty deps only runs once, similar to useRef lazy init
+  const drift = useMemo(() => generateDrift(), []);
+  // Lazy init for prefersReducedMotion to avoid impure call during render
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
 
+  // Listen for changes to prefers-reduced-motion preference
   useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  // Auto-hide bubble based on prefersReducedMotion and duration
+  useEffect(() => {
+    // Fade in place if reduced motion is preferred
     if (prefersReducedMotion) {
-      // Fade in place instead of floating animation
       const fadeTimer = setTimeout(() => {
         setIsVisible(false);
       }, 1000); // 1s fade per reduced-motion spec
@@ -94,8 +125,8 @@ function ReactionBubble({ reaction, duration = 2800, className }: ReactionBubble
       style={
         {
           // Random horizontal drift
-          transform: `translateX(calc(-50% + ${driftRef.current}px))`,
-          "--drift": `${driftRef.current}px`,
+          transform: `translateX(calc(-50% + ${drift}px))`,
+          "--drift": `${drift}px`,
         } as React.CSSProperties
       }
       role="img"

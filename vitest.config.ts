@@ -30,6 +30,12 @@ export default defineConfig({
       // FamilyTV-specific components and utilities for coverage tracking
       include: [
         "src/lib/utils.ts",
+        "src/lib/watch-party/chat-handler.ts",
+        "src/lib/watch-party/reaction-handler.ts",
+        "src/lib/watch-party/socket-handlers.ts",
+        "src/lib/watch-party/presence.ts",
+        "src/lib/watch-party/security.ts",
+        "src/lib/watch-party/server.ts",
         "src/app/api/posts/route.ts",
         "src/app/api/comments/route.ts",
         "src/app/api/reactions/route.ts",

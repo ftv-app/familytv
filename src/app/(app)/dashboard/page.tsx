@@ -80,7 +80,6 @@ export default async function DashboardPage() {
 
   if (familiesData.length > 0) {
     const primaryFamily = familiesData[0];
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const postsResult = await db
       .select({ cnt: count() })
@@ -101,6 +100,7 @@ export default async function DashboardPage() {
 
     if (recentPosts.length > 0) {
       const latest = recentPosts[0];
+      // eslint-disable-next-line react-hooks/purity -- Server component: Date.now() runs once per request
       const seconds = Math.floor((Date.now() - latest.createdAt.getTime()) / 1000);
       let timeAgo: string;
       if (seconds < 60) {

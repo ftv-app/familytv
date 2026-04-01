@@ -260,3 +260,170 @@ p a, li a, span a, div a:not([class]) {
 button[data-testid^="watch-party-reaction-"]:active {
   animation: reaction-pulse 0.15s ease-out;
 }
+
+/* ---- Watch Party Bottom Sheet Animations ---- */
+/* Sheet enter: fade in backdrop */
+@keyframes sheet-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-sheet-enter {
+  animation: sheet-enter 0.2s ease-out forwards;
+}
+
+/* Sheet slide up: panel slides up from bottom */
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-sheet-slide-up {
+  animation: sheet-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Sheet dismiss: slide down */
+@keyframes sheet-slide-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-sheet-dismiss {
+  animation: sheet-slide-down 0.25s ease-in forwards;
+}
+
+/* ---- New messages pill bounce in ---- */
+@keyframes bounce-in {
+  0% {
+    transform: translateY(100%) scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-10%) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.3s ease-out forwards;
+}
+
+/* ---- Bubble fade animation (for reduced motion) ---- */
+@keyframes bubble-fade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-bubble-fade {
+  animation: bubble-fade 1s ease-out forwards;
+}
+
+/* ---- Wave animation for empty state ---- */
+@keyframes wave {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-wave {
+  animation: wave 1.5s ease-in-out infinite;
+}
+
+/* ---- Live dot pulse ---- */
+@keyframes live-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+.live-dot {
+  animation: live-pulse 1.5s ease-in-out infinite;
+}
+
+/* ---- Prefers Reduced Motion Support ---- */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-up {
+    animation: bubble-fade 1s ease-out forwards;
+  }
+
+  .animate-sheet-enter {
+    animation: none;
+    opacity: 1;
+  }
+
+  .animate-sheet-slide-up {
+    animation: none;
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .animate-bounce-in {
+    animation: none;
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .animate-wave {
+    animation: none;
+  }
+
+  .live-dot {
+    animation: none;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ---- Watch Party Custom Scrollbar ---- */
+/* Thin, subtle scrollbar for chat messages */
+[data-testid="watch-party-chat-messages"]::-webkit-scrollbar {
+  width: 4px;
+}
+
+[data-testid="watch-party-chat-messages"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-testid="watch-party-chat-messages"]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+[data-testid="watch-party-chat-messages"]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}

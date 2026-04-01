@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { MergedPresenceUser } from "@/lib/watch-party/presence";
 
@@ -390,6 +390,10 @@ function PresencePopover({
     [onClose]
   );
 
+  // Generate timestamp using useMemo - must be called unconditionally per hooks rules
+  // eslint-disable-next-line react-hooks/purity -- Client component: runs once per mount
+  const currentTimestamp = useMemo(() => Date.now(), []);
+
   if (!isOpen) return null;
 
   return (
@@ -482,7 +486,7 @@ function PresencePopover({
                     status: "active",
                     isMultiDevice: false,
                     deviceCount: 1,
-                    lastSeen: Date.now(),
+                    lastSeen: currentTimestamp,
                   }}
                   isCurrentUser
                 />
