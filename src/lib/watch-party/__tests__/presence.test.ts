@@ -255,6 +255,11 @@ describe('presence', () => {
         const result = manager.heartbeat('test-room', 'nonexistent');
         expect(result).toBe(false);
       });
+
+      it('returns false when room does not exist', () => {
+        const result = manager.heartbeat('nonexistent-room', 'device1');
+        expect(result).toBe(false);
+      });
     });
 
     describe('getRoomPresence', () => {
@@ -358,6 +363,26 @@ describe('presence', () => {
         
         manager.deleteRoom('room1');
         expect(manager.hasRoom('room1')).toBe(false);
+      });
+
+      it('deleteRoom returns false when room does not exist', () => {
+        const result = manager.deleteRoom('nonexistent-room');
+        expect(result).toBe(false);
+      });
+
+      it('startCleanup handles setInterval being undefined', () => {
+        // Save original setInterval
+        const originalSetInterval = globalThis.setInterval;
+        // @ts-expect-error - intentionally undefined for testing
+        globalThis.setInterval = undefined;
+        
+        try {
+          // Should not throw, should just return early
+          const m = new PresenceManager();
+          m.destroy();
+        } finally {
+          globalThis.setInterval = originalSetInterval;
+        }
       });
     });
 
