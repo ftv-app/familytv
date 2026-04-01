@@ -94,15 +94,15 @@ export function Reactions({
     });
 
     socketInstance.on("connect", () => {
-      console.log("[Reactions] Socket connected:", socketInstance.id);
+      // Socket connected
     });
 
     socketInstance.on("disconnect", (reason) => {
-      console.log("[Reactions] Socket disconnected:", reason);
+      // Socket disconnected
     });
 
     socketInstance.on("connect_error", (error) => {
-      console.error("[Reactions] Socket connection error:", error.message);
+      // Socket connection error
     });
 
     // Listen for reactions from other users
@@ -165,7 +165,6 @@ export function Reactions({
   const sendReaction = useCallback(
     (emoji: ReactionEmoji) => {
       if (!socket?.connected) {
-        console.warn("[Reactions] Socket not connected, dropping reaction");
         return;
       }
 
