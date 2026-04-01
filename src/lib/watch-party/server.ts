@@ -16,7 +16,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { createClient } from 'redis';
 import http from 'http';
-import { verifyClerkToken, extractAuthFromHandshake, AuthenticatedUser } from './security';
+import { verifyClerkToken, extractAuthFromHandshake } from './security';
 import { registerPresenceHandlers } from './socket-handlers';
 import { registerChatHandlers } from './chat-handler';
 import { registerReactionHandlers } from './reaction-handler';
@@ -88,9 +88,7 @@ export async function createWatchPartyServer(
       await Promise.all([pubClient.connect(), subClient.connect()]);
 
       io.adapter(createAdapter(pubClient, subClient));
-      console.log('[Socket.IO] Redis adapter connected for horizontal scaling');
     } catch (error) {
-      console.error('[Socket.IO] Failed to connect Redis adapter:', error);
       console.warn('[Socket.IO] Running WITHOUT Redis adapter - single instance only');
     }
   } else {
@@ -117,10 +115,8 @@ export async function createWatchPartyServer(
       socket.displayName = user.displayName;
       socket.avatarUrl = user.avatarUrl;
 
-      console.log(`[Auth] User ${user.userId} authenticated for socket ${socket.id}`);
       next();
     } catch (error) {
-      console.error('[Auth] Authentication failed:', error);
       next(new Error('Authentication failed'));
     }
   });
@@ -138,14 +134,12 @@ export async function createWatchPartyServer(
   // =========================================
 
   io.on('connection', (socket: Socket) => {
-    console.log(`[Socket.IO] Client connected: ${socket.id}, user: ${socket.userId}`);
-
-    socket.on('error', (error) => {
-      console.error(`[Socket.IO] Socket error for ${socket.id}:`, error);
+    socket.on('error', () => {
+      // Errors handled per-socket
     });
 
-    socket.on('disconnect', (reason) => {
-      console.log(`[Socket.IO] Client disconnected: ${socket.id}, reason: ${reason}`);
+    socket.on('disconnect', () => {
+      // Disconnect handled per-socket
     });
   });
 
@@ -156,7 +150,7 @@ export async function createWatchPartyServer(
  * Attach Socket.IO server to a Next.js API route response
  * This is called from the API route handler
  */
-export function attachSocketServer(io: SocketIOServer): void {
+export function attachSocketServer(_io: SocketIOServer): void {
   // Socket.IO manages its own connection lifecycle
   // This function exists for potential future extension
 }

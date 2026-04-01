@@ -66,7 +66,7 @@ export interface Reaction {
  */
 export function registerReactionHandlers(io: SocketIOServer): void {
   io.on('connection', (socket: Socket) => {
-    console.log(`[Reaction] Client connected: ${socket.id}`);
+    // Client connected
 
     /**
      * reaction:send - Send a reaction to the room
@@ -114,7 +114,7 @@ export function registerReactionHandlers(io: SocketIOServer): void {
 
         try {
           verifyRoomFamilyScope(roomParts, user);
-        } catch (err) {
+        } catch (_err) {
           socket.emit('error', { code: 'UNAUTHORIZED', message: 'Cannot send reactions in this room' });
           return;
         }
@@ -161,9 +161,7 @@ export function registerReactionHandlers(io: SocketIOServer): void {
         const safeReaction = safeReactionForBroadcast(reaction);
         io.to(roomId).emit('reaction:new', safeReaction);
 
-        console.log(`[Reaction] ${socket.userId} sent ${validatedEmoji} in room ${roomId}`);
       } catch (error) {
-        console.error('[Reaction] Error sending reaction:', error);
         socket.emit('error', { code: 'SERVER_ERROR', message: 'Failed to send reaction' });
       }
     });

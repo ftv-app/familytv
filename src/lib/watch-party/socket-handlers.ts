@@ -15,12 +15,9 @@
 
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import {
-  PresenceManager,
   getPresenceManager,
   buildRoomId,
-  parseRoomId,
   isValidRoomId,
-  MergedPresenceUser,
 } from './presence';
 
 // Extend Socket to include authenticated user data
@@ -42,7 +39,7 @@ export function registerPresenceHandlers(io: SocketIOServer): void {
   const presence = getPresenceManager();
 
   io.on('connection', (socket: Socket) => {
-    console.log(`[Presence] Client connected: ${socket.id}`);
+    // Client connected
 
     /**
      * room:join - Join a watch party room
@@ -89,7 +86,7 @@ export function registerPresenceHandlers(io: SocketIOServer): void {
         socket.deviceId = deviceId;
 
         // Add user to presence tracking
-        const user = presence.joinRoom(
+        presence.joinRoom(
           roomId,
           socket.userId || 'anonymous',
           socket.displayName || 'Family Member',
@@ -107,9 +104,7 @@ export function registerPresenceHandlers(io: SocketIOServer): void {
         // Broadcast presence update to all users in the room
         broadcastPresenceUpdate(io, roomId);
 
-        console.log(`[Presence] User ${socket.userId} joined room ${roomId} with device ${deviceId}`);
       } catch (error) {
-        console.error('[Presence] Error in room:join:', error);
         socket.emit('error', { code: 'SERVER_ERROR', message: 'Failed to join room' });
       }
     });
@@ -149,7 +144,6 @@ export function registerPresenceHandlers(io: SocketIOServer): void {
           broadcastPresenceUpdate(io, payload.roomId);
         }
       } catch (error) {
-        console.error('[Presence] Error in presence:heartbeat:', error);
         socket.emit('error', { code: 'SERVER_ERROR', message: 'Failed to process heartbeat' });
       }
     });
@@ -181,9 +175,7 @@ export function registerPresenceHandlers(io: SocketIOServer): void {
         // Confirm leave
         socket.emit('room:left', { roomId: payload.roomId });
 
-        console.log(`[Presence] User ${socket.userId} left room ${payload.roomId}`);
       } catch (error) {
-        console.error('[Presence] Error in room:leave:', error);
         socket.emit('error', { code: 'SERVER_ERROR', message: 'Failed to leave room' });
       }
     });
@@ -192,7 +184,7 @@ export function registerPresenceHandlers(io: SocketIOServer): void {
      * Handle disconnection
      */
     socket.on('disconnect', () => {
-      console.log(`[Presence] Client disconnected: ${socket.id}`);
+      // Client disconnected
 
       // Remove user from all rooms they were in
       // Note: In production, we might want to keep the user marked as "disconnected" 

@@ -187,7 +187,7 @@ function generateUUID(): string {
  */
 export function registerChatHandlers(io: SocketIOServer): void {
   io.on('connection', (socket: Socket) => {
-    console.log(`[Chat] Client connected: ${socket.id}`);
+    // Client connected
 
     /**
      * chat:send - Send a chat message to the room
@@ -234,7 +234,7 @@ export function registerChatHandlers(io: SocketIOServer): void {
 
         try {
           verifyRoomFamilyScope(roomParts, user);
-        } catch (err) {
+        } catch (_err) {
           socket.emit('error', { code: 'UNAUTHORIZED', message: 'Cannot send messages in this room' });
           return;
         }
@@ -294,10 +294,7 @@ export function registerChatHandlers(io: SocketIOServer): void {
         });
 
         io.to(roomId).emit('chat:new', safeMessage);
-
-        console.log(`[Chat] Message sent in room ${roomId} by user ${socket.userId}`);
       } catch (error) {
-        console.error('[Chat] Error sending message:', error);
         socket.emit('error', { code: 'SERVER_ERROR', message: 'Failed to send message' });
       }
     });
@@ -348,7 +345,6 @@ export function registerChatHandlers(io: SocketIOServer): void {
 
         socket.emit('chat:history', history);
       } catch (error) {
-        console.error('[Chat] Error fetching history:', error);
         socket.emit('error', { code: 'SERVER_ERROR', message: 'Failed to fetch chat history' });
       }
     });

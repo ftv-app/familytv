@@ -107,11 +107,11 @@ describe('registerChatHandlers', () => {
       expect(mockSocket.on).toHaveBeenCalled();
     });
 
-    it('should log when client connects', () => {
+    it('should not log on client connect', () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       registerChatHandlers(mockIo);
       mockIo._connectionHandler(mockSocket);
-      expect(consoleSpy).toHaveBeenCalledWith('[Chat] Client connected: socket-123');
+      expect(consoleSpy).not.toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
   });

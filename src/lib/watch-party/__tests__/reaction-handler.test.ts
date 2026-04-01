@@ -183,13 +183,13 @@ describe('registerReactionHandlers', () => {
   });
 
   describe('connection logging', () => {
-    it('should log when client connects', async () => {
+    it('should not log on client connect', async () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       const { registerReactionHandlers } = await import('../reaction-handler');
       registerReactionHandlers(mockIo as SocketIOServer);
 
-      expect(consoleSpy).toHaveBeenCalledWith('[Reaction] Client connected: socket-123');
+      expect(consoleSpy).not.toHaveBeenCalled();
 
       consoleSpy.mockRestore();
     });
