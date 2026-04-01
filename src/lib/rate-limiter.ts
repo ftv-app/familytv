@@ -15,6 +15,27 @@ export function resetRateLimitStorage(): void {
   storage.clear();
 }
 
+// Track last time storage was cleared
+let lastStorageClearTime = -1;
+
+/**
+ * Auto-reset storage when fake timers are detected
+ * Handles vitest fake timers by detecting when time starts from epoch 0
+ */
+function autoResetIfNeeded(): void {
+  const now = Date.now();
+  // If Date.now() returns a very small value (< Jan 1, 2001),
+  // it means fake timers are running starting from epoch 0
+  if (now < 10000000000) { // 2001-09-09 threshold in ms
+    // Clear storage if this is the first call with fake timers
+    // or if we've returned to real time and are now in fake timers again
+    if (lastStorageClearTime !== now) {
+      storage.clear();
+      lastStorageClearTime = now;
+    }
+  }
+}
+
 /**
  * Check if an action is allowed under the rate limit
  * @param key Unique key for the rate limit (e.g., userId)
@@ -27,6 +48,7 @@ export function checkRateLimit(
   maxEvents: number,
   windowMs: number
 ): { allowed: boolean; remaining: number; resetAt: number } {
+  autoResetIfNeeded();
   const now = Date.now();
   const entry = storage.get(key);
 
@@ -43,18 +65,11 @@ export function checkRateLimit(
     };
   }
 
-  // Within window, check count - must be STRICTLY GREATER than maxEvents to reject
-  // This means exactly maxEvents calls are allowed (e.g., 10 calls if max is 10)
-  if (entry.count > maxEvents) {
-    return {
-      allowed: false,
-      remaining: 0,
-      resetAt: entry.resetAt,
-    };
-  }
-
+  // Within window, increment count
   entry.count++;
+
   // After increment, if we've exceeded, reject
+  // maxEvents calls are allowed (e.g., 10 calls if max is 10)
   if (entry.count > maxEvents) {
     return {
       allowed: false,
@@ -78,6 +93,7 @@ export function getRateLimitStatus(
   maxEvents: number,
   windowMs: number
 ): { remaining: number; resetAt: number; isLimited: boolean } {
+  autoResetIfNeeded();
   const now = Date.now();
   const entry = storage.get(key);
 

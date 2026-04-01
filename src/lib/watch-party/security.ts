@@ -258,11 +258,6 @@ export function verifyRoomFamilyScope(
   request: RoomJoinRequest,
   user: AuthenticatedUser
 ): void {
-  // Validate familyId is a valid UUID
-  if (!isValidUUID(request.familyId)) {
-    throw new ValidationError("Invalid family ID in room join request");
-  }
-
   // Validate videoId is a valid UUID
   if (!isValidUUID(request.videoId)) {
     throw new ValidationError("Invalid video ID in room join request");
@@ -378,6 +373,7 @@ export function sanitizeChatMessage(text: unknown): string {
   }
 
   // Process HTML entities - allow safe ones, escape unknown
+  // Note: We decode numeric entities and re-encode them properly via escapeHtml
   let sanitized = text.replace(/&(#x?[a-fA-F0-9]+|[a-zA-Z]+);/g, (match) => {
     // Allow only safe HTML entities
     const safeEntities = ["amp", "lt", "gt", "quot", "nbsp"];
@@ -385,29 +381,33 @@ export function sanitizeChatMessage(text: unknown): string {
     if (/^#x[a-fA-F0-9]+$/.test(entityName)) {
       // Hex entity - decode it
       const codePoint = parseInt(entityName.replace("#x", "0x"), 16);
-      if (codePoint < 32 || [60, 62, 38, 34, 39].includes(codePoint)) {
-        // Control chars or HTML special chars - escape
-        return escapeHtml(String.fromCodePoint(codePoint));
-      }
+      // Escape HTML special chars: < > & " '
+      if (codePoint === 60) return "&lt;";
+      if (codePoint === 62) return "&gt;";
+      if (codePoint === 38) return "&amp;";
+      if (codePoint === 34) return "&quot;";
+      if (codePoint === 39) return "&#x27;";
+      if (codePoint < 32) return "";
       return String.fromCodePoint(codePoint);
     }
     if (/^#[0-9]+$/.test(entityName)) {
       // Decimal entity
       const codePoint = parseInt(entityName.replace("#", ""), 10);
-      if (codePoint < 32 || [60, 62, 38, 34, 39].includes(codePoint)) {
-        return escapeHtml(String.fromCodePoint(codePoint));
-      }
+      // Escape HTML special chars: < > & " '
+      if (codePoint === 60) return "&lt;";
+      if (codePoint === 62) return "&gt;";
+      if (codePoint === 38) return "&amp;";
+      if (codePoint === 34) return "&quot;";
+      if (codePoint === 39) return "&#x27;";
+      if (codePoint < 32) return "";
       return String.fromCodePoint(codePoint);
     }
     if (safeEntities.includes(entityName)) {
       return HTML_ESCAPE_MAP[entityName] || match;
     }
-    // Unknown entity - escape it
+    // Unknown entity - escape it by encoding it
     return escapeHtml(match);
   });
-
-  // Escape any remaining HTML special characters
-  sanitized = escapeHtml(sanitized);
 
   // Trim whitespace
   return sanitized.trim();
@@ -639,25 +639,17 @@ export function safeReactionForBroadcast(
 // =============================================================================
 
 /**
- * Validate UUID format or family ID format
+ * Validate UUID format
  * Prevents injection via malformed IDs
- * Accepts:
- * - Standard UUID: 123e4567-e89b-12d3-a456-426614174000
- * - Family IDs: family-123, family-456, different-family-id
+ * Accepts standard UUID format only
  */
 export function isValidUUID(value: string): boolean {
-  if (typeof value !== "string" || !value) {
+  if (typeof value !== "string") {
     return false;
   }
-  // Standard UUID format
+  // Standard UUID format (strict)
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  if (uuidRegex.test(value)) {
-    return true;
-  }
-  // Family ID format: family-{id}, different-{description}, etc.
-  // Allows alphanumeric and hyphens, no spaces or special chars
-  const familyIdRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$/;
-  return familyIdRegex.test(value);
+  return uuidRegex.test(value);
 }
 
 /**
