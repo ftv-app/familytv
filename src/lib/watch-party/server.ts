@@ -15,6 +15,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { createClient } from 'redis';
+import http from 'http';
 import { verifyClerkToken, extractAuthFromHandshake, AuthenticatedUser } from './security';
 import { registerPresenceHandlers } from './socket-handlers';
 import { registerChatHandlers } from './chat-handler';
@@ -58,7 +59,7 @@ function createRedisClient(): ReturnType<typeof createClient> {
  * Create and configure a Socket.IO server with all handlers
  */
 export async function createWatchPartyServer(
-  httpServer?: any, // Node HTTP server for standalone mode
+  httpServer?: http.Server, // Node HTTP server for standalone mode
   options: ServerOptions = {}
 ): Promise<SocketIOServer> {
   const corsOrigin = options.corsOrigin || process.env.SOCKET_CORS_ORIGIN || '*';

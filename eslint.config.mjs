@@ -7,7 +7,7 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Allow explicit-any in test files (testing-library patterns require any for mock types)
   {
-    files: ["src/test/**", "src/__tests__/**", "src/components/**/*.test.tsx", "e2e/**"],
+    files: ["src/test/**", "src/__tests__/**", "src/components/**/*.test.tsx", "src/lib/**/*.test.ts", "src/lib/**/*.test.tsx", "e2e/**"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "react-hooks/rules-of-hooks": "off",
