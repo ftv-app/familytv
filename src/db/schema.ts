@@ -252,3 +252,21 @@ export const reactions = pgTable("reactions", {
 }, (table) => [
   uniqueIndex("unique_user_post_reaction").on(table.userId, table.postId),
 ]);
+
+/**
+ * Watch Party Chat Messages
+ * Stores chat messages for watch party sessions
+ * Limited to last 100 messages per session
+ */
+export const watchPartyMessages = pgTable("watch_party_messages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  familyId: uuid("family_id").notNull(),
+  sessionId: text("session_id").notNull(),
+  userId: text("user_id").notNull(),
+  userName: text("user_name").notNull(),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_watch_party_session").on(table.familyId, table.sessionId, table.createdAt),
+  index("idx_watch_party_cleanup").on(table.familyId, table.sessionId, table.id),
+]);
