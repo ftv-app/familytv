@@ -4,9 +4,9 @@
  */
 import type { Socket } from 'socket.io';
 import type { AuthenticatedSocket } from './types';
-import { auth, currentUser } from '@clerk/nextjs/server';
-import { getSql, getUserFamilyRole } from '@/db';
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
+import { db } from '@/db';
+import { familyMemberships } from '@/db/schema';
 
 // Clerk JWT verification errors
 export class AuthError extends Error {
@@ -64,12 +64,12 @@ export async function verifyFamilyMembership(
   familyId: string
 ): Promise<boolean> {
   try {
-    const memberships = await getSql()`
+    const memberships = await db.execute(sql`
       SELECT id FROM family_memberships 
       WHERE user_id = ${userId} AND family_id = ${familyId}
-    `;
+    `);
 
-    return (memberships as unknown[]).length > 0;
+    return memberships.length > 0;
   } catch (error) {
     console.error('Family membership verification error:', error);
     return false;
@@ -77,18 +77,41 @@ export async function verifyFamilyMembership(
 }
 
 /**
- * Get user display name from Clerk or database
+ * Get user display name from Clerk API
  */
-export async function getUserDisplayName(userId: string): Promise<string> {
+export async function getUserDisplayName(
+  userId: string,
+  token: string
+): Promise<string> {
   try {
-    const users = await getSql()`
-      SELECT name FROM users WHERE clerk_id = ${userId}
-    `;
-    
-    if ((users as unknown[]).length > 0) {
-      return ((users as { name: string | null }[])[0]?.name) || 'Family Member';
+    const response = await fetch(`https://api.clerk.dev/v1/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return 'Family Member';
     }
-    
+
+    const user = (await response.json()) as {
+      first_name: string | null;
+      last_name: string | null;
+      username: string | null;
+      email_addresses: Array<{ email_address: string }>;
+    };
+
+    if (user.first_name || user.last_name) {
+      return [user.first_name, user.last_name].filter(Boolean).join(' ');
+    }
+    if (user.username) {
+      return user.username;
+    }
+    if (user.email_addresses?.[0]) {
+      return user.email_addresses[0].email_address.split('@')[0];
+    }
+
     return 'Family Member';
   } catch {
     return 'Family Member';
@@ -118,6 +141,7 @@ export async function socketAuthMiddleware(
     const authSocket = socket as AuthenticatedSocket;
     authSocket.userId = user.userId;
     authSocket.userName = user.userName;
+    authSocket.token = token;
     
     next();
   } catch (error) {
@@ -136,7 +160,8 @@ export async function socketAuthMiddleware(
  */
 export async function verifyWatchPartyAccess(
   userId: string,
-  familyId: string
+  familyId: string,
+  token: string
 ): Promise<{ allowed: boolean; userName: string }> {
   const isMember = await verifyFamilyMembership(userId, familyId);
   
@@ -144,6 +169,6 @@ export async function verifyWatchPartyAccess(
     return { allowed: false, userName: 'Unknown' };
   }
 
-  const userName = await getUserDisplayName(userId);
+  const userName = await getUserDisplayName(userId, token);
   return { allowed: true, userName };
 }

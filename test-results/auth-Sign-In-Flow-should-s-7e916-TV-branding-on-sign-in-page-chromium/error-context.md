@@ -1,0 +1,62 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - main "Sign in to FamilyTV" [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic "Sign in to FamilyTV" [ref=e4]:
+      - heading "Sign in to FamilyTV" [level=2] [ref=e5]
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e9]: F
+          - generic [ref=e10]: FamilyTV
+        - heading "Welcome back" [level=1] [ref=e11]
+        - paragraph [ref=e12]: Your family is waiting for you
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e17]:
+            - heading "Sign in to clerk-ftv" [level=1] [ref=e18]
+            - paragraph [ref=e19]: Welcome back! Please sign in to continue
+          - generic [ref=e20]:
+            - button "Sign in with Google Continue with Google" [ref=e23] [cursor=pointer]:
+              - generic [ref=e24]:
+                - generic "Sign in with Google" [ref=e26]
+                - generic [ref=e27]: Continue with Google
+            - paragraph [ref=e30]: or
+            - generic [ref=e32]:
+              - generic [ref=e33]:
+                - generic [ref=e36]:
+                  - generic [ref=e38]: Email address
+                  - textbox "Email address" [ref=e39]:
+                    - /placeholder: Enter your email address
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: Password
+                      - generic:
+                        - textbox "Password":
+                          - /placeholder: Enter your password
+                        - button "Show password":
+                          - img
+              - button "Continue" [ref=e42] [cursor=pointer]:
+                - generic [ref=e43]:
+                  - text: Continue
+                  - img [ref=e44]
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - generic [ref=e48]: Don’t have an account?
+            - link "Sign up" [ref=e49] [cursor=pointer]:
+              - /url: https://familytv.vercel.app/sign-up
+          - generic [ref=e51]:
+            - generic [ref=e53]:
+              - paragraph [ref=e54]: Secured by
+              - link "Clerk logo" [ref=e55] [cursor=pointer]:
+                - /url: https://go.clerk.com/components
+                - img [ref=e56]
+            - paragraph [ref=e61]: Development mode
+      - paragraph [ref=e62]: Share photos, plan events, and stay connected with the people who matter most.
+  - region "Notifications alt+T"
+  - alert [ref=e63]
+```

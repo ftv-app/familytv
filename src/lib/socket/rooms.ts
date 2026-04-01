@@ -122,7 +122,8 @@ export async function joinWatchPartyRoom(
   // Verify user is a member of this family
   const { allowed, userName } = await verifyWatchPartyAccess(
     socket.userId,
-    familyId
+    familyId,
+    socket.token || ''
   );
 
   if (!allowed) {

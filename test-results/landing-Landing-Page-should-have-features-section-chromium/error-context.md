@@ -1,0 +1,98 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - img [ref=e7]
+          - generic [ref=e10]: FamilyTV
+        - generic [ref=e11]:
+          - link "Sign in" [ref=e12] [cursor=pointer]:
+            - /url: /sign-in
+            - button "Sign in" [ref=e13]
+          - link "Get started" [ref=e14] [cursor=pointer]:
+            - /url: /sign-up
+            - button "Get started" [ref=e15]
+    - main [ref=e16]:
+      - generic [ref=e26]:
+        - generic [ref=e27]: ★ Now Streaming ★
+        - heading "Your family's private channel" [level=1] [ref=e28]:
+          - text: Your family's
+          - text: private channel
+        - paragraph [ref=e29]: Photos, videos, and live moments — shared only with family. No ads, no algorithms, no strangers. Just your people, seeing what matters.
+        - generic [ref=e30]:
+          - link "Start free" [ref=e31] [cursor=pointer]:
+            - /url: /sign-up
+            - button "Start free" [ref=e32]
+          - link "Sign in" [ref=e33] [cursor=pointer]:
+            - /url: /sign-in
+            - button "Sign in" [ref=e34]
+      - generic [ref=e36]:
+        - heading "Families love FamilyTV" [level=2] [ref=e37]
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - generic [ref=e40]:
+              - img "The Richardson Family" [ref=e42]
+              - generic [ref=e43]: The Richardson Family
+            - paragraph [ref=e44]: “Grandma finally gets to see the kids grow up, even from across the country.
+          - generic [ref=e45]:
+            - generic [ref=e46]:
+              - img "The Nakamura Family" [ref=e48]
+              - generic [ref=e49]: The Nakamura Family
+            - paragraph [ref=e50]: “We share everything — birthday parties, soccer games, random Tuesdays. It feels like we're always together.
+          - generic [ref=e51]:
+            - generic [ref=e52]:
+              - img "The O'Brien Family" [ref=e54]
+              - generic [ref=e55]: The O'Brien Family
+            - paragraph [ref=e56]: “No more group chats with 47 messages. Just one channel, our family.
+      - generic [ref=e58]:
+        - heading "HOW IT WORKS" [level=2] [ref=e59]
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - generic [ref=e62]: "1"
+            - generic [ref=e63]:
+              - heading "Create your family channel" [level=3] [ref=e64]
+              - paragraph [ref=e65]: Sign up in seconds — no credit card needed. Your channel is ready immediately.
+          - generic [ref=e66]:
+            - generic [ref=e67]: "2"
+            - generic [ref=e68]:
+              - heading "Invite your family" [level=3] [ref=e69]
+              - paragraph [ref=e70]: Share a simple link — no app downloads required. Anyone can join on any device.
+          - generic [ref=e71]:
+            - generic [ref=e72]: "3"
+            - generic [ref=e73]:
+              - heading "Share what matters" [level=3] [ref=e74]
+              - paragraph [ref=e75]: Post photos, videos, and go live. Everything stays private to your family.
+      - generic [ref=e77]:
+        - heading "YOUR CHANNEL INCLUDES" [level=2] [ref=e78]
+        - generic [ref=e79]:
+          - generic [ref=e80]:
+            - generic [ref=e81]:
+              - img [ref=e83]
+              - generic [ref=e87]: Photo & Video
+            - generic [ref=e89]: Share memories in high quality. No compression, no limits on what your family can see.
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - img [ref=e93]
+              - generic [ref=e95]: Live Broadcasting
+            - generic [ref=e97]: Go live and share moments in real-time. Family everywhere can watch together.
+          - generic [ref=e98]:
+            - generic [ref=e99]:
+              - img [ref=e101]
+              - generic [ref=e103]: Family Calendar
+            - generic [ref=e105]: Birthdays, events, reunions — everyone sees what's coming up. Never miss a moment.
+      - generic [ref=e107]:
+        - img [ref=e109]
+        - heading "Family privacy, guaranteed." [level=2] [ref=e114]
+        - paragraph [ref=e115]: We don't sell your data. We don't show ads. We don't use your family's photos to train AI. FamilyTV is built to protect what you share, not exploit it.
+    - contentinfo [ref=e116]:
+      - generic [ref=e117]:
+        - generic [ref=e118]:
+          - img [ref=e120]
+          - generic [ref=e123]: FamilyTV
+        - paragraph [ref=e124]: Made for families, with privacy first.
+  - region "Notifications alt+T"
+  - alert [ref=e125]
+```

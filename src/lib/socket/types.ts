@@ -61,6 +61,7 @@ export interface AuthenticatedSocket extends Socket {
   userName?: string;
   familyId?: string;
   sessionId?: string;
+  token?: string;
 }
 
 // ---- Room Keys ----

@@ -3,7 +3,7 @@
  * Supports both standalone Node.js server and Vercel serverless
  */
 import { Server as HttpServer } from 'http';
-import { Server as SocketIOServer } from 'socket.io';
+import { Server as SocketIOServer, type Socket } from 'socket.io';
 import { Redis } from '@upstash/redis';
 import type { AuthenticatedSocket } from './types';
 import { socketServerState } from './types';
@@ -79,23 +79,12 @@ export async function initializeSocketServer(
   });
 
   // Apply Redis adapter if Redis is available
+  // NOTE: Upstash Redis does not support duplicate() for pub/sub connections.
+  // For single-instance MVP, we run without the Redis adapter.
+  // For multi-instance production, consider using a proper Redis/Upstash setup
+  // that supports pub/sub, or use Socket.IO's built-in broadcast approach.
   if (redis) {
-    try {
-      // Dynamic import for Redis adapter (only loads when Redis is available)
-      const { createAdapter } = await import('@socket.io/redis-adapter');
-      
-      const pubClient = redis; // Upstash Redis is compatible with the Redis adapter
-      const subClient = redis.duplicate();
-      
-      // Note: Upstash Redis may not support pub/sub in the same way
-      // For production with multiple instances, consider using Redis Streams
-      // or a dedicated pub/sub broker
-      io.adapter(createAdapter(pubClient as never, subClient as never));
-      
-      console.log('Socket.IO Redis adapter enabled');
-    } catch (error) {
-      console.warn('Failed to enable Redis adapter:', error);
-    }
+    console.log('Socket.IO running without Redis adapter (single-instance mode). Upstash does not support duplicate() for pub/sub.');
   } else {
     console.log('Socket.IO running without Redis adapter (single-instance mode)');
   }

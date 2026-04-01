@@ -2,7 +2,8 @@
  * Watch Party Chat Persistence
  * Neon Postgres integration for storing last 100 chat messages per session
  */
-import { getSql, sql } from '@/db';
+import { db } from '@/db';
+import { sql } from 'drizzle-orm';
 import type { ChatMessage } from './types';
 
 // ---- Database Schema ----
@@ -36,7 +37,7 @@ export async function saveChatMessage(
   const timestamp = Date.now();
 
   try {
-    await getSql()`
+    await db.execute(sql`
       INSERT INTO watch_party_messages (id, family_id, session_id, user_id, user_name, message, created_at)
       VALUES (
         ${id}::uuid,
@@ -47,7 +48,7 @@ export async function saveChatMessage(
         ${message},
         NOW()
       )
-    `;
+    `);
 
     // Cleanup old messages beyond MAX_MESSAGES_PER_SESSION
     await cleanupOldMessages(familyId, sessionId);
@@ -86,7 +87,7 @@ export async function getRecentMessages(
   limit: number = MAX_MESSAGES_PER_SESSION
 ): Promise<ChatMessage[]> {
   try {
-    const messages = await getSql`
+    const messages = await db.execute(sql`
       SELECT 
         id,
         user_id as "userId",
@@ -97,7 +98,7 @@ export async function getRecentMessages(
       WHERE family_id = ${familyId}::uuid AND session_id = ${sessionId}
       ORDER BY created_at DESC
       LIMIT ${limit}
-    `;
+    `);
 
     return (messages as unknown as ChatMessage[]).reverse();
   } catch (error) {
@@ -118,7 +119,7 @@ export async function getMessageById(
   messageId: string
 ): Promise<ChatMessage | null> {
   try {
-    const messages = await getSql`
+    const messages = await db.execute(sql`
       SELECT 
         id,
         user_id as "userId",
@@ -127,7 +128,7 @@ export async function getMessageById(
         EXTRACT(EPOCH FROM created_at)::int * 1000 as timestamp
       FROM watch_party_messages
       WHERE id = ${messageId}::uuid AND family_id = ${familyId}::uuid
-    `;
+    `);
 
     if ((messages as unknown[]).length === 0) {
       return null;
@@ -151,13 +152,13 @@ export async function deleteMessage(
   userId: string
 ): Promise<boolean> {
   try {
-    const result = await getSql`
+    const result = await db.execute(sql`
       DELETE FROM watch_party_messages
       WHERE id = ${messageId}::uuid 
         AND family_id = ${familyId}::uuid 
         AND user_id = ${userId}
       RETURNING id
-    `;
+    `);
 
     return (result as unknown[]).length > 0;
   } catch (error) {
@@ -178,7 +179,7 @@ async function cleanupOldMessages(
 ): Promise<void> {
   try {
     // Delete messages beyond the limit
-    await getSql`
+    await db.execute(sql`
       DELETE FROM watch_party_messages wpm
       WHERE wpm.family_id = ${familyId}::uuid
         AND wpm.session_id = ${sessionId}
@@ -188,7 +189,7 @@ async function cleanupOldMessages(
           ORDER BY created_at DESC
           LIMIT ${MAX_MESSAGES_PER_SESSION}
         )
-    `;
+    `);
   } catch (error) {
     // Non-fatal: log but don't throw
     console.error('Error cleaning up old messages:', error);
@@ -203,11 +204,11 @@ export async function getMessageCount(
   sessionId: string
 ): Promise<number> {
   try {
-    const result = await getSql`
+    const result = await db.execute(sql`
       SELECT COUNT(*)::int as count
       FROM watch_party_messages
       WHERE family_id = ${familyId}::uuid AND session_id = ${sessionId}
-    `;
+    `);
 
     return ((result as { count: number }[])[0]?.count) || 0;
   } catch (error) {
