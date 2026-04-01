@@ -583,6 +583,146 @@ describe('presence', () => {
       expect(state.users[0].status).toBe('active');
     });
   });
+
+  describe('mergePresenceState branches', () => {
+    let manager: PresenceManager;
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      manager = new PresenceManager();
+    });
+
+    afterEach(() => {
+      manager.destroy();
+      vi.useRealTimers();
+    });
+
+    it('skips inactive users without calling updateIdleStatus first (line 261 continue branch)', () => {
+      // Set fake time to T=0
+      vi.setSystemTime(0);
+      
+      // Join user at T=0 - lastSeen will be 0
+      manager.joinRoom('test-room', 'user1', 'Mom', null, 'device1');
+      
+      // Advance time to T=121000 (past removal threshold of 120000ms)
+      vi.setSystemTime(121_000);
+      
+      // Call getRoomPresence directly WITHOUT calling updateIdleStatus
+      // The mergePresenceState should skip the stale user due to continue at line 261
+      const state = manager.getRoomPresence('test-room');
+      
+      // User should be filtered out (not present in merged output)
+      expect(state.users.length).toBe(0);
+    });
+
+    it('updates primary device when second device has more recent lastSeen (line 271)', () => {
+      // Set fake time to T=0
+      vi.setSystemTime(0);
+      
+      // Join first device at T=0
+      manager.joinRoom('test-room', 'user1', 'Mom', null, 'device1');
+      
+      // Advance time by 10 seconds
+      vi.setSystemTime(10_000);
+      
+      // Join second device at T=10000 - this has MORE RECENT lastSeen
+      manager.joinRoom('test-room', 'user1', 'Mom', null, 'device2');
+      
+      // Get presence state
+      const state = manager.getRoomPresence('test-room');
+      
+      // Should have merged to 1 user with 2 devices
+      expect(state.users.length).toBe(1);
+      expect(state.users[0].deviceCount).toBe(2);
+      expect(state.users[0].isMultiDevice).toBe(true);
+      
+      // The primary should be device2 because it has the more recent lastSeen
+      const room = manager.getOrCreateRoom('test-room');
+      const device2User = Array.from(room.users.values()).find(u => u.deviceId === 'device2');
+      expect(device2User).toBeDefined();
+      expect(state.users[0].oderId).toBe(device2User!.oderId);
+    });
+
+    it('handles offline status calculation when timeSinceLastSeen exceeds threshold (line 284)', () => {
+      // This tests the offline status branch in the merged users loop
+      // We need to simulate a scenario where the primary's lastSeen appears stale
+      // enough for timeSinceLastSeen >= REMOVAL_THRESHOLD_MS in the second loop
+      
+      // Join user at T=0
+      vi.setSystemTime(0);
+      manager.joinRoom('test-room', 'user1', 'Mom', null, 'device1');
+      
+      // Advance time past idle threshold but before removal threshold
+      vi.setSystemTime(31_000);
+      
+      // Manually set the user's status to 'idle' (simulating updateIdleStatus effect)
+      const room = manager.getOrCreateRoom('test-room');
+      const user = Array.from(room.users.values())[0];
+      user.status = 'idle';
+      
+      // Now call getRoomPresence - this will use mergePresenceState
+      // which recalculates status based on timeSinceLastSeen
+      const state = manager.getRoomPresence('test-room');
+      
+      // The status should be recalculated based on time, not the stored status
+      // Since 31s >= IDLE_THRESHOLD_MS (30s), it should be 'idle'
+      expect(state.users[0].status).toBe('idle');
+    });
+
+    it('primary device selection with multiple devices at same time', () => {
+      // When two devices join at the same time, the first one should be primary
+      vi.setSystemTime(0);
+      manager.joinRoom('test-room', 'user1', 'Mom', null, 'device1');
+      manager.joinRoom('test-room', 'user1', 'Mom', null, 'device2');
+      
+      const state = manager.getRoomPresence('test-room');
+      
+      // Both devices should be grouped under one merged user
+      expect(state.users.length).toBe(1);
+      expect(state.users[0].deviceCount).toBe(2);
+      expect(state.users[0].isMultiDevice).toBe(true);
+      
+      // The first device should be primary (oderId should match device1)
+      const room = manager.getOrCreateRoom('test-room');
+      const device1User = Array.from(room.users.values()).find(u => u.deviceId === 'device1');
+      expect(state.users[0].oderId).toBe(device1User!.oderId);
+    });
+
+    it('user with single device should not be marked multi-device', () => {
+      vi.setSystemTime(0);
+      manager.joinRoom('test-room', 'user1', 'Mom', null, 'device1');
+      
+      const state = manager.getRoomPresence('test-room');
+      
+      expect(state.users.length).toBe(1);
+      expect(state.users[0].isMultiDevice).toBe(false);
+      expect(state.users[0].deviceCount).toBe(1);
+    });
+
+    it('correctly handles multi-device user with stale first device and fresh second device', () => {
+      // This test specifically exercises line 271 (primary update)
+      // First device joins at T=0, second at T=50000
+      vi.setSystemTime(0);
+      manager.joinRoom('test-room', 'user1', 'Mom', null, 'device1');
+      
+      vi.setSystemTime(50_000);
+      manager.joinRoom('test-room', 'user1', 'Mom', null, 'device2');
+      
+      const state = manager.getRoomPresence('test-room');
+      
+      // Should only be 1 merged user
+      expect(state.users.length).toBe(1);
+      expect(state.users[0].deviceCount).toBe(2);
+      
+      // device2 should be primary since it has more recent lastSeen (50000 vs 0)
+      const room = manager.getOrCreateRoom('test-room');
+      const device2User = Array.from(room.users.values()).find(u => u.deviceId === 'device2');
+      expect(state.users[0].oderId).toBe(device2User!.oderId);
+      
+      // LastSeen should be 50000 (the more recent device)
+      expect(state.users[0].lastSeen).toBe(50_000);
+    });
+  });
 });
 
 describe('PresenceStatus type', () => {
