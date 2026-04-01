@@ -23,6 +23,7 @@ vi.mock("socket.io-client", () => ({
     on: mockOn,
     off: mockOff,
     disconnect: vi.fn(),
+    connected: true,
   })),
 }));
 
@@ -75,7 +76,7 @@ describe("Reactions Component", () => {
       render(<Reactions roomId="test-room" userId="user-1" userName="Test User" />);
 
       const button = screen.getByTestId("watch-party-reaction-😂");
-      expect(button).toBeDisabled(); // Not disabled - but we check it IS a button
+      expect(button).not.toBeDisabled();
       expect(button.type).toBe("button");
     });
   });
