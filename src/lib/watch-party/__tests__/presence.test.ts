@@ -13,10 +13,14 @@ import {
 } from '../presence';
 
 // Mock crypto.getRandomValues for UUID generation
+// Track call count to return different values each time
+let mockCallCount = 0;
 const mockRandomValues = vi.fn((arr: Uint8Array) => {
   for (let i = 0; i < arr.length; i++) {
-    arr[i] = i % 256;
+    // Return different bytes based on call count to ensure unique UUIDs
+    arr[i] = (i + mockCallCount * 17) % 256;
   }
+  mockCallCount++;
   return arr;
 });
 vi.stubGlobal('crypto', { getRandomValues: mockRandomValues });
@@ -213,10 +217,12 @@ describe('presence', () => {
 
       beforeEach(() => {
         manager = new PresenceManager();
+        vi.useFakeTimers();
       });
 
       afterEach(() => {
         manager.destroy();
+        vi.useRealTimers();
       });
 
       it('updates lastSeen and status', () => {
@@ -522,8 +528,9 @@ describe('presence', () => {
     let manager: PresenceManager;
 
     beforeEach(() => {
+      // Use fake timers BEFORE creating manager to ensure Date is mocked
+      vi.useFakeTimers({ shouldAdvanceTime: false });
       manager = new PresenceManager();
-      vi.useFakeTimers();
     });
 
     afterEach(() => {
