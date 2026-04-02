@@ -89,7 +89,7 @@ function MobileNav() {
                 key={item.href}
                 href={item.href}
                 className={`
-                  flex items-center gap-3 px-3 py-3 rounded-lg transition-colors
+                  flex items-center gap-3 px-3 rounded-lg transition-colors
                   focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
                   hover:bg-[#252529] hover:text-[#E8E8EC]
                   ${isActive ? "" : ""}
@@ -97,14 +97,20 @@ function MobileNav() {
                 style={{
                   backgroundColor: isActive ? "#252529" : "transparent",
                   color: isActive ? "#E8E8EC" : "#A8A8B0",
+                  minHeight: "48px",
+                  paddingTop: "14px",
+                  paddingBottom: "14px",
                 }}
                 onClick={() => setOpen(false)}
+                aria-current={isActive ? "page" : undefined}
+                data-testid={`nav-${item.label.toLowerCase()}-link`}
               >
                 <item.icon
                   className="w-5 h-5 shrink-0"
                   style={{ color: isActive ? "#D4AF37" : "inherit" }}
+                  aria-hidden="true"
                 />
-                <span className="text-sm font-medium">{item.label}</span>
+                <span className="text-base font-medium">{item.label}</span>
               </Link>
             );
           })}
@@ -113,21 +119,23 @@ function MobileNav() {
             style={{ borderColor: "rgba(255,255,255,0.06)" }}
           >
             <p
-              className="px-3 py-2 text-xs font-medium uppercase tracking-wider"
-              style={{ color: "#5A5A62" }}
+              className="px-3 py-2 text-base font-medium uppercase tracking-wider"
+              style={{ color: "#A8A8B0" }}
+              aria-hidden="true"
             >
               Account
             </p>
             <SignOutButton>
               <button
-                className="flex items-center gap-3 px-3 py-3 rounded-lg transition-colors w-full text-left
+                className="flex items-center gap-3 px-3 rounded-lg transition-colors w-full text-left
                   focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
                   hover:bg-[#252529] hover:text-[#E8E8EC]"
-                style={{ color: "#A8A8B0" }}
+                style={{ color: "#A8A8B0", minHeight: "48px", paddingTop: "14px", paddingBottom: "14px" }}
                 onClick={() => { window.location.href = "/"; }}
+                data-testid="nav-signout-btn"
               >
-                <LogOut className="w-5 h-5 shrink-0" />
-                <span className="text-sm font-medium">Sign out</span>
+                <LogOut className="w-5 h-5 shrink-0" aria-hidden="true" />
+                <span className="text-base font-medium">Sign out</span>
               </button>
             </SignOutButton>
           </div>

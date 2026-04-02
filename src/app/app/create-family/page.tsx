@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 export default function CreateFamilyPage() {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function CreateFamilyPage() {
         <h1 className="font-heading text-3xl font-semibold text-foreground mb-2">
           Name your family
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-base">
           This is the name your family will see — you can always change it later.
         </p>
       </div>
@@ -80,16 +81,25 @@ export default function CreateFamilyPage() {
 
             <Button
               type="submit"
-              className="w-full text-base h-12"
+              className="w-full text-base min-h-[48px]"
               disabled={loading || !name.trim()}
+              aria-busy={loading}
+              data-testid="create-family-submit"
             >
-              {loading ? "Creating..." : "Create family"}
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" aria-hidden="true" />
+                  Creating...
+                </>
+              ) : (
+                "Create family"
+              )}
             </Button>
           </form>
         </CardContent>
       </Card>
 
-      <p className="text-center text-sm text-muted-foreground mt-6">
+      <p className="text-center text-base text-muted-foreground mt-6">
         As the creator, you&apos;ll be the owner. You can invite family members after
         creating the group.
       </p>
