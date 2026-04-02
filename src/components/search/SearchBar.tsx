@@ -8,6 +8,7 @@ interface SearchBarProps {
   familyId: string;
   onSearch: (query: string, familyId: string) => Promise<void>;
   loading?: boolean;
+  onClear?: () => void;
   className?: string;
 }
 
@@ -15,6 +16,7 @@ export function SearchBar({
   familyId,
   onSearch,
   loading = false,
+  onClear,
   className,
 }: SearchBarProps) {
   const [query, setQuery] = useState("");
@@ -54,6 +56,7 @@ export function SearchBar({
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
+    onClear?.();
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
