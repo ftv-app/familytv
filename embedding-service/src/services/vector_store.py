@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import lancedb
-from lancedb.embeddings import get_embedding_function
+from lancedb.embeddings import SentenceTransformerEmbeddings, EmbeddingFunctionConfig
 from lancedb.pydantic import LanceModel, Vector
 
 from src.config import settings
@@ -39,7 +39,7 @@ class VectorStore:
 
     def __init__(self) -> None:
         self._db: lancedb.LanceDBConnection | None = None
-        self._table: lancedb.Table | None = None
+        self._table: Any = None
         self._db_path: str = settings.LANCE_DB_PATH
 
     def _ensure_db_path(self) -> Path:
@@ -56,9 +56,8 @@ class VectorStore:
         self._db = lancedb.connect(str(db_path))
 
         # Register the embedding function so LanceDB can auto-embed on insert
-        embedding_function = get_embedding_function(
-            name="sentence-transformers",
-            model=settings.MODEL_NAME,
+        embedding_function = SentenceTransformerEmbeddings(
+            name=settings.MODEL_NAME,
         )
 
         # Check if table already exists
@@ -70,12 +69,16 @@ class VectorStore:
             self._table = self._db.create_table(
                 self.TABLE_NAME,
                 schema=Document,
-                embedding_function=embedding_function,
+                embedding_functions=[EmbeddingFunctionConfig(
+                    source_column="text",
+                    vector_column="vector",
+                    function=embedding_function,
+                )],
             )
             logger.info("Created new table '%s'", self.TABLE_NAME)
 
     @property
-    def table(self) -> lancedb.Table:
+    def table(self) -> Any:
         """Return the cached LanceDB table."""
         if self._table is None:
             raise RuntimeError("VectorStore not loaded. Call load() first.")
