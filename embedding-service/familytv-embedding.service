@@ -1,0 +1,16 @@
+[Unit]
+Description=FamilyTV Embedding Service (FastAPI + LanceDB)
+After=network.target
+
+[Service]
+Type=simple
+User=openclaw
+WorkingDirectory=/home/openclaw/familytv/embedding-service
+ExecStart=/home/openclaw/familytv/embedding-service/.venv/bin/python -m uvicorn src.main:app --host 0.0.0.0 --port 8080
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/tmp/embedding-service.log
+StandardError=append:/tmp/embedding-service.log
+
+[Install]
+WantedBy=multi-user.target

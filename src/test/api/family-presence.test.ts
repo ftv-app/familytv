@@ -125,9 +125,9 @@ describe("/api/family/presence", () => {
 
       expect(res.status).toBe(200);
       const json = await res.json();
-      expect(json).toHaveProperty("onlineMembers");
+      expect(json).toHaveProperty("users");
       expect(json).toHaveProperty("timestamp");
-      expect(Array.isArray(json.onlineMembers)).toBe(true);
+      expect(Array.isArray(json.users)).toBe(true);
     });
 
     it("returns empty onlineMembers when no one is online", async () => {
@@ -139,7 +139,7 @@ describe("/api/family/presence", () => {
 
       expect(res.status).toBe(200);
       const json = await res.json();
-      expect(json.onlineMembers).toEqual([]);
+      expect(json.users).toEqual([]);
     });
 
     it("uses first family when familyId not provided", async () => {
