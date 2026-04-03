@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -190,7 +190,7 @@ interface FamilyCalendarProps {
   events?: FamilyEvent[];
 }
 
-export function FamilyCalendar({ familyId, events: initialEvents }: FamilyCalendarProps) {
+export function FamilyCalendar({ familyId: _familyId, events: initialEvents }: FamilyCalendarProps) {
   const events = initialEvents ?? PLACEHOLDER_EVENTS;
   const now = new Date();
   const upcomingCount = events.filter((e) => e.date >= now).length;

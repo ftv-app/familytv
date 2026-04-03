@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { PresenceUpdate, ReactionUpdate } from "@/lib/socket/types";
-import { Clock, Calendar, Users, MessageCircle, Heart, Loader2, Wifi, WifiOff } from "lucide-react";
+import { Clock, Calendar, Users, MessageCircle, Heart, Wifi, WifiOff } from "lucide-react";
 
 // ─── Brand Tokens ─────────────────────────────────────────────────────────────
 const TERRACOTTA = "#c4785a";
-const CREAM = "#faf8f5";
 const CREAM_MUTED = "oklch(0.45_0.015_50)";
 const DARK_CHARS = "oklch(0.18_0.015_50)";
 const CARD_BG = "#fffdfb";
@@ -351,6 +350,7 @@ export function WhatsHappeningNow({
 
   const socketRef = useRef<WebSocket | null>(null);
   const presenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connectPresenceRef = useRef<(() => void) | null>(null);
 
   // Fetch upcoming events (24h) from activity API
   const fetchUpcomingEvents = useCallback(async (): Promise<UpcomingEvent[]> => {
@@ -466,7 +466,7 @@ export function WhatsHappeningNow({
         setState((prev) => ({ ...prev, isConnected: false }));
         // Reconnect after 3s
         presenceTimeoutRef.current = setTimeout(() => {
-          connectPresence();
+          connectPresenceRef.current?.();
         }, 3000);
       };
 
@@ -478,6 +478,11 @@ export function WhatsHappeningNow({
       setState((prev) => ({ ...prev, isConnected: false }));
     }
   }, [familyId, currentUserId]);
+
+  // Keep ref in sync with connectPresence callback for recursive WebSocket reconnects
+  useEffect(() => {
+    connectPresenceRef.current = connectPresence;
+  }, [connectPresence]);
 
   useEffect(() => {
     // Initial data load
@@ -493,6 +498,7 @@ export function WhatsHappeningNow({
     loadInitial();
 
     // Connect to presence
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     connectPresence();
 
     return () => {
@@ -503,16 +509,16 @@ export function WhatsHappeningNow({
     };
   }, [connectPresence, fetchUpcomingEvents]);
 
-  const handleActivityClick = useCallback((activity: RecentActivity) => {
+  const handleActivityClick = useCallback((_activity: RecentActivity) => {
     // Navigate to the relevant post or reaction source
     // For now, this is a no-op; can be wired to navigate()
   }, []);
 
-  const handleEventClick = useCallback((event: UpcomingEvent) => {
+  const handleEventClick = useCallback((_event: UpcomingEvent) => {
     // Could open event detail modal
   }, []);
 
-  const handleMemberClick = useCallback((member: OnlineMember) => {
+  const handleMemberClick = useCallback((_member: OnlineMember) => {
     // Could open member profile
   }, []);
 
