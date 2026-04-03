@@ -136,6 +136,7 @@ export function CreatePost({ familyId, onPostCreated }: CreatePostProps) {
         id="create-post"
         className="border-dashed border-2 border-border/60 hover:border-primary/40 transition-colors cursor-pointer"
         onClick={() => setOpen(true)}
+        data-testid="create-post-trigger"
       >
         <CardContent className="p-6 flex flex-col items-center justify-center text-center min-h-[120px]">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">

@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   turbopack: {},
@@ -22,10 +21,11 @@ const nextConfig: NextConfig = {
   // instrumentationHook removed - available by default in Next.js 16
 };
 
-const sentryConfig = withSentryConfig(nextConfig, {
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  silent: false,
-});
+// Sentry temporarily disabled — install @sentry/nextjs to re-enable
+// const sentryConfig = withSentryConfig(nextConfig, {
+//   org: process.env.SENTRY_ORG,
+//   project: process.env.SENTRY_PROJECT,
+//   silent: false,
+// });
 
-export default sentryConfig;
+export default nextConfig;

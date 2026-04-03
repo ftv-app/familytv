@@ -72,15 +72,15 @@ export class FeedPage {
 
   async expectEmptyState() {
     await expect(this.emptyState).toBeVisible();
-    await expect(this.emptyStateTitle).toContainText("Your family feed is waiting");
-    await expect(this.emptyStateDescription).toContainText("Share your first photo or video");
-    await expect(this.emptyStatePrimaryCta).toContainText("Share your first memory");
+    await expect(this.emptyStateTitle).toContainText("Your family's story starts here");
+    await expect(this.emptyStateDescription).toContainText("When someone shares a moment, it will appear here");
+    await expect(this.emptyStatePrimaryCta).toContainText("Share the first moment");
     await expect(this.emptyStateSecondaryCta).toContainText("Invite family members");
   }
 
   async expectEmptyStatePrimaryCta() {
     await expect(this.emptyStatePrimaryCta).toBeVisible();
-    await expect(this.emptyStatePrimaryCta).toContainText("Share your first memory");
+    await expect(this.emptyStatePrimaryCta).toContainText("Share the first moment");
   }
 
   async expectEmptyStateSecondaryCta() {
