@@ -31,6 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, _errorInfo: ErrorInfo): void {
+    void _errorInfo; // suppress unused var warning
     // Send to Sentry with PII scrubbing (Sentry SDK is configured)
     // Do NOT log error.message, error.stack, or componentStack to console — they may contain PII
     if (typeof window !== "undefined" && "Sentry" in window) {
