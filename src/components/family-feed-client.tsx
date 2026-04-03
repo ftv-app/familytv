@@ -124,19 +124,20 @@ export function FamilyFeedClient({
         </p>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-4" data-testid="feed-post-list">
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
       </div>
 
       {hasMore && (
-        <div className="text-center pt-2">
+        <div className="text-center pt-2" data-testid="feed-load-more-container">
           <Button
             variant="outline"
             onClick={handleLoadMore}
             disabled={loading}
             className="min-w-[140px] min-h-[44px]"
+            data-testid="feed-load-more-button"
           >
             {loading ? (
               <>
@@ -151,7 +152,7 @@ export function FamilyFeedClient({
       )}
 
       {!hasMore && posts.length > 0 && (
-        <p className="text-center text-sm text-muted-foreground py-4">
+        <p className="text-center text-sm text-muted-foreground py-4" data-testid="feed-all-caught-up">
           You&apos;re all caught up! 🎉
         </p>
       )}
@@ -163,9 +164,9 @@ function EmptyFeedState({ familyId }: { familyId: string }) {
   return (
     <WarmEmptyState
       emoji="📷"
-      title="Your family feed is waiting"
-      description="Share your first photo or video and start filling this feed with the moments that matter most."
-      ctaLabel="Share your first memory"
+      title="Your family's story starts here"
+      description="When someone shares a moment, it will appear here"
+      ctaLabel="Share the first moment"
       ctaHref="#create-post"
       secondaryLabel="Invite family members"
       secondaryHref={`/app/family/${familyId}/invite`}
