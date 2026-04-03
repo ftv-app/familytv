@@ -236,11 +236,12 @@ class VectorStore:
     def close(self) -> None:
         """Close the database connection."""
         if self._db is not None:
-            self._db.close()
+            # lancedb==0.11.0 LanceDBConnection has no close() method;
+            # connection is released when the object is garbage-collected
             self._db = None
             self._table = None
             self._video_table = None
-            logger.info("LanceDB connection closed")
+            logger.info("LanceDB connection cleared")
 
 
 # Singleton instance

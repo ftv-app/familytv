@@ -54,6 +54,7 @@ export function WarmEmptyState({
       aria-live="polite"
       className="flex flex-col items-center justify-center text-center px-6 py-16 rounded-2xl"
       style={{ backgroundColor: "#faf8f5" }}
+      data-testid="warm-empty-state"
     >
       {/* Decorative icon bubble */}
       <div
@@ -72,6 +73,7 @@ export function WarmEmptyState({
           fontFamily: "var(--font-heading, 'Fraunces', serif)",
           color: "oklch(0.18_0.015_50)",
         }}
+        data-testid="warm-empty-state-title"
       >
         {title}
       </h2>
@@ -83,6 +85,7 @@ export function WarmEmptyState({
           fontFamily: "var(--font-sans, 'Plus Jakarta Sans', sans-serif)",
           color: "oklch(0.45_0.015_50)",
         }}
+        data-testid="warm-empty-state-description"
       >
         {description}
       </p>
@@ -101,6 +104,7 @@ export function WarmEmptyState({
                     color: "#ffffff",
                     fontFamily: "var(--font-sans, 'Plus Jakarta Sans', sans-serif)",
                   }}
+                  data-testid="warm-empty-state-primary-cta"
                 >
                   {ctaLabel}
                 </Button>
@@ -115,6 +119,7 @@ export function WarmEmptyState({
                   color: "#ffffff",
                   fontFamily: "var(--font-sans, 'Plus Jakarta Sans', sans-serif)",
                 }}
+                data-testid="warm-empty-state-primary-cta"
               >
                 {ctaLabel}
               </Button>
@@ -133,6 +138,7 @@ export function WarmEmptyState({
                   backgroundColor: "transparent",
                   fontFamily: "var(--font-sans, 'Plus Jakarta Sans', sans-serif)",
                 }}
+                data-testid="warm-empty-state-secondary-cta"
               >
                 {secondaryLabel}
               </Button>
