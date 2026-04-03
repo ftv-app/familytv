@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 
 from src.config import settings
 from src.models import HealthResponse
-from src.routers import embed, search
+from src.routers import embed, search, video
 from src.services.embedder import get_embedder
 from src.services.vector_store import get_vector_store
 
@@ -77,6 +77,7 @@ app.add_middleware(
 # Routers
 app.include_router(embed.router)
 app.include_router(search.router)
+app.include_router(video.router)
 
 
 # ─── Global exception handler ─────────────────────────────────────────────────

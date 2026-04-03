@@ -17,13 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 class Document(LanceModel):
-    """LanceDB row schema for indexed documents."""
+    """LanceDB row schema for indexed documents (text only)."""
 
     id: str
     text: str
     family_id: str
     type: str | None = None
-    vector: Vector(settings.EMBEDDING_DIM)
+    vector: Vector(384)  # auto-computed by BGE-small
 
 
 # ─── VectorStore ──────────────────────────────────────────────────────────────
@@ -36,10 +36,12 @@ class VectorStore:
     """
 
     TABLE_NAME = "documents"
+    VIDEO_TABLE_NAME = "video_slices"
 
     def __init__(self) -> None:
         self._db: lancedb.LanceDBConnection | None = None
         self._table: Any = None
+        self._video_table: Any = None
         self._db_path: str = settings.LANCE_DB_PATH
 
     def _ensure_db_path(self) -> Path:
@@ -49,19 +51,19 @@ class VectorStore:
         return path
 
     def load(self) -> None:
-        """Open (or create) the LanceDB database and table."""
+        """Open (or create) the LanceDB database and tables."""
         db_path = self._ensure_db_path()
         logger.info("Opening LanceDB at: %s", db_path)
 
         self._db = lancedb.connect(str(db_path))
 
-        # Register the embedding function so LanceDB can auto-embed on insert
+        # Text table: auto-embed with BGE-small
         embedding_function = SentenceTransformerEmbeddings(
             name=settings.MODEL_NAME,
         )
 
-        # Check if table already exists
         table_names = self._db.table_names()
+
         if self.TABLE_NAME in table_names:
             self._table = self._db.open_table(self.TABLE_NAME)
             logger.info("Opened existing table '%s', count: %d", self.TABLE_NAME, self.count())
@@ -77,6 +79,73 @@ class VectorStore:
             )
             logger.info("Created new table '%s'", self.TABLE_NAME)
 
+        # Video slices table: explicit CLIP vectors, no auto-embedding
+        if self.VIDEO_TABLE_NAME in table_names:
+            self._video_table = self._db.open_table(self.VIDEO_TABLE_NAME)
+            logger.info("Opened video table, count: %d", self.video_count())
+        else:
+            import pyarrow as pa
+            video_schema = pa.schema([
+                ("id", pa.string()),
+                ("text", pa.string()),
+                ("family_id", pa.string()),
+                ("type", pa.string()),
+                ("vector", pa.list_(pa.float32())),
+                ("video_id", pa.string()),
+                ("timestamp", pa.float64()),
+                ("frame_index", pa.int32()),
+            ])
+            self._video_table = self._db.create_table(self.VIDEO_TABLE_NAME, schema=video_schema)
+            logger.info("Created new video table '%s'", self.VIDEO_TABLE_NAME)
+
+    @property
+    def video_table(self) -> Any:
+        """Return the video slices table."""
+        if self._video_table is None:
+            raise RuntimeError("VectorStore not loaded. Call load() first.")
+        return self._video_table
+
+    def video_count(self) -> int:
+        """Return total number of video slices."""
+        return len(self.video_table)
+
+    def insert_video_slices(self, slices: list[dict[str, Any]]) -> int:
+        """Insert pre-computed video slice vectors (CLIP, 512-dim).
+
+        Args:
+            slices: List of dicts with: id, text, family_id, type, vector, video_id, timestamp, frame_index
+
+        Returns:
+            Number of slices inserted.
+        """
+        if not slices:
+            return 0
+        import pyarrow as pa
+        arrays = {
+            "id": [d["id"] for d in slices],
+            "text": [d["text"] for d in slices],
+            "family_id": [d["family_id"] for d in slices],
+            "type": [d.get("type", "video") for d in slices],
+            "vector": [d["vector"] for d in slices],
+            "video_id": [d["video_id"] for d in slices],
+            "timestamp": [d.get("timestamp", 0.0) for d in slices],
+            "frame_index": [d.get("frame_index", 0) for d in slices],
+        }
+        schema = pa.schema([
+            ("id", pa.string()),
+            ("text", pa.string()),
+            ("family_id", pa.string()),
+            ("type", pa.string()),
+            ("vector", pa.list_(pa.float32())),
+            ("video_id", pa.string()),
+            ("timestamp", pa.float64()),
+            ("frame_index", pa.int32()),
+        ])
+        table = pa.table(arrays, schema=schema)
+        self.video_table.add(table)
+        logger.debug("Inserted %d video slices", len(slices))
+        return len(slices)
+
     @property
     def table(self) -> Any:
         """Return the cached LanceDB table."""
@@ -89,18 +158,26 @@ class VectorStore:
         return len(self.table)
 
     def insert(self, documents: list[dict[str, Any]]) -> int:
-        """Insert documents into the table.
+        """Insert text documents into the table with auto-embedding.
 
         Args:
-            documents: List of dicts with keys: id, text, family_id, type (optional).
-                       The 'vector' field is auto-computed by LanceDB's embedding function.
+            documents: List of dicts with keys: id, text, family_id, type.
+                       vector is auto-computed by BGE-small.
 
         Returns:
             Number of documents inserted.
         """
         if not documents:
             return 0
-        self.table.add(documents)
+
+        # Strip any extra fields LanceDB doesn't know about
+        text_docs = [
+            {k: v for k, v in doc.items() if k in ("id", "text", "family_id", "type")}
+            for doc in documents
+        ]
+
+        # LanceDB auto-embeds via the embedding function registered on the table
+        self.table.add(text_docs)
         logger.debug("Inserted %d documents", len(documents))
         return len(documents)
 
@@ -139,12 +216,20 @@ class VectorStore:
         # LanceDB returns scores alongside columns
         formatted = []
         for row in results:
-            formatted.append({
+            item = {
                 "id": row["id"],
                 "text": row["text"],
                 "score": float(row.get("_score", 0.0)),
                 "type": row.get("type"),
-            })
+            }
+            # Include video metadata if present
+            if row.get("video_id"):
+                item["video_id"] = row["video_id"]
+            if row.get("timestamp") is not None:
+                item["timestamp"] = row["timestamp"]
+            if row.get("frame_index") is not None:
+                item["frame_index"] = row["frame_index"]
+            formatted.append(item)
 
         return formatted
 
@@ -154,6 +239,7 @@ class VectorStore:
             self._db.close()
             self._db = None
             self._table = None
+            self._video_table = None
             logger.info("LanceDB connection closed")
 
 
