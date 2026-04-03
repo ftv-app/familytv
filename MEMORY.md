@@ -40,12 +40,49 @@ Private family social media. Invite-only, video/image sharing, shared calendars,
 Next.js 16.2.1 + Turbopack | Clerk v7 | Neon Postgres | Vercel Blob | Socket.IO + Redis | LanceDB | Sentry | GitHub Actions
 
 ## Quality
-Build passes | E2E: landing 9/9, auth 3/3 | Coverage: ~86% (target 97%+)
+Build passes | E2E: landing 9/9, auth 3/3 | Coverage: ~86% → target 97%+ (CTM-212)
+
+## CTM-212 Test Infrastructure
+Scaffolding added to make it easy to write tests for API routes and components.
+
+**Files created:**
+- `src/test/fixtures/index.ts` — `factories` object + named exports for: user, family, membership, post, comment, reaction, invite, familyInvite, calendarEvent, familySyncState
+- `src/test/api-helpers.ts` — `apiFetch()`, `createMockAuth()`, `expectStatus()`, `jsonBody()`, `expectJson()`, `insertMembership/insertFamily/insertPost()` for integration tests
+- `src/test/component-factories.tsx` — `mockClerkUser()`, `mockUseUserSignedIn/SignedOut()`, `mockFamilyContext()`, `mockPostData()`, `renderWithAuth()`, `renderWithFamily()`, `renderWithAll()`
+
+**CI fix:** Removed `continue-on-error: true` from `.github/workflows/ci.yml` test:coverage step so the 97% threshold actually blocks merges.
+
+**Note:** `component-factories.tsx` uses `jest.fn()` which is vitest-compatible. The 15 pre-existing test failures (WhatsHappeningNow, family-activity-filter, family-presence) are unrelated and tracked separately.
 
 ## Known Issues
 - ~15 test failures in ActivityFeed, WhatsHappeningNow, family-presence, family-activity-filter (from Sprint 011)
 - CTM-209: Clerk rename (founder action in Clerk dashboard)
-- CTM-219: invite O(n)→O(1) (DoS vector, carried from March)
 - Clerk test mode: development mode — E2E tests time out (known infra gap)
 - ESLint hangs locally (CI not affected)
 - SLO alerting inactive
+
+## CTM-219 Implementation
+**P0 Security Fix**: Replaced O(n) invite scan with O(1) hash lookup to mitigate DoS vector.
+
+### Problem
+- Old invite validation iterated ALL invites for a family to find a match (O(n))
+- Attacker could create many invites, causing slow validation for all users
+
+### Solution
+- Added `lookup_hash` column (SHA-256 of invite code) with UNIQUE index
+- Invite creation stores both `invite_code_hash` (bcrypt) and `lookup_hash` (SHA-256)
+- Validation queries use indexed `lookup_hash` for O(1) lookup, THEN bcrypt verify
+
+### Files Changed
+- `src/db/schema.ts`: Added `lookupHash` column + `family_invites_lookup_hash_idx` unique index
+- `drizzle/0001_add_lookup_hash_to_family_invites.sql`: Migration with backfill note
+- `src/app/api/families/[familyId]/invites/route.ts`: Creates invite with `lookupHash`
+- `src/app/api/families/invites/[code]/route.ts`: Validates using O(1) hash lookup
+- `src/app/api/families/invites/[code]/accept/route.ts`: Accepts using O(1) hash lookup
+- `src/__tests__/api/family-invites.test.ts`: Unit tests for O(1) lookup logic
+
+### Security Notes
+- SHA-256 is for INDEX LOOKUP only, not security
+- Bcrypt (12 rounds) remains for secure storage
+- Lookup hash is useless without the original code (one-way)
+- Index is conditional (`WHERE lookup_hash != ''`) to handle edge cases
