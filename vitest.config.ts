@@ -20,7 +20,7 @@ export default defineConfig({
     ],
     coverage: {
       provider: "v8",
-      reporter: ["text", "text-summary", "lcov"],
+      reporter: ["text", "text-summary", "lcov", "json-summary"],
       thresholds: {
         statements: 97,
         branches: 97,
