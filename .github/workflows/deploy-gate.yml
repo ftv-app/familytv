@@ -4,6 +4,8 @@ on:
   pull_request:
     branches: [master, main]
     types: [opened, synchronize, reopened]
+  push:
+    branches: [master, main]
 
 jobs:
   # Gate 1: Tech Lead (code quality)

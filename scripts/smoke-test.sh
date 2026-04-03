@@ -5,7 +5,7 @@
 
 set -e
 
-URL="${1:-https://staging.familytv.vercel.app}"
+URL="${1:-https://familytv.vercel.app}"
 MAX_RETRIES=3
 RETRY_DELAY=5
 
