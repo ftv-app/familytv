@@ -259,32 +259,6 @@ export const factories = {
       ...overrides,
     };
   },
-
-  /**
-   * Creates an album DB row (CTM-237).
-   */
-  album(overrides?: Partial<{
-    id: string;
-    familyId: string;
-    name: string;
-    description: string | null;
-    coverUrl: string | null;
-    createdBy: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }>) {
-    return {
-      id: generateUUID(),
-      familyId: generateUUID(),
-      name: "Summer Vacation 2026",
-      description: "Photos from our family trip",
-      coverUrl: null,
-      createdBy: `user_${generateUUID().slice(0, 8)}`,
-      createdAt: new Date("2026-01-01T00:00:00Z"),
-      updatedAt: new Date("2026-01-01T00:00:00Z"),
-      ...overrides,
-    };
-  },
 };
 
 // Named exports for convenience
@@ -298,4 +272,3 @@ export const invite = factories.invite;
 export const familyInvite = factories.familyInvite;
 export const calendarEvent = factories.calendarEvent;
 export const familySyncState = factories.familySyncState;
-export const album = factories.album;
