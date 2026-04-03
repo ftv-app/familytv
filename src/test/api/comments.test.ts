@@ -40,8 +40,11 @@ vi.mock("drizzle-orm/neon-http", () => ({
 const mockAuth = vi.fn();
 const mockCurrentUser = vi.fn();
 const mockCommentsFindMany = vi.fn();
+const mockCommentsFindFirst = vi.fn();
 const mockCommentsInsert = vi.fn();
 const mockCommentsDelete = vi.fn();
+const mockPostsFindFirst = vi.fn();
+const mockMembershipsFindFirst = vi.fn();
 
 // Mock Clerk auth
 vi.mock("@clerk/nextjs/server", () => ({
@@ -49,19 +52,31 @@ vi.mock("@clerk/nextjs/server", () => ({
   currentUser: (...args: unknown[]) => mockCurrentUser(...args),
 }));
 
-// Mock database
-vi.mock("@/db", () => ({
-  db: {
+// Mock database - define mockDb inside factory to avoid hoisting issues
+vi.mock("@/db", () => {
+  const mockDb = {
     query: {
+      posts: {
+        findFirst: (...args: unknown[]) => mockPostsFindFirst(...args),
+      },
+      familyMemberships: {
+        findFirst: (...args: unknown[]) => mockMembershipsFindFirst(...args),
+      },
       comments: {
         findMany: (...args: unknown[]) => mockCommentsFindMany(...args),
+        findFirst: (...args: unknown[]) => mockCommentsFindFirst(...args),
       },
     },
     insert: (...args: unknown[]) => mockCommentsInsert(...args),
     delete: (...args: unknown[]) => mockCommentsDelete(...args),
-  },
-  comments: {},
-}));
+  };
+  return {
+    db: mockDb,
+    posts: {},
+    familyMemberships: {},
+    comments: {},
+  };
+});
 
 import { GET, POST, DELETE } from "@/app/api/comments/route";
 import { createMockComment } from "@/test/factories";
@@ -96,6 +111,20 @@ describe("/api/comments", () => {
       const comments = [createMockComment({ postId: "post_123" })];
       
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      // Mock post lookup
+      mockPostsFindFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      
+      // Mock membership lookup
+      mockMembershipsFindFirst.mockResolvedValue({
+        id: "membership_123",
+        familyId: "family_123",
+        userId: "user_123",
+      } as any);
+      
       mockCommentsFindMany.mockResolvedValue(comments as any);
       
       const req = new NextRequest("http://localhost/api/comments?postId=post_123");
@@ -154,6 +183,20 @@ describe("/api/comments", () => {
         firstName: "John", 
         emailAddresses: [] 
       } as any);
+      
+      // Mock post lookup
+      mockPostsFindFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      
+      // Mock membership lookup
+      mockMembershipsFindFirst.mockResolvedValue({
+        id: "membership_123",
+        familyId: "family_123",
+        userId: "user_123",
+      } as any);
+      
       mockCommentsInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([comment]),
@@ -169,6 +212,41 @@ describe("/api/comments", () => {
       expect(res.status).toBe(201);
       const json = await res.json();
       expect(json.comment).toBeDefined();
+    });
+
+    it("uses email address as author name when firstName is missing", async () => {
+      const comment = createMockComment({ postId: "post_123", authorId: "user_123" });
+      
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockCurrentUser.mockResolvedValue({ 
+        firstName: null, 
+        emailAddresses: [{ emailAddress: "user@example.com" }] 
+      } as any);
+      
+      mockPostsFindFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      
+      mockMembershipsFindFirst.mockResolvedValue({
+        id: "membership_123",
+        familyId: "family_123",
+        userId: "user_123",
+      } as any);
+      
+      mockCommentsInsert.mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([comment]),
+        }),
+      } as any);
+      
+      const req = new NextRequest("http://localhost/api/comments", {
+        method: "POST",
+        body: JSON.stringify({ postId: "post_123", content: "Hello" }),
+      });
+      const res = await POST(req);
+      
+      expect(res.status).toBe(201);
     });
   });
 
@@ -199,6 +277,25 @@ describe("/api/comments", () => {
 
     it("deletes comment successfully", async () => {
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      // Mock comment lookup with post relation
+      mockCommentsFindFirst.mockResolvedValue({
+        id: "comment_123",
+        postId: "post_123",
+        authorId: "user_123",
+        post: {
+          id: "post_123",
+          familyId: "family_123",
+        },
+      } as any);
+      
+      // Mock membership lookup
+      mockMembershipsFindFirst.mockResolvedValue({
+        id: "membership_123",
+        familyId: "family_123",
+        userId: "user_123",
+      } as any);
+      
       mockCommentsDelete.mockReturnValue({
         where: vi.fn().mockResolvedValue({} as any),
       } as any);
@@ -211,6 +308,98 @@ describe("/api/comments", () => {
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.success).toBe(true);
+    });
+
+    it("returns 404 when comment not found", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockCommentsFindFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/comments?id=nonexistent", {
+        method: "DELETE",
+      });
+      const res = await DELETE(req);
+      
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 403 when user is not a family member (DELETE)", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      
+      mockCommentsFindFirst.mockResolvedValue({
+        id: "comment_123",
+        postId: "post_123",
+        authorId: "user_123",
+        post: {
+          id: "post_123",
+          familyId: "family_123",
+        },
+      } as any);
+      mockMembershipsFindFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/comments?id=comment_123", {
+        method: "DELETE",
+      });
+      const res = await DELETE(req);
+      
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe("GET - error branches", () => {
+    it("returns 404 when post not found", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockPostsFindFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/comments?postId=nonexistent");
+      const res = await GET(req);
+      
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 403 when user is not a family member (GET)", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockPostsFindFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      mockMembershipsFindFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/comments?postId=post_123");
+      const res = await GET(req);
+      
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe("POST - error branches", () => {
+    it("returns 404 when post not found", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockPostsFindFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/comments", {
+        method: "POST",
+        body: JSON.stringify({ postId: "nonexistent", content: "Hello" }),
+      });
+      const res = await POST(req);
+      
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 403 when user is not a family member (POST)", async () => {
+      mockAuth.mockResolvedValue({ userId: "user_123" } as any);
+      mockPostsFindFirst.mockResolvedValue({
+        id: "post_123",
+        familyId: "family_123",
+      } as any);
+      mockMembershipsFindFirst.mockResolvedValue(null);
+      
+      const req = new NextRequest("http://localhost/api/comments", {
+        method: "POST",
+        body: JSON.stringify({ postId: "post_123", content: "Hello" }),
+      });
+      const res = await POST(req);
+      
+      expect(res.status).toBe(403);
     });
   });
 });

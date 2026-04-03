@@ -1,0 +1,84 @@
+# Cloud Run Service Configuration for FamilyTV Embedding Service
+#
+# Deploy with:
+#   gcloud run services replace cloudrun/service.yaml
+#   gcloud run services update-traffic familytv-embeddings --latest
+#
+# Or one-shot:
+#   gcloud run services create familytv-embeddings \
+#     --image=gcr.io/PROJECT_ID/familytv-embeddings:latest \
+#     --region=us-central1 \
+#     --platform=managed \
+#     --no-allow-unauthenticated \
+#     --min-instances=1 \
+#     --max-instances=10 \
+#     --cpu=2 \
+#     --memory=4Gi \
+#     --port=8080 \
+#     --set-env-vars="MODEL_NAME=BAAI/bge-small-en-v1.5,LANCE_DB_PATH=/tmp/familytv_vectors,LOG_LEVEL=info" \
+#     --vpc-connector=familytv-vpc-connector \
+#     --vpc-egress=all-traffic \
+#     --labels="app=familytv,component=embedding-service"
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: familytv-embeddings
+  labels:
+    app: familytv
+    component: embedding-service
+  annotations:
+    run.googleapis.com/ingress: internal
+spec:
+  template:
+    metadata:
+      annotations:
+        # Keep at least 1 instance warm — no cold start latency
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "10"
+        run.googleapis.com/startupProbe: |
+          {
+            "httpGet": {"path": "/health"},
+            "periodSeconds": 10,
+            "failureThreshold": 12,
+            "initialDelaySeconds": 30
+          }
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 30
+      serviceAccountName: familytv-embeddings-sa@PROJECT_ID.iam.gserviceaccount.com
+      containers:
+        - image: gcr.io/PROJECT_ID/familytv-embeddings:latest
+          ports:
+            - name: http1
+              containerPort: 8080
+          env:
+            - name: MODEL_NAME
+              value: BAAI/bge-small-en-v1.5
+            - name: LANCE_DB_PATH
+              value: /tmp/familytv_vectors
+            - name: LOG_LEVEL
+              value: info
+            - name: PORT
+              value: "8080"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          resources:
+            limits:
+              cpu: "2"
+              memory: 4Gi
+            requests:
+              cpu: "2"
+              memory: 4Gi
+          # Volume to persist LanceDB data across container restarts
+          # NOTE: Cloud Run containers are ephemeral. For production,
+          # consider mounting a Cloud Storage fuse mount or using
+          # LanceDB's cloud sync feature instead.
+          #
+          # For ephemeral /tmp storage (default):
+          # - Vector data is lost on container restart
+          # - Re-index on startup OR use a persistent vector DB
+          # - See: https://docs.lancedb.com/docs/cloud
+      vpc:
+        connector: projects/PROJECT_ID/locations/us-central1/connectors/familytv-vpc-connector
+        egress: all-traffic

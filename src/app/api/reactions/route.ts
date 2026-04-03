@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { db, reactions } from "@/db";
+import { db, reactions, posts, familyMemberships } from "@/db";
 import { eq, and, sql } from "drizzle-orm";
 
 // GET /api/reactions?postId=xxx
@@ -14,6 +14,26 @@ export async function GET(req: NextRequest) {
   const postId = searchParams.get("postId");
   if (!postId) {
     return NextResponse.json({ error: "postId required" }, { status: 400 });
+  }
+
+  // Verify user is a member of the family that owns this post
+  const post = await db.query.posts.findFirst({
+    where: eq(posts.id, postId),
+  });
+
+  if (!post) {
+    return NextResponse.json({ error: "Post not found" }, { status: 404 });
+  }
+
+  const membership = await db.query.familyMemberships.findFirst({
+    where: and(
+      eq(familyMemberships.userId, userId),
+      eq(familyMemberships.familyId, post.familyId)
+    ),
+  });
+
+  if (!membership) {
+    return NextResponse.json({ error: "You are not a member of this family" }, { status: 403 });
   }
 
   const result = await db
@@ -42,6 +62,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "postId and emoji required" }, { status: 400 });
   }
 
+  // Verify user is a member of the family that owns this post
+  const post = await db.query.posts.findFirst({
+    where: eq(posts.id, postId),
+  });
+
+  if (!post) {
+    return NextResponse.json({ error: "Post not found" }, { status: 404 });
+  }
+
+  const membership = await db.query.familyMemberships.findFirst({
+    where: and(
+      eq(familyMemberships.userId, userId),
+      eq(familyMemberships.familyId, post.familyId)
+    ),
+  });
+
+  if (!membership) {
+    return NextResponse.json({ error: "You are not a member of this family" }, { status: 403 });
+  }
+
   // Upsert reaction
   await db
     .insert(reactions)
@@ -65,6 +105,26 @@ export async function DELETE(req: NextRequest) {
   const postId = searchParams.get("postId");
   if (!postId) {
     return NextResponse.json({ error: "postId required" }, { status: 400 });
+  }
+
+  // Verify user is a member of the family that owns this post
+  const post = await db.query.posts.findFirst({
+    where: eq(posts.id, postId),
+  });
+
+  if (!post) {
+    return NextResponse.json({ error: "Post not found" }, { status: 404 });
+  }
+
+  const membership = await db.query.familyMemberships.findFirst({
+    where: and(
+      eq(familyMemberships.userId, userId),
+      eq(familyMemberships.familyId, post.familyId)
+    ),
+  });
+
+  if (!membership) {
+    return NextResponse.json({ error: "You are not a member of this family" }, { status: 403 });
   }
 
   await db.delete(reactions).where(and(eq(reactions.postId, postId), eq(reactions.userId, userId)));

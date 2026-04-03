@@ -1,0 +1,92 @@
+name: Dependency Audit
+
+on:
+  schedule:
+    # Run every Monday at 9:00 AM UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: Audit Dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        id: audit
+        run: |
+          AUDIT_OUTPUT=$(npm audit --audit-level=high 2>&1)
+          echo "$AUDIT_OUTPUT"
+          echo "audit_output=$AUDIT_OUTPUT" >> $GITHUB_OUTPUT
+          
+          # Check for vulnerabilities
+          if echo "$AUDIT_OUTPUT" | grep -q "vulnerabilities"; then
+            echo "vulnerabilities_found=true" >> $GITHUB_OUTPUT
+          else
+            echo "vulnerabilities_found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for outdated packages
+        id: outdated
+        run: |
+          # Install npm-check-updates
+          npx npm-check-updates --version 2>/dev/null || npm install -g npm-check-updates
+
+          # Check for updates
+          UPDATES_OUTPUT=$(npx npm-check-updates --upgrade --upgradeAll 2>&1)
+          echo "$UPDATES_OUTPUT"
+          echo "updates_output=$UPDATES_OUTPUT" >> $GITHUB_OUTPUT
+          
+          # Check if updates available
+          if echo "$UPDATES_OUTPUT" | grep -qE "^\[INFO\] (0 packages|System)";
+            then echo "updates_available=false" >> $GITHUB_OUTPUT
+            else echo "updates_available=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Issue for vulnerabilities
+        if: steps.audit.outputs.vulnerabilities_found == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const auditOutput = ` ${{ steps.audit.outputs.audit_output }} `;
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Security Vulnerabilities Detected in Dependencies',
+              body: `## Security Audit Results\n\nnpm audit has detected vulnerabilities in our dependencies.\n\n### Audit Output\n\`\`\`\n${auditOutput.substring(0, 6000)}\n\`\`\`\n\n### Action Required\n- Review the vulnerabilities above\n- Run \`npm audit fix\` for automatic fixes where possible\n- Update affected packages manually if auto-fix is not available\n- Re-run audit to verify fixes\n\n---\n*This issue was automatically created by the Dependency Audit workflow*`,
+              labels: ['security', 'dependencies', 'automated']
+            })
+
+      - name: Create GitHub Issue for outdated packages
+        if: steps.outdated.outputs.updates_available == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const updatesOutput = ` ${{ steps.outdated.outputs.updates_output }} `;
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📦 Dependency Updates Available',
+              body: `## Dependency Update Report\n\nNew versions of our dependencies are available.\n\n### Updates\n\`\`\`\n${updatesOutput.substring(0, 6000)}\n\`\`\`\n\n### Recommended Actions\n- Review breaking changes before upgrading\n- Test thoroughly after updating\n- Update one major version at a time for large updates\n\n---\n*This issue was automatically created by the Dependency Audit workflow*`,
+              labels: ['dependencies', 'automated']
+            })
+
+      - name: Post summary comment
+        if: always()
+        run: |
+          echo "=== Dependency Audit Summary ==="
+          echo "Vulnerabilities found: ${{ steps.audit.outputs.vulnerabilities_found }}"
+          echo "Updates available: ${{ steps.outdated.outputs.updates_available }}"

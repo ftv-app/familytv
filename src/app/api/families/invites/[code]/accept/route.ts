@@ -1,77 +1,128 @@
-export const dynamic = 'force-dynamic';
+// POST /api/families/invites/[code]/accept — Accept invite, add user to family
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { db, invites, familyMemberships } from "@/db";
-import { eq } from "drizzle-orm";
+import { db, familyInvites, familyMemberships, families } from "@/db";
+import { eq, and, isNull } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 import { createHash } from "crypto";
 
-// POST /api/families/invites/[code]/accept — accept an invite (requires auth)
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ code: string }> }
-) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export const dynamic = 'force-dynamic';
 
-  const { code } = await params;
+interface RouteContext {
+  params: Promise<{ code: string }>;
+}
 
-  if (!code) {
-    return NextResponse.json({ error: "Invite code required" }, { status: 400 });
-  }
+/**
+ * Compute SHA-256 hash of invite code for indexed lookup
+ */
+function sha256(input: string): string {
+  return createHash("sha256").update(input).digest("hex");
+}
 
-  const tokenHash = createHash("sha256").update(code).digest("hex");
-  const invite = await db.query.invites.findFirst({
-    where: eq(invites.tokenHash, tokenHash),
-    with: { family: true },
-  });
+export async function POST(req: NextRequest, context: RouteContext) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  if (!invite) {
-    return NextResponse.json({ error: "Invalid invite" }, { status: 404 });
-  }
+    const { code } = await context.params;
 
-  if (invite.status === "revoked") {
-    return NextResponse.json({ error: "This invite has been revoked" }, { status: 410 });
-  }
+    if (!code || code.length !== INVITE_CODE_LENGTH) {
+      return NextResponse.json(
+        { error: "Invalid invite code format" },
+        { status: 400 }
+      );
+    }
 
-  if (invite.status === "accepted") {
-    return NextResponse.json({ error: "This invite has already been used" }, { status: 410 });
-  }
+    // Use SHA-256 lookup hash for O(1) query instead of iterating all invites
+    const lookupHash = sha256(code);
 
-  if (new Date() > invite.expiresAt) {
-    return NextResponse.json({ error: "This invite has expired" }, { status: 410 });
-  }
+    // Find the invite by lookup_hash (indexed) first
+    const matchedInvite = await db.query.familyInvites.findFirst({
+      where: and(
+        eq(familyInvites.lookupHash, lookupHash),
+        isNull(familyInvites.revokedAt)
+      ),
+      with: {
+        family: true,
+      },
+    });
 
-  // Check if already a member
-  const existingMembership = await db.query.familyMemberships.findFirst({
-    where: eq(familyMemberships.userId, userId),
-  });
+    if (!matchedInvite) {
+      return NextResponse.json(
+        { error: "Invalid invite code" },
+        { status: 404 }
+      );
+    }
 
-  if (existingMembership) {
-    return NextResponse.json(
-      { error: "You are already a member of a family" },
-      { status: 400 }
-    );
-  }
+    // Verify with bcrypt (only one invite, not all)
+    const isValid = await bcrypt.compare(code, matchedInvite.inviteCodeHash);
+    if (!isValid) {
+      return NextResponse.json(
+        { error: "Invalid invite code" },
+        { status: 404 }
+      );
+    }
 
-  // Accept the invite: mark as accepted + create membership
-  await db.transaction(async (tx) => {
-    await tx.update(invites)
-      .set({ status: "accepted" })
-      .where(eq(invites.id, invite.id));
+    // Check if expired
+    if (new Date() > matchedInvite.expiresAt) {
+      return NextResponse.json(
+        { error: "This invite has expired" },
+        { status: 410 }
+      );
+    }
 
-    await tx.insert(familyMemberships).values({
-      familyId: invite.familyId,
+    // Check if revoked (already handled by query, but double-check)
+    if (matchedInvite.revokedAt) {
+      return NextResponse.json(
+        { error: "This invite has been revoked" },
+        { status: 410 }
+      );
+    }
+
+    // Check if user is already a member
+    const existingMembership = await db.query.familyMemberships.findFirst({
+      where: and(
+        eq(familyMemberships.userId, userId),
+        eq(familyMemberships.familyId, matchedInvite.familyId)
+      ),
+    });
+
+    if (existingMembership) {
+      return NextResponse.json(
+        { error: "You are already a member of this family" },
+        { status: 400 }
+      );
+    }
+
+    // Accept the invite: create membership
+    const [membership] = await db.insert(familyMemberships).values({
+      familyId: matchedInvite.familyId,
       userId,
       role: "member",
-    });
-  });
+    }).returning();
 
-  return NextResponse.json({
-    family: {
-      id: invite.family.id,
-      name: invite.family.name,
-    },
-  });
+    // Revoke the invite so it can't be used again
+    await db.update(familyInvites)
+      .set({ revokedAt: new Date() })
+      .where(eq(familyInvites.id, matchedInvite.id));
+
+    return NextResponse.json({
+      success: true,
+      familyId: matchedInvite.familyId,
+      familyName: matchedInvite.family.name,
+      familyAvatarUrl: matchedInvite.family.avatarUrl,
+      membershipId: membership.id,
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error("Error accepting invite:", error);
+    return NextResponse.json(
+      { error: "Failed to accept invite" },
+      { status: 500 }
+    );
+  }
 }
+
+const INVITE_CODE_LENGTH = 32;

@@ -93,6 +93,7 @@ export const invites = pgTable(
 
 /**
  * Posts - family posts with optional media (video, image, or text)
+ * CTM-223: serverTimestamp is the authoritative timestamp for chronological ordering
  */
 export const posts = pgTable(
   "posts",
@@ -108,16 +109,22 @@ export const posts = pgTable(
     caption: text("caption"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    // Server-authoritative timestamp for chronological ordering (CTM-223)
+    // Set by server at insert time, never trust client clocks
+    serverTimestamp: timestamp("server_timestamp").defaultNow().notNull(),
   },
   (table) => [
     index("posts_family_idx").on(table.familyId),
     index("posts_author_idx").on(table.authorId),
     index("posts_created_idx").on(table.familyId, table.createdAt),
+    // CTM-223: Index for efficient sync queries by server_timestamp
+    index("posts_server_timestamp_idx").on(table.familyId, table.serverTimestamp),
   ]
 );
 
 /**
  * Calendar events - family calendar events
+ * CTM-223: serverTimestamp for consistent chronological ordering
  */
 export const calendarEvents = pgTable(
   "calendar_events",
@@ -133,10 +140,14 @@ export const calendarEvents = pgTable(
     allDay: boolean("all_day").notNull().default(false),
     createdBy: text("created_by").notNull(), // Clerk userId
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    // Server-authoritative timestamp for chronological ordering (CTM-223)
+    serverTimestamp: timestamp("server_timestamp").defaultNow().notNull(),
   },
   (table) => [
     index("calendar_events_family_idx").on(table.familyId),
     index("calendar_events_start_idx").on(table.familyId, table.startDate),
+    // CTM-223: Index for efficient sync queries
+    index("calendar_events_server_timestamp_idx").on(table.familyId, table.serverTimestamp),
   ]
 );
 
@@ -154,6 +165,9 @@ export const familyInvites = pgTable(
       .notNull()
       .references(() => families.id, { onDelete: "cascade" }),
     inviteCodeHash: text("invite_code_hash").notNull(),
+    // SHA-256 hash of the invite code for O(1) lookup
+    // Stored separately from bcrypt hash to enable indexed queries
+    lookupHash: text("lookup_hash").notNull(),
     createdByUserId: text("created_by_user_id").notNull(),
     expiresAt: timestamp("expires_at").notNull(),
     revokedAt: timestamp("revoked_at"),
@@ -162,6 +176,8 @@ export const familyInvites = pgTable(
   (table) => [
     index("family_invites_family_idx").on(table.familyId),
     index("family_invites_created_by_idx").on(table.createdByUserId),
+    // Unique index on lookup_hash for O(1) invite validation
+    uniqueIndex("family_invites_lookup_hash_idx").on(table.lookupHash),
   ]
 );
 
@@ -182,12 +198,35 @@ export const familyInviteRateLimits = pgTable(
   ]
 );
 
-export const familiesRelations = relations(families, ({ many }) => ({
+/**
+ * Family Sync States - CTM-223: Server-authoritative sync state per family
+ * Tracks the authoritative sync clock for each family to ensure consistent
+ * chronological ordering across all family members' devices.
+ */
+export const familySyncStates = pgTable(
+  "family_sync_states",
+  {
+    familyId: uuid("family_id")
+      .notNull()
+      .references(() => families.id, { onDelete: "cascade" }),
+    lastServerTime: timestamp("last_server_time").defaultNow().notNull(),
+    lastSyncedAt: timestamp("last_synced_at").defaultNow().notNull(),
+    driftMs: integer("drift_ms").notNull().default(0),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  }
+);
+
+export const familiesRelations = relations(families, ({ many, one }) => ({
   memberships: many(familyMemberships),
   invites: many(invites),
   familyInvites: many(familyInvites),
   posts: many(posts),
   calendarEvents: many(calendarEvents),
+  // CTM-223: One sync state per family
+  syncState: one(familySyncStates, {
+    fields: [families.id],
+    references: [familySyncStates.familyId],
+  }),
 }));
 
 export const familyMembershipsRelations = relations(
@@ -250,3 +289,11 @@ export const reactions = pgTable("reactions", {
 }, (table) => [
   uniqueIndex("unique_user_post_reaction").on(table.userId, table.postId),
 ]);
+
+// CTM-223: Family Sync States relation
+export const familySyncStatesRelations = relations(familySyncStates, ({ one }) => ({
+  family: one(families, {
+    fields: [familySyncStates.familyId],
+    references: [families.id],
+  }),
+}));

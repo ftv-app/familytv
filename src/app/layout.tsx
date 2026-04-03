@@ -1,80 +1,66 @@
-import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Oswald, Source_Sans_3, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 /* ---- FamilyTV Fonts ---- */
-/* Heading: Fraunces - warm serif with personality, not Inter */
-const fraunces = Fraunces({
+/* Heading: Oswald — broadcast/station feel, weight 400-700 */
+const oswald = Oswald({
   variable: "--font-heading",
   subsets: ["latin"],
-  axes: ["opsz"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-/* Body: Plus Jakarta Sans - geometric but warm, highly readable */
-const plusJakarta = Plus_Jakarta_Sans({
+/* Body: Source Sans 3 — clean, readable, weight 300-600 */
+const sourceSans = Source_Sans_3({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
   display: "swap",
 });
 
-const APP_URL = "https://familytv.vercel.app";
+/* Mono: JetBrains Mono — timestamps, timecodes, technical data */
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  metadataBase: new URL(APP_URL),
-  title: {
-    default: "FamilyTV — Private Family Sharing",
-    template: "%s | FamilyTV",
-  },
+  title: "FamilyTV — Your Family's Private Channel",
   description:
-    "The private place for families to share photos, videos, and calendars. No ads, no algorithms, just family.",
-  keywords: [
-    "family photo sharing",
-    "private family app",
-    "family calendar",
-    "family memories",
-    "no ads social media",
-  ],
-  authors: [{ name: "FamilyTV" }],
-  creator: "FamilyTV",
+    "Your private family TV station. Share photos, videos, and live moments with family only. No ads, no algorithms.",
+  alternates: {
+    canonical: "https://familytv.vercel.app",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: APP_URL,
+    url: "https://familytv.vercel.app",
     siteName: "FamilyTV",
-    title: "FamilyTV — Your Family's Private Space to Share Memories",
+    title: "FamilyTV — Your Family's Private Channel",
     description:
-      "Share photos, videos, and calendars only with family. No ads, no algorithms, no strangers.",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "FamilyTV — Private Family Sharing",
-      },
-    ],
+      "Your private family TV station. Share photos, videos, and live moments with family only. No ads, no algorithms.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "FamilyTV — Your Family's Private Space",
+    title: "FamilyTV — Your Family's Private Channel",
     description:
-      "Share photos, videos, and calendars only with family. No ads, no algorithms.",
-    images: ["/og-image.png"],
-    creator: "@familytv",
+      "Your private family TV station. Share photos, videos, and live moments with family only. No ads, no algorithms.",
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -86,17 +72,40 @@ export default function RootLayout({
     <ClerkProvider>
       <html
         lang="en"
-        className={`${plusJakarta.variable} ${fraunces.variable} h-full antialiased`}
+        className={`${sourceSans.variable} ${oswald.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
       >
         <body className="min-h-full flex flex-col bg-background text-foreground">
-          {children}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: "FamilyTV",
+                url: "https://familytv.vercel.app",
+                logo: "https://familytv.vercel.app/favicon.ico",
+                description:
+                  "Private family TV station for sharing photos, videos, and live moments with family only.",
+                sameAs: [],
+              }),
+            }}
+          />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <ErrorBoundary>{children}</ErrorBoundary>
+            <Analytics />
+          </ThemeProvider>
           <Toaster
             position="bottom-center"
             toastOptions={{
               style: {
-                background: "oklch(0.18 0.015 50)",
-                color: "oklch(0.98 0.005 50)",
-                border: "1px solid oklch(0.86 0.008 50)",
+                background: "#1A1A1E",
+                color: "#E8E8EC",
+                border: "1px solid rgba(255, 255, 255, 0.06)",
               },
             }}
           />

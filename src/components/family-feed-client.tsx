@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PostCard } from "@/components/post-card";
 import { CreatePost } from "@/components/create-post";
+import { WarmEmptyState } from "@/components/warm-empty-state";
 import type { PostWithAuthor } from "@/components/post-card";
+import { SearchBar, SearchResults } from "@/components/search";
+import type { SearchResultItem } from "@/components/search";
 
 interface FamilyFeedClientProps {
   initialPosts: PostWithAuthor[];
@@ -22,7 +25,42 @@ export function FamilyFeedClient({
   const [cursor, setCursor] = useState<string | null>(initialCursor);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialCursor !== null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const router = useRouter();
+
+  async function handleSearch(query: string, famId: string) {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearch(false);
+      return;
+    }
+    setSearchQuery(query);
+    setShowSearch(true);
+    setIsSearching(true);
+    try {
+      const res = await fetch("/api/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, family_id: famId, limit: 10 }),
+      });
+      if (!res.ok) throw new Error("Search failed");
+      const data = await res.json();
+      setSearchResults(data.results || []);
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }
+
+  function handleClearSearch() {
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowSearch(false);
+  }
 
   async function handleLoadMore() {
     if (!cursor || loading) return;
@@ -58,11 +96,12 @@ export function FamilyFeedClient({
     router.refresh();
   }
 
-  if (posts.length === 0) {
+  if (posts.length === 0 && !showSearch) {
     return (
       <div className="space-y-4">
         <CreatePost familyId={familyId} onPostCreated={handlePostCreated} />
-        <EmptyState />
+        <SearchBar familyId={familyId} onSearch={handleSearch} loading={isSearching} />
+        <EmptyFeedState familyId={familyId} />
       </div>
     );
   }
@@ -70,6 +109,20 @@ export function FamilyFeedClient({
   return (
     <div className="space-y-4">
       <CreatePost familyId={familyId} onPostCreated={handlePostCreated} />
+      <SearchBar
+        familyId={familyId}
+        onSearch={handleSearch}
+        loading={isSearching}
+        onClear={handleClearSearch}
+      />
+      {showSearch && searchResults.length > 0 && (
+        <SearchResults results={searchResults} />
+      )}
+      {showSearch && searchQuery && searchResults.length === 0 && !isSearching && (
+        <p className="text-center text-sm text-muted-foreground py-4" data-testid="search-empty">
+          No results for &quot;{searchQuery}&quot;
+        </p>
+      )}
 
       <div className="space-y-4">
         {posts.map((post) => (
@@ -106,19 +159,16 @@ export function FamilyFeedClient({
   );
 }
 
-function EmptyState() {
+function EmptyFeedState({ familyId }: { familyId: string }) {
   return (
-    <div className="text-center py-16 px-4">
-      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-        <span className="text-3xl">📷</span>
-      </div>
-      <h3 className="font-heading text-lg font-semibold text-foreground mb-2">
-        No moments shared yet
-      </h3>
-      <p className="text-muted-foreground text-sm mb-6 max-w-xs mx-auto">
-        Start sharing photos and videos with your family. Only the people you
-        invite can see what you post.
-      </p>
-    </div>
+    <WarmEmptyState
+      emoji="📷"
+      title="Your family feed is waiting"
+      description="Share your first photo or video and start filling this feed with the moments that matter most."
+      ctaLabel="Share your first memory"
+      ctaHref="#create-post"
+      secondaryLabel="Invite family members"
+      secondaryHref={`/app/family/${familyId}/invite`}
+    />
   );
 }

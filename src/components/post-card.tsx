@@ -43,6 +43,14 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
+// Convert private blob URLs to our auth proxy
+function getMediaSrc(url: string): string {
+  if (url.includes(".vercel-storage.com")) {
+    return `/api/media?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 interface PostCardProps {
   post: PostWithAuthor;
 }
@@ -55,24 +63,48 @@ export function PostCard({ post }: PostCardProps) {
   const isVideo = post.contentType === "video";
   const isImage = post.contentType === "image";
   const hasMedia = post.mediaUrl && (isVideo || isImage);
+  const mediaSrc = post.mediaUrl ? getMediaSrc(post.mediaUrl) : null;
 
   return (
     <>
-      <Card className="overflow-hidden border-border/60 shadow-sm">
+      <Card
+        className="overflow-hidden shadow-sm"
+        style={{
+          backgroundColor: "#1A1A1E",
+          border: "1px solid rgba(255,255,255,0.06)",
+          borderRadius: "8px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+        }}
+      >
         {/* Media */}
         {hasMedia ? (
-          <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+          <div
+            className="relative aspect-[4/3] overflow-hidden"
+            style={{ backgroundColor: "#0D0D0F" }}
+          >
             {isVideo ? (
-              <VideoPlayer url={post.mediaUrl!} />
+              <VideoPlayer url={mediaSrc!} />
             ) : (
               <>
                 {!imageLoaded && !imageError && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-muted">
-                    <div className="w-6 h-6 border-2 border-muted-foreground/30 border-t-foreground rounded-full animate-spin" />
+                  <div
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ backgroundColor: "#0D0D0F" }}
+                  >
+                    <div
+                      className="w-6 h-6 rounded-full animate-spin"
+                      style={{
+                        border: "2px solid rgba(142,142,150,0.3)",
+                        borderTopColor: "#A8A8B0",
+                      }}
+                    />
                   </div>
                 )}
                 {imageError ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                  <div
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ backgroundColor: "#0D0D0F" }}
+                  >
                     <span className="text-4xl">🖼️</span>
                   </div>
                 ) : (
@@ -82,7 +114,7 @@ export function PostCard({ post }: PostCardProps) {
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={post.mediaUrl!}
+                      src={mediaSrc!}
                       alt={post.caption ?? "Family moment"}
                       className={cn(
                         "w-full h-full object-cover transition-opacity duration-300",
@@ -99,11 +131,14 @@ export function PostCard({ post }: PostCardProps) {
         ) : null}
 
         {/* Content */}
-        <CardContent className="p-4">
+        <CardContent className="p-4" style={{ backgroundColor: "#1A1A1E" }}>
           {/* Author row */}
           <div className="flex items-center gap-3 mb-3">
             <Avatar className="w-9 h-9 shrink-0">
-              <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+              <AvatarFallback
+                className="text-sm font-medium"
+                style={{ backgroundColor: "rgba(45,90,74,0.2)", color: "#2D5A4A" }}
+              >
                 {getInitials(post.authorName)}
               </AvatarFallback>
             </Avatar>
@@ -171,7 +206,7 @@ export function PostCard({ post }: PostCardProps) {
 
       {lightboxOpen && post.mediaUrl && (
         <ImageLightbox
-          src={post.mediaUrl}
+          src={mediaSrc}
           alt={post.caption ?? "Family moment"}
           onClose={() => setLightboxOpen(false)}
         />

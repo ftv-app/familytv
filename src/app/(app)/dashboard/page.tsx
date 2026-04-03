@@ -1,10 +1,20 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { db, families, familyMemberships, posts, calendarEvents } from "@/db";
+import { eq, desc, count } from "drizzle-orm";
 import { DashboardClient } from "./dashboard-client";
+import type { DashboardStats } from "./dashboard-client";
+import type { FamilyMember, LastActivity } from "./dashboard-client";
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
+  let userId: string | null = null;
+  try {
+    const authResult = await auth();
+    userId = authResult.userId ?? null;
+  } catch {
+    redirect("/sign-in");
+    return;
+  }
 
   if (!userId) {
     redirect("/sign-in");
@@ -14,17 +24,129 @@ export default async function DashboardPage() {
   const firstName = user?.firstName ?? "there";
   const email = user?.primaryEmailAddress?.emailAddress ?? "";
 
-  // Use placeholder families for now (API not ready)
-  const families = [
-    { id: "fam_1", name: "The Smiths", memberCount: 4 },
-    { id: "fam_2", name: "The Conways", memberCount: 6 },
-  ];
+  // Fetch real families from DB
+  const memberships = await db.query.familyMemberships.findMany({
+    where: eq(familyMemberships.userId, userId),
+    with: { family: true },
+    orderBy: [desc(familyMemberships.joinedAt)],
+  });
+
+  const familiesData = await Promise.all(
+    memberships.map(async (m) => {
+      const memberResult = await db
+        .select({ cnt: count() })
+        .from(familyMemberships)
+        .where(eq(familyMemberships.familyId, m.familyId));
+
+      const postResult = await db
+        .select({ cnt: count() })
+        .from(posts)
+        .where(eq(posts.familyId, m.familyId));
+
+      return {
+        id: m.family.id,
+        name: m.family.name,
+        memberCount: memberResult[0]?.cnt ?? 0,
+        postCount: postResult[0]?.cnt ?? 0,
+      };
+    })
+  );
+
+  // Use the first family's name as the "channel callsign"
+  const familyName = familiesData.length > 0 ? familiesData[0].name : undefined;
+
+  // Fetch family members for presence indicators
+  let familyMembers: FamilyMember[] = [];
+  if (familiesData.length > 0) {
+    const primaryFamilyId = familiesData[0].id;
+    const memberRecords = await db.query.familyMemberships.findMany({
+      where: eq(familyMemberships.familyId, primaryFamilyId),
+      with: { family: false },
+    });
+
+    // For now, mark members as offline (we don't have real-time presence data)
+    // The names come from Clerk — we use the cached authorName from posts if available
+    familyMembers = memberRecords.map((m, i) => ({
+      id: m.id,
+      name: `Member ${i + 1}`,
+      role: m.role,
+      isOnline: false,
+    }));
+  }
+
+  // Compute stats for the primary (first) family
+  let stats: DashboardStats = { members: 0, postsThisWeek: 0, upcomingEvents: 0 };
+  let lastActivity: LastActivity | null = null;
+
+  if (familiesData.length > 0) {
+    const primaryFamily = familiesData[0];
+
+    const postsResult = await db
+      .select({ cnt: count() })
+      .from(posts)
+      .where(eq(posts.familyId, primaryFamily.id));
+
+    const eventsResult = await db
+      .select({ cnt: count() })
+      .from(calendarEvents)
+      .where(eq(calendarEvents.familyId, primaryFamily.id));
+
+    // Fetch the most recent post for "last activity" display
+    const recentPosts = await db.query.posts.findMany({
+      where: eq(posts.familyId, primaryFamily.id),
+      orderBy: [desc(posts.createdAt)],
+      limit: 1,
+    });
+
+    if (recentPosts.length > 0) {
+      const latest = recentPosts[0];
+      // eslint-disable-next-line react-hooks/purity -- Server component: Date.now() runs once per request
+      const seconds = Math.floor((Date.now() - latest.createdAt.getTime()) / 1000);
+      let timeAgo: string;
+      if (seconds < 60) {
+        timeAgo = "just now";
+      } else if (seconds < 3600) {
+        const mins = Math.floor(seconds / 60);
+        timeAgo = `${mins} minute${mins > 1 ? "s" : ""} ago`;
+      } else if (seconds < 86400) {
+        const hours = Math.floor(seconds / 3600);
+        timeAgo = `${hours} hour${hours > 1 ? "s" : ""} ago`;
+      } else {
+        const days = Math.floor(seconds / 86400);
+        timeAgo = `${days} day${days > 1 ? "s" : ""} ago`;
+      }
+
+      lastActivity = {
+        authorName: latest.authorName,
+        timeAgo,
+        contentType: latest.contentType || "moment",
+      };
+
+      // Update family members with real names from recent posts
+      if (familyMembers.length > 0 && recentPosts[0]) {
+        familyMembers = familyMembers.map((member, i) => ({
+          ...member,
+          name: i === 0 ? recentPosts[0].authorName : `Member ${i + 1}`,
+        }));
+      }
+    }
+
+    stats = {
+      members: primaryFamily.memberCount,
+      postsThisWeek: postsResult[0]?.cnt ?? 0,
+      upcomingEvents: eventsResult[0]?.cnt ?? 0,
+    };
+  }
 
   return (
     <DashboardClient
       firstName={firstName}
       email={email}
-      families={families}
+      families={familiesData}
+      familyName={familyName}
+      familyMembers={familyMembers}
+      stats={stats}
+      lastActivity={lastActivity}
     />
   );
 }

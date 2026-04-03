@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Bell, Check, CheckCheck, FileText, Calendar, Mail, ExternalLink } from 'lucide-react';
 import { NotificationWithDetails } from '@/lib/types';
+import { WarmEmptyState } from '@/components/warm-empty-state';
 
 export default function NotificationsClient({
   initialNotifications,
@@ -89,19 +90,13 @@ export default function NotificationsClient({
   return (
     <div className="space-y-4">
       {notifications.length === 0 ? (
-        <div
-          className="rounded-xl border p-12 text-center"
-          style={{ background: 'var(--card)', borderColor: 'var(--border)' }}
-        >
-          <Bell
-            className="w-12 h-12 mx-auto mb-4"
-            style={{ color: 'var(--muted-foreground)' }}
-          />
-          <p style={{ color: 'var(--foreground)' }}>No notifications yet</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
-            You&apos;ll be notified when something happens in your families
-          </p>
-        </div>
+        <WarmEmptyState
+          emoji="🔔"
+          title="All quiet here"
+          description="You&apos;ll get notifications when family members share new moments, events are coming up, or someone responds to an invite."
+          ctaLabel="Share a moment"
+          ctaHref="/app"
+        />
       ) : (
         <>
           {unreadCount > 0 && (

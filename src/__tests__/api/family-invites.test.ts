@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { randomBytes } from "crypto";
+import { randomBytes, createHash } from "crypto";
 import bcrypt from "bcryptjs";
 
 // ============================================
@@ -53,10 +53,23 @@ describe("Family Invite Validation", () => {
     id: string;
     familyId: string;
     inviteCodeHash: string;
+    lookupHash: string;
     expiresAt: Date;
     revokedAt: Date | null;
   }
 
+  /**
+   * Compute SHA-256 hash of invite code for indexed lookup (O(1))
+   * Matches the implementation in the actual API routes
+   */
+  function sha256(input: string): string {
+    return createHash("sha256").update(input).digest("hex");
+  }
+
+  /**
+   * Validate an invite code using O(1) HashMap lookup instead of O(n) iteration
+   * This replicates the production behavior where lookupHash is indexed in the database
+   */
   function validateInviteCode(
     code: string,
     invites: MockInvite[]
@@ -70,24 +83,45 @@ describe("Family Invite Validation", () => {
       return { valid: false, error: "Invalid invite code format" };
     }
 
-    // Find matching invite
+    // Build lookup hash map for O(1) lookup instead of O(n) iteration
+    // This mirrors the production implementation using indexed lookupHash column
+    const inviteByLookupHash = new Map<string, MockInvite>();
     for (const invite of invites) {
-      // Note: In real implementation, bcrypt.compare handles the comparison
-      // For testing, we simulate this with a hash check
-      if (invite.revokedAt) continue;
-      if (new Date() > invite.expiresAt) continue;
-
-      // In real code, this would be bcrypt.compare
-      return { valid: true, invite };
+      if (invite.lookupHash) {
+        inviteByLookupHash.set(invite.lookupHash, invite);
+      }
     }
 
-    return { valid: false, error: "Invalid invite code" };
+    // O(1) lookup using the pre-computed lookup hash
+    const lookupHash = sha256(code);
+    const invite = inviteByLookupHash.get(lookupHash);
+
+    if (!invite) {
+      return { valid: false, error: "Invalid invite code" };
+    }
+
+    // Check revocation status
+    if (invite.revokedAt) {
+      return { valid: false, error: "Invalid invite code" };
+    }
+
+    // Check expiration
+    if (new Date() > invite.expiresAt) {
+      return { valid: false, error: "Invalid invite code" };
+    }
+
+    // In real code, bcrypt.compare would verify the code against inviteCodeHash
+    // For testing, we trust the lookupHash match
+    return { valid: true, invite };
   }
 
+  // Create a real lookupHash from a test code so tests work correctly
+  const TEST_CODE = "a".repeat(32);
   const mockInvite: MockInvite = {
     id: "invite-123",
     familyId: "family-456",
     inviteCodeHash: "$2a$10$hashedcode...",
+    lookupHash: sha256(TEST_CODE), // Pre-computed lookupHash for O(1) lookup
     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
     revokedAt: null,
   };

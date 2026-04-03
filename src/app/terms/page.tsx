@@ -61,7 +61,7 @@ export default function TermsPage() {
             <p>
               Each FamilyTV account can belong to one family group. The person who creates
               a family group is the owner and can invite other members. Invite links are
-              personal — you should only share them with the person you're inviting. We
+              personal — you should only share them with the person you&apos;re inviting. We
               reserve the right to revoke invite links that are being used in a way that
               violates these terms.
             </p>
@@ -96,7 +96,7 @@ export default function TermsPage() {
               6. Our service and availability
             </h2>
             <p>
-              FamilyTV is provided "as is." While we aim to keep the service reliable and
+              FamilyTV is provided &quot;as is.&quot; While we aim to keep the service reliable and
               available, we do not guarantee uninterrupted access. We may update, modify,
               or discontinue features from time to time. We will give reasonable notice
               of significant changes.

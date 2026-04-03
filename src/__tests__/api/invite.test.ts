@@ -296,4 +296,118 @@ describe("PATCH /api/invite", () => {
     expect(res.status).toBe(400);
     expect((await res.json()).error).toBe("You are already a member of this family");
   });
+
+  it("returns 400 when invite already used or revoked", async () => {
+    const family = createMockFamily();
+    const invite = createMockInvite({
+      familyId: family.id,
+      status: "accepted", // not pending
+      expiresAt: new Date(Date.now() + 86400000),
+      family,
+    });
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.invites.findFirst.mockResolvedValue(invite);
+
+    const handler = await getHandler();
+    const req = new NextRequest("http://localhost/api/invite", {
+      method: "PATCH",
+      body: JSON.stringify({ inviteId: invite.id, token: "sometoken" }),
+    });
+    const res = await handler.PATCH(req);
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("This invite has already been used or revoked");
+  });
+
+  it("returns 400 when token does not match", async () => {
+    const family = createMockFamily();
+    const invite = createMockInvite({
+      familyId: family.id,
+      status: "pending",
+      expiresAt: new Date(Date.now() + 86400000),
+      tokenHash: "correct_hash",
+      family,
+    });
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.invites.findFirst.mockResolvedValue(invite);
+
+    const handler = await getHandler();
+    // Use a different token that won't match the stored hash
+    const req = new NextRequest("http://localhost/api/invite", {
+      method: "PATCH",
+      body: JSON.stringify({ inviteId: invite.id, token: "wrong_token" }),
+    });
+    const res = await handler.PATCH(req);
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("Invalid token");
+  });
+});
+
+describe("GET /api/invite - additional branches", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 400 when invite already used or expired (GET)", async () => {
+    const family = createMockFamily();
+    const invite = createMockInvite({
+      familyId: family.id,
+      status: "accepted", // already used
+      expiresAt: new Date(Date.now() + 86400000),
+      family,
+    });
+    mockDb.query.invites.findFirst.mockResolvedValue(invite);
+
+    const handler = await getHandler();
+    const req = new NextRequest(`http://localhost/api/invite?inviteId=${invite.id}`, {
+      method: "GET",
+    });
+    const res = await handler.GET(req);
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("This invite has already been used or expired");
+  });
+});
+
+describe("POST /api/invite - additional branches", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 400 when person is already a member of the family", async () => {
+    const family = createMockFamily();
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.familyMemberships.findFirst.mockResolvedValue(
+      createMockMembership({ familyId: family.id, userId: TEST_USER_ID })
+    );
+    // No existing invite, so it would proceed to check membership
+    mockDb.query.invites.findFirst.mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest("http://localhost/api/invite", {
+      method: "POST",
+      body: JSON.stringify({ familyId: family.id, email: "newmember@example.com" }),
+    });
+    const res = await handler.POST(req);
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("This person is already a member of your family");
+  });
+
+  it("returns 403 when user is not a family member (explicit)", async () => {
+    const family = createMockFamily();
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    // Explicitly mock membership as null to ensure 403 is hit
+    mockDb.query.familyMemberships.findFirst.mockResolvedValue(null);
+    mockDb.query.invites.findFirst.mockResolvedValue(null);
+
+    const handler = await getHandler();
+    const req = new NextRequest("http://localhost/api/invite", {
+      method: "POST",
+      body: JSON.stringify({ familyId: family.id, email: "test@example.com" }),
+    });
+    const res = await handler.POST(req);
+    expect(res.status).toBe(403);
+  });
 });

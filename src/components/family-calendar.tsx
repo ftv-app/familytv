@@ -1,7 +1,10 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { WarmEmptyState } from "@/components/warm-empty-state";
 
 interface FamilyEvent {
   id: string;
@@ -158,12 +161,18 @@ function UpcomingEvents({ events, maxItems }: UpcomingEventsProps) {
 
   if (upcoming.length === 0) {
     return (
-      <div className="py-12 text-center">
-        <span className="text-3xl">📅</span>
-        <p className="text-sm text-muted-foreground mt-2">
-          No upcoming events
-        </p>
-      </div>
+      <WarmEmptyState
+        emoji="📅"
+        title="No upcoming events"
+        description="Add birthdays, gatherings, or trips so the whole family can see what&apos;s coming up."
+        ctaLabel="Add first event"
+        onCtaClick={() => {
+          // Scroll to / focus the Add event button at the top of the calendar section
+          const btn = document.querySelector('[data-calendar-add-event]') as HTMLButtonElement | null;
+          btn?.scrollIntoView({ behavior: "smooth", block: "center" });
+          btn?.focus();
+        }}
+      />
     );
   }
 
@@ -193,7 +202,14 @@ export function FamilyCalendar({ familyId, events: initialEvents }: FamilyCalend
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3">
-        <Card className="bg-primary/5 border-primary/20">
+        <Card
+          className="border-0"
+          style={{
+            backgroundColor: "#1A1A1E",
+            border: "1px solid rgba(45,90,74,0.3)",
+            borderRadius: "8px",
+          }}
+        >
           <CardContent className="p-4 text-center">
             <p className="font-heading text-2xl font-semibold text-foreground">
               {upcomingCount}
@@ -203,7 +219,14 @@ export function FamilyCalendar({ familyId, events: initialEvents }: FamilyCalend
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-accent/5 border-accent/20">
+        <Card
+          className="border-0"
+          style={{
+            backgroundColor: "#1A1A1E",
+            border: "1px solid rgba(212,175,55,0.3)",
+            borderRadius: "8px",
+          }}
+        >
           <CardContent className="p-4 text-center">
             <p className="font-heading text-2xl font-semibold text-foreground">
               {todayCount}
@@ -216,7 +239,29 @@ export function FamilyCalendar({ familyId, events: initialEvents }: FamilyCalend
       </div>
 
       {/* Add event CTA */}
-      <Button variant="outline" className="w-full gap-2 min-h-[44px]">
+      <Button
+        variant="outline"
+        data-calendar-add-event
+        className="w-full gap-2 min-h-[44px] transition-all duration-150 border-0"
+        style={{
+          backgroundColor: "transparent",
+          border: "1px solid rgba(255,255,255,0.1)",
+          color: "#A8A8B0",
+          borderRadius: "8px",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = "#2D5A4A";
+          e.currentTarget.style.borderColor = "#2D5A4A";
+          e.currentTarget.style.color = "#FDF8F3";
+          e.currentTarget.style.boxShadow = "0 4px 16px rgba(45,90,74,0.4)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "transparent";
+          e.currentTarget.style.border = "1px solid rgba(255,255,255,0.1)";
+          e.currentTarget.style.color = "#A8A8B0";
+          e.currentTarget.style.boxShadow = "none";
+        }}
+      >
         <svg
           className="w-4 h-4"
           fill="none"

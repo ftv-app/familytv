@@ -89,7 +89,7 @@
   /* Warm border (not cold gray) */
   --border: oklch(0.86 0.008 50);
   --input: oklch(0.86 0.008 50);
-  --ring: oklch(0.55 0.10 50);
+  --ring: #2D5A3D; /* Forest green - CTM-221 focus ring */
 
   /* Chart colors (warm variants) */
   --chart-1: oklch(0.58 0.12 50);
@@ -149,7 +149,38 @@
   /* Borders */
   --border: oklch(0.28 0.012 50);
   --input: oklch(0.28 0.012 50);
-  --ring: oklch(0.55 0.10 50);
+  --ring: #2D5A3D; /* Forest green - CTM-221 focus ring */
+}
+
+/* ---- Accessibility: WCAG 2.1 AA ---- */
+/* Minimum 16px body text */
+body {
+  @apply bg-background text-foreground;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Minimum 48px tap targets for interactive elements (elderly users) */
+button,
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Links inside text flow inherit line-height instead of forcing 48px */
+p a, li a, span a, div a:not([class]) {
+  min-height: unset;
+  min-width: unset;
+}
+
+/* Forest green focus ring - WCAG AA compliant, CTM-221 */
+*:focus-visible {
+  outline: 2px solid #2D5A4A;
+  outline-offset: 2px;
 }
 
 @layer base {
@@ -162,4 +193,237 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ---- Watch Party Reaction Bubbles Animation ---- */
+/* 
+ * Float up animation for reaction bubbles
+ * - Duration: 2.8 seconds (as per PRD)
+ * - Floats up 200px with slight horizontal drift
+ * - Fades out in last 500ms
+ * - Easing: ease-out (fast start, slow float to stop)
+ */
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(var(--drift, 0px)) scale(0.5);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(-20px) translateX(var(--drift, 0px)) scale(1.1);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-50px) translateX(var(--drift, 0px)) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-180px) translateX(var(--drift, 0px)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-200px) translateX(var(--drift, 0px)) scale(0.8);
+  }
+}
+
+.animate-float-up {
+  animation: float-up 2.8s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+/* Reaction bubble base styles */
+.reaction-bubble {
+  z-index: 50;
+}
+
+/* Mobile safe area padding for fixed bottom bar */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Reaction button pulse on send (feedback animation) */
+@keyframes reaction-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+button[data-testid^="watch-party-reaction-"]:active {
+  animation: reaction-pulse 0.15s ease-out;
+}
+
+/* ---- Watch Party Bottom Sheet Animations ---- */
+/* Sheet enter: fade in backdrop */
+@keyframes sheet-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-sheet-enter {
+  animation: sheet-enter 0.2s ease-out forwards;
+}
+
+/* Sheet slide up: panel slides up from bottom */
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-sheet-slide-up {
+  animation: sheet-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Sheet dismiss: slide down */
+@keyframes sheet-slide-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-sheet-dismiss {
+  animation: sheet-slide-down 0.25s ease-in forwards;
+}
+
+/* ---- New messages pill bounce in ---- */
+@keyframes bounce-in {
+  0% {
+    transform: translateY(100%) scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-10%) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.3s ease-out forwards;
+}
+
+/* ---- Bubble fade animation (for reduced motion) ---- */
+@keyframes bubble-fade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-bubble-fade {
+  animation: bubble-fade 1s ease-out forwards;
+}
+
+/* ---- Wave animation for empty state ---- */
+@keyframes wave {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-wave {
+  animation: wave 1.5s ease-in-out infinite;
+}
+
+/* ---- Live dot pulse ---- */
+@keyframes live-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+.live-dot {
+  animation: live-pulse 1.5s ease-in-out infinite;
+}
+
+/* ---- Prefers Reduced Motion Support ---- */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-up {
+    animation: bubble-fade 1s ease-out forwards;
+  }
+
+  .animate-sheet-enter {
+    animation: none;
+    opacity: 1;
+  }
+
+  .animate-sheet-slide-up {
+    animation: none;
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .animate-bounce-in {
+    animation: none;
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .animate-wave {
+    animation: none;
+  }
+
+  .live-dot {
+    animation: none;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ---- Watch Party Custom Scrollbar ---- */
+/* Thin, subtle scrollbar for chat messages */
+[data-testid="watch-party-chat-messages"]::-webkit-scrollbar {
+  width: 4px;
+}
+
+[data-testid="watch-party-chat-messages"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-testid="watch-party-chat-messages"]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+[data-testid="watch-party-chat-messages"]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
 }

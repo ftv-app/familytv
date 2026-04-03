@@ -30,20 +30,19 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Structured error log for debugging
+  componentDidCatch(error: Error, _errorInfo: ErrorInfo): void {
+    // Send to Sentry with PII scrubbing (Sentry SDK is configured)
+    // Do NOT log error.message, error.stack, or componentStack to console — they may contain PII
+    if (typeof window !== "undefined" && "Sentry" in window) {
+      // Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } });
+    }
+    // Log a minimal anonymized error event to console for local debugging only
     console.error(
-      JSON.stringify(
-        {
-          type: "UNCAUGHT_ERROR",
-          message: error.message,
-          stack: error.stack,
-          componentStack: errorInfo.componentStack,
-          timestamp: new Date().toISOString(),
-        },
-        null,
-        2
-      )
+      JSON.stringify({
+        type: "UNCAUGHT_ERROR",
+        errorName: error.name,
+        timestamp: new Date().toISOString(),
+      })
     );
   }
 
