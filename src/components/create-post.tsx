@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { WarmSpinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import type { PostWithAuthor } from "@/components/post-card";
 import { toast } from "sonner";
@@ -284,7 +285,7 @@ export function CreatePost({ familyId, onPostCreated }: CreatePostProps) {
                 >
                   {submitting ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
+                      <WarmSpinner size="sm" />
                       {uploading ? "Uploading..." : "Sharing..."}
                     </>
                   ) : (
