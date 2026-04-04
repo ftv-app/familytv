@@ -283,6 +283,7 @@ describe("/api/invite", () => {
         status: "pending",
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         id: "invite_123",
+        tokenHash: "hashed_token_value",
       });
 
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
@@ -307,10 +308,9 @@ describe("/api/invite", () => {
         return cb(tx);
       });
 
-      // No token — inviteId alone is sufficient (UUID-based single-use links)
       const req = new NextRequest("http://localhost/api/invite", {
         method: "PATCH",
-        body: JSON.stringify({ inviteId: "invite_123" }),
+        body: JSON.stringify({ inviteId: "invite_123", token: "some_token" }),
       });
       const res = await PATCH(req);
 
@@ -367,6 +367,7 @@ describe("/api/invite", () => {
         status: "accepted", // not pending
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         id: "invite_123",
+        tokenHash: "hashed_token_value",
       });
 
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
@@ -377,7 +378,7 @@ describe("/api/invite", () => {
 
       const req = new NextRequest("http://localhost/api/invite", {
         method: "PATCH",
-        body: JSON.stringify({ inviteId: "invite_123" }),
+        body: JSON.stringify({ inviteId: "invite_123", token: "some_token" }),
       });
       const res = await PATCH(req);
       
@@ -393,6 +394,7 @@ describe("/api/invite", () => {
         status: "pending",
         expiresAt: new Date(Date.now() - 1000), // expired
         id: "invite_123",
+        tokenHash: "hashed_token_value",
       });
 
       mockAuth.mockResolvedValue({ userId: "user_123" } as any);
@@ -403,7 +405,7 @@ describe("/api/invite", () => {
 
       const req = new NextRequest("http://localhost/api/invite", {
         method: "PATCH",
-        body: JSON.stringify({ inviteId: "invite_123" }),
+        body: JSON.stringify({ inviteId: "invite_123", token: "some_token" }),
       });
       const res = await PATCH(req);
       
@@ -419,6 +421,7 @@ describe("/api/invite", () => {
         status: "pending",
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         id: "invite_123",
+        tokenHash: "hashed_token_value",
       });
       const existingMembership = createMockFamilyMembership({
         familyId: "fam_123",
@@ -434,7 +437,7 @@ describe("/api/invite", () => {
 
       const req = new NextRequest("http://localhost/api/invite", {
         method: "PATCH",
-        body: JSON.stringify({ inviteId: "invite_123" }),
+        body: JSON.stringify({ inviteId: "invite_123", token: "some_token" }),
       });
       const res = await PATCH(req);
       

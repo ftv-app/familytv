@@ -89,10 +89,10 @@ export async function POST(req: NextRequest) {
   }).returning();
 
   // TODO: Send email with invite link
-  // Return the public invite ID (not the secret token)
+  // Return the invite link containing the secret token for secure acceptance
   return NextResponse.json({
     inviteId: invite.id,
-    inviteLink: `/invite/${invite.id}`,
+    inviteLink: `/invite/${invite.id}?token=${token}`,
     expiresAt: expiresAt.toISOString(),
   }, { status: 201 });
 }
@@ -144,13 +144,17 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { inviteId } = body;
+  const { inviteId, token } = body;
 
   if (!inviteId || typeof inviteId !== "string") {
     return NextResponse.json({ error: "inviteId required" }, { status: 400 });
   }
 
-  // Look up by public invite ID (UUID-based, sufficient for single-use invite links)
+  if (!token || typeof token !== "string") {
+    return NextResponse.json({ error: "Token required" }, { status: 400 });
+  }
+
+  // Look up by public invite ID
   const invite = await db.query.invites.findFirst({
     where: eq(invites.id, inviteId),
     with: { family: true },
@@ -158,6 +162,12 @@ export async function PATCH(req: NextRequest) {
 
   if (!invite) {
     return NextResponse.json({ error: "Invalid invite" }, { status: 404 });
+  }
+
+  // Verify the secret token matches the stored hash (prevents invite ID enumeration)
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  if (invite.tokenHash !== tokenHash) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 400 });
   }
 
   if (invite.status !== "pending") {

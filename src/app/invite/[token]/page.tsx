@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,9 @@ interface InviteInfo {
 export default function InviteAcceptPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const inviteId = params.token as string;
+  const token = searchParams.get("token") || "";
 
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
@@ -53,7 +55,7 @@ export default function InviteAcceptPage() {
       const res = await fetch("/api/invite", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inviteId }),
+        body: JSON.stringify({ inviteId, token }),
       });
 
       const data = await res.json();
