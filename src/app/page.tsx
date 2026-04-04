@@ -293,7 +293,7 @@ export default function Home() {
         </div>
 
         {/* Hero content below the carousel image */}
-        <section className="py-16 sm:py-24 px-4 sm:px-6">
+        <section className="py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0D0D0F" }}>
           <div className="max-w-3xl mx-auto text-center w-full">
             {/* Channel Callsign */}
             <div className="mb-6">
