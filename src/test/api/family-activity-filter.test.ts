@@ -114,6 +114,8 @@ describe("/api/family/activity - filtering", () => {
 
     const membershipWithFamily = { ...mockMembership, family: mockFamily };
     mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
+    // Default mock for memberships findMany - tests can override as needed
+    mockMembershipsFindMany.mockResolvedValue([]);
   });
 
   describe("timeRange parameter", () => {

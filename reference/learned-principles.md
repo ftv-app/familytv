@@ -11,3 +11,8 @@
 9. **CSP must allow Clerk CDN** — add clerk.accounts.dev and clerk.com explicitly
 10. **Private blob = proxy required** — Vercel private blobs return 403 directly; /api/media proxy adds auth
 11. **Always deploy after every change** — push + deploy after every commit, no batching
+12. **Deploy gates are not suggestions — they block or they don't exist** — CI that sometimes passes when tests fail is worse than no gate (false confidence). Gate must be non-negotiable and self-testing.
+13. **Security debt doesn't queue — it compounds** — a deferred security fix is an expanding attack surface, not a scheduled item. Fix known security issues before new feature work begins.
+14. **Merged ≠ Deployed** — track production deployment explicitly. Use a release checklist to confirm before declaring a feature "done."
+15. **UX walkthroughs are not optional** — 30-min live browser inspection catches bugs that hours of testing miss. Non-negotiable part of every sprint, not a one-time event.
+16. **Push to master ≠ problem solved** — for critical pipeline blockers, wait for CI confirmation before marking resolved.
