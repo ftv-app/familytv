@@ -27,6 +27,22 @@ export const inviteStatusEnum = pgEnum("invite_status", [
 // ---- Tables ----
 
 /**
+ * Users table - cached user data from Clerk
+ * Syncs on first auth or membership creation
+ */
+export const users = pgTable("users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  clerkId: text("clerk_id").unique().notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  email: text("email"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("users_clerk_id_idx").on(table.clerkId),
+]);
+
+/**
  * Families table - each row is one family group
  */
 export const families = pgTable("families", {
