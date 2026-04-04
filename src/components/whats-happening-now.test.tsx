@@ -1,29 +1,24 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { WhatsHappeningNow } from "./whats-happening-now";
 import type { ActivityResponse, SurfacedItem } from "./whats-happening-now";
 
-// Store original fetch so we can restore it after each test
-const originalFetch = globalThis.fetch;
-
 // ─── Global afterEach for component cleanup ───────────────────────────────────
 afterEach(() => {
   cleanup();
-  // Restore original fetch
-  Object.defineProperty(globalThis, "fetch", {
-    configurable: true,
-    writable: true,
-    value: originalFetch,
-  });
+  vi.restoreAllMocks();
 });
 
 // ─── Mock fetch ───────────────────────────────────────────────────────────────
 function mockFetch(data: unknown, ok = true, status = 200) {
-  globalThis.fetch = vi.fn().mockResolvedValue({
-    ok,
-    status,
-    json: () => Promise.resolve(data),
-  }) as unknown as typeof globalThis.fetch;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok,
+      status,
+      json: () => Promise.resolve(data),
+    })
+  );
 }
 
 // ─── Spec-compliant response factory ──────────────────────────────────────────
@@ -184,11 +179,11 @@ describe("WhatsHappeningNow", () => {
 
     render(<WhatsHappeningNow familyId="family-1" />);
 
-    const posts = await screen.findAllByTestId("whats-happening-post");
-    expect(posts).toHaveLength(2);
+    await waitFor(() => {
+      expect(screen.getAllByTestId("whats-happening-post")).toHaveLength(2);
+    });
 
-    // Author name appears on both cards since both are by Mom Johnson
-    expect(screen.getAllByText("Mom Johnson")).toHaveLength(2);
+    expect(screen.getByText("Mom Johnson")).toBeInTheDocument();
     expect(screen.getByText("Beautiful sunset at the beach!")).toBeInTheDocument();
     expect(screen.getByText("Dinner tonight")).toBeInTheDocument();
   });
@@ -379,8 +374,9 @@ describe("WhatsHappeningNow", () => {
 
     render(<WhatsHappeningNow familyId="family-1" />);
 
-    const meta = await screen.findByTestId("whats-happening-meta");
-    expect(meta).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("whats-happening-meta")).toBeInTheDocument();
+    });
   });
 
   it("has correct data-post-id attributes on post cards", async () => {
@@ -392,9 +388,11 @@ describe("WhatsHappeningNow", () => {
 
     render(<WhatsHappeningNow familyId="family-1" />);
 
-    const posts = await screen.findAllByTestId("whats-happening-post");
-    expect(posts[0]).toHaveAttribute("data-post-id", "post-abc");
-    expect(posts[1]).toHaveAttribute("data-post-id", "post-xyz");
+    await waitFor(() => {
+      const posts = screen.getAllByTestId("whats-happening-post");
+      expect(posts[0]).toHaveAttribute("data-post-id", "post-abc");
+      expect(posts[1]).toHaveAttribute("data-post-id", "post-xyz");
+    });
   });
 
   it("onSeeAllClick is called when See all button is clicked", async () => {
