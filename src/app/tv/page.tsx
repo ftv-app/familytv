@@ -117,6 +117,7 @@ interface ProgressBarProps {
   buffered?: number;
   onSeek: (time: number) => void;
   isVisible: boolean;
+  isLive?: boolean;
 }
 
 function ProgressBar({
@@ -125,6 +126,7 @@ function ProgressBar({
   buffered = 0,
   onSeek,
   isVisible,
+  isLive = false,
 }: ProgressBarProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
@@ -175,18 +177,29 @@ function ProgressBar({
     >
       {/* Time labels */}
       <div className="flex justify-between mb-1.5">
-        <span
-          className="font-mono text-xs"
-          style={{ color: "currentColor", fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)" }}
-        >
-          {formatTime(currentTime)}
-        </span>
-        <span
-          className="font-mono text-xs"
-          style={{ color: "currentColor", fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)" }}
-        >
-          {formatTime(duration)}
-        </span>
+        {isLive ? (
+          <span
+            className="font-heading text-xs font-semibold uppercase tracking-wide"
+            style={{ color: "#C41E3A" }}
+          >
+            ● LIVE
+          </span>
+        ) : (
+          <span
+            className="font-mono text-xs"
+            style={{ color: "currentColor", fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)" }}
+          >
+            {formatTime(currentTime)}
+          </span>
+        )}
+        {!isLive && (
+          <span
+            className="font-mono text-xs"
+            style={{ color: "currentColor", fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)" }}
+          >
+            {formatTime(duration)}
+          </span>
+        )}
       </div>
 
       {/* Track */}
@@ -668,7 +681,7 @@ export default function TVPlayerPage() {
           <SkipButton
             seconds={-10}
             onClick={() => skip(-10)}
-            isVisible={controlsVisible}
+            isVisible={controlsVisible && !session.content.isLive}
             label="-10s"
           />
         </div>
@@ -737,7 +750,7 @@ export default function TVPlayerPage() {
           <SkipButton
             seconds={10}
             onClick={() => skip(10)}
-            isVisible={controlsVisible}
+            isVisible={controlsVisible && !session.content.isLive}
             label="+10s"
           />
         </div>
@@ -811,6 +824,7 @@ export default function TVPlayerPage() {
             buffered={buffered}
             onSeek={seek}
             isVisible={controlsVisible}
+            isLive={session.content.isLive}
           />
         </div>
       </div>
