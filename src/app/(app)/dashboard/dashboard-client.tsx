@@ -24,6 +24,8 @@ import {
   Play,
   Clock,
 } from "lucide-react";
+import { ActivityFeed } from "@/components/feed/ActivityFeed";
+import type { ActivityItem } from "@/components/feed/ActivityFeed";
 
 export interface FamilyMember {
   id: string;
@@ -59,6 +61,8 @@ interface DashboardClientProps {
   familyMembers?: FamilyMember[];
   stats?: DashboardStats;
   lastActivity?: LastActivity | null;
+  feedItems?: ActivityItem[];
+  feedCursor?: string | null;
 }
 
 // ─── Cinema Black Design Tokens ───────────────────────────────────────────────
@@ -198,6 +202,8 @@ export function DashboardClient({
   familyMembers = [],
   stats,
   lastActivity,
+  feedItems,
+  feedCursor,
 }: DashboardClientProps) {
   const [selectedFamilyId, setSelectedFamilyId] = useState(
     families.length > 0 ? families[0].id : null
@@ -329,27 +335,47 @@ export function DashboardClient({
 
       <Separator style={{ borderColor: "rgba(255,255,255,0.06)" }} />
 
-      {/* ── Stats Row ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          icon={Users}
-          label="Family members"
-          value={displayStats.members}
-          sublabel="In your circle"
-        />
-        <StatCard
-          icon={Image}
-          label="Posts this week"
-          value={displayStats.postsThisWeek}
-          sublabel="Shared moments"
-        />
-        <StatCard
-          icon={Calendar}
-          label="Upcoming events"
-          value={displayStats.upcomingEvents}
-          sublabel="On the calendar"
-        />
-      </div>
+      {/* ── Activity Stories Feed ───────────────────────────────────────────── */}
+      {feedItems !== undefined ? (
+        <div>
+          <h2
+            className="font-heading text-lg font-semibold mb-4"
+            style={{ color: SILVER_WHITE }}
+          >
+            Activity Stories
+          </h2>
+          {selectedFamily && (
+            <ActivityFeed
+              familyId={selectedFamily.id}
+              initialItems={feedItems}
+              initialCursor={feedCursor ?? null}
+              familyName={familyName}
+            />
+          )}
+        </div>
+      ) : (
+        /* ── Stats Row (fallback when no feedItems) ──────────────────────── */
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard
+            icon={Users}
+            label="Family members"
+            value={displayStats.members}
+            sublabel="In your circle"
+          />
+          <StatCard
+            icon={Image}
+            label="Posts this week"
+            value={displayStats.postsThisWeek}
+            sublabel="Shared moments"
+          />
+          <StatCard
+            icon={Calendar}
+            label="Upcoming events"
+            value={displayStats.upcomingEvents}
+            sublabel="On the calendar"
+          />
+        </div>
+      )}
 
       <Separator style={{ borderColor: "rgba(255,255,255,0.06)" }} />
 
