@@ -44,7 +44,6 @@ function MobileNav() {
           - Forest green focus ring per CTM-221
         */}
         <button
-          data-testid="hamburger-menu"
           className="flex items-center gap-1.5 px-3 py-3 rounded-lg transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2"
           style={{ backgroundColor: "#faf8f5" }}
           aria-label="Open navigation menu"
@@ -89,7 +88,6 @@ function MobileNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                data-testid={`nav-item-${item.label.toLowerCase()}`}
                 className={`
                   flex items-center gap-3 px-3 py-3 rounded-lg transition-colors
                   focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
@@ -122,7 +120,6 @@ function MobileNav() {
             </p>
             <SignOutButton>
               <button
-                data-testid="sign-out-button"
                 className="flex items-center gap-3 px-3 py-3 rounded-lg transition-colors w-full text-left
                   focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
                   hover:bg-[#252529] hover:text-[#E8E8EC]"
@@ -225,7 +222,6 @@ function AppShellContent({ pathname, children }: { pathname: string; children: R
                   <Link
                     key={item.href}
                     href={item.href}
-                    data-testid={`desktop-nav-${item.label.toLowerCase()}`}
                     className={`
                       flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors
                       focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
