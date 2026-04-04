@@ -130,15 +130,18 @@ function QuickActionButton({
   icon: Icon,
   label,
   description,
+  testId,
 }: {
   href: string;
   icon: React.ElementType;
   label: string;
   description: string;
+  testId?: string;
 }) {
   return (
     <Link
       href={href}
+      data-testid={testId}
       className="block rounded-xl transition-all duration-200 min-h-[60px]"
       style={{
         backgroundColor: THEATER_CHARCOAL,
@@ -434,6 +437,7 @@ export function DashboardClient({
             icon={Calendar}
             label="Add an event"
             description="Birthday, gathering, trip"
+            testId="quick-action-add-event"
           />
           <QuickActionButton
             href={
@@ -444,6 +448,7 @@ export function DashboardClient({
             icon={Users}
             label="Invite a member"
             description="Share a link with family"
+            testId="quick-action-invite-member"
           />
           <QuickActionButton
             href={
@@ -454,6 +459,7 @@ export function DashboardClient({
             icon={Image}
             label="View feed"
             description="Recent photos and videos"
+            testId="quick-action-view-feed"
           />
         </div>
       </div>
