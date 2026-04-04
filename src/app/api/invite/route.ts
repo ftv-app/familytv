@@ -144,13 +144,17 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { inviteId } = body;
+  const { inviteId, token } = body;
 
   if (!inviteId || typeof inviteId !== "string") {
     return NextResponse.json({ error: "inviteId required" }, { status: 400 });
   }
 
-  // Look up by public invite ID (UUID-based, sufficient for single-use invite links)
+  if (!token || typeof token !== "string") {
+    return NextResponse.json({ error: "Token required" }, { status: 400 });
+  }
+
+  // Look up by public invite ID
   const invite = await db.query.invites.findFirst({
     where: eq(invites.id, inviteId),
     with: { family: true },

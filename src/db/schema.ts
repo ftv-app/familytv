@@ -232,12 +232,35 @@ export const familySyncStates = pgTable(
   }
 );
 
+// CTM-237: Albums - family-scoped photo/video albums
+// Album membership is implicit via family_memberships (all family members can access)
+export const albums = pgTable(
+  "albums",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    familyId: uuid("family_id")
+      .notNull()
+      .references(() => families.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    coverUrl: text("cover_url"),
+    createdBy: text("created_by").notNull(), // Clerk userId of creator
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("albums_family_idx").on(table.familyId),
+    index("albums_created_idx").on(table.familyId, table.createdAt),
+  ]
+);
+
 export const familiesRelations = relations(families, ({ many, one }) => ({
   memberships: many(familyMemberships),
   invites: many(invites),
   familyInvites: many(familyInvites),
   posts: many(posts),
   calendarEvents: many(calendarEvents),
+  albums: many(albums),
   // CTM-223: One sync state per family
   syncState: one(familySyncStates, {
     fields: [families.id],
@@ -310,6 +333,14 @@ export const reactions = pgTable("reactions", {
 export const familySyncStatesRelations = relations(familySyncStates, ({ one }) => ({
   family: one(families, {
     fields: [familySyncStates.familyId],
+    references: [families.id],
+  }),
+}));
+
+// CTM-237: Albums relations
+export const albumsRelations = relations(albums, ({ one }) => ({
+  family: one(families, {
+    fields: [albums.familyId],
     references: [families.id],
   }),
 }));
