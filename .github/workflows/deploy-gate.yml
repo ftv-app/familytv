@@ -38,8 +38,9 @@ jobs:
       - run: npm run test:coverage
       - name: Enforce 97% coverage
         run: |
-          # Parse coverage/coverage-summary.json
-          COVERAGE=$(cat coverage/coverage-summary.json | grep -o '"lines":{"pct":[0-9.]*' | grep -o '[0-9.]*$')
+          # Robust JSON parsing — no fragile grep
+          COVERAGE=$(node -e "const d=require('./coverage/coverage-summary.json'); console.log(d.lines.pct)")
+          if [ -z "$COVERAGE" ]; then echo "::error::Could not parse coverage summary"; exit 1; fi
           if (( $(echo "$COVERAGE < 97" | bc -l) )); then
             echo "::error::Coverage ${COVERAGE}% is below 97% threshold — blocking deploy"
             exit 1

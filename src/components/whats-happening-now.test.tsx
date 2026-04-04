@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { WhatsHappeningNow } from "./whats-happening-now";
 import type { ActivityResponse, SurfacedItem } from "./whats-happening-now";
@@ -183,7 +183,7 @@ describe("WhatsHappeningNow", () => {
       expect(screen.getAllByTestId("whats-happening-post")).toHaveLength(2);
     });
 
-    expect(screen.getByText("Mom Johnson")).toBeInTheDocument();
+    expect(screen.getAllByText("Mom Johnson")).toHaveLength(2);
     expect(screen.getByText("Beautiful sunset at the beach!")).toBeInTheDocument();
     expect(screen.getByText("Dinner tonight")).toBeInTheDocument();
   });
