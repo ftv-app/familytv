@@ -77,7 +77,14 @@ describe("ActivityFeed", () => {
     await waitFor(() => {
       expect(screen.getByTestId("feed-container")).toBeInTheDocument();
     });
-    expect(screen.getByText(/Your family feed is quiet/i)).toBeInTheDocument();
+    // Spec: "Your family's story starts here"
+    expect(screen.getByText(/Your family's story starts here/i)).toBeInTheDocument();
+    // Spec: body copy
+    expect(screen.getByText(/When someone shares a moment/i)).toBeInTheDocument();
+    // Spec: primary CTA
+    expect(screen.getByText(/Share the first moment/i)).toBeInTheDocument();
+    // Spec: secondary CTA — "Invite family members →"
+    expect(screen.getByText(/Invite family members/i)).toBeInTheDocument();
   });
 
   it("renders activity cards when items exist", async () => {

@@ -226,18 +226,21 @@ function ActivityCardSkeleton() {
 }
 
 // ─── Empty State ───────────────────────────────────────────────────────────────
+// Per spec in design/sprint-010/empty-states-spec.md — "Your family's story starts here"
 function EmptyFeed({ familyName }: { familyName?: string }) {
   return (
     <WarmEmptyState
       emoji="👨‍👩‍👧‍👦"
-      title="Your family feed is quiet"
+      title="Your family's story starts here"
       description={
         familyName
-          ? `Start sharing moments in ${familyName} and they'll appear here — photos, comments, reactions, and events.`
-          : "Start sharing moments and they'll appear here — photos, comments, reactions, and events."
+          ? `When someone shares a moment in ${familyName}, it will appear here.`
+          : "When someone shares a moment, it will appear here."
       }
       ctaLabel="Share the first moment"
       ctaHref="/app/family"
+      secondaryLabel="Invite family members"
+      secondaryHref="/app/family/invites"
     />
   );
 }
