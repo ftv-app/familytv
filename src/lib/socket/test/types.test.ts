@@ -71,7 +71,7 @@ describe('Socket Types', () => {
 
   describe('VALID_EMOJIS', () => {
     it('should contain all allowed reaction emojis', () => {
-      const expectedEmojis = ['🎬', '😂', '❤️', '🔥', '😮', '💯'];
+      const expectedEmojis = ['👍', '❤️', '😂', '😢', '🔥', '🎉'];
       expect(VALID_EMOJIS).toEqual(expectedEmojis);
     });
 
@@ -113,10 +113,10 @@ describe('Socket Types', () => {
       const reaction: ReactionUpdate = {
         userId: 'user-456',
         userName: 'Test User',
-        emoji: '🎬',
+        emoji: '👍',
         timestamp: Date.now(),
       };
-      expect(reaction.emoji).toBe('🎬');
+      expect(reaction.emoji).toBe('👍');
     });
   });
 });

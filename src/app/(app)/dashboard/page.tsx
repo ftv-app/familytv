@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { getUserDisplayName } from "@/lib/get-user-display-name";
-import { db, families, familyMemberships, posts, calendarEvents } from "@/db";
-import { eq, desc, count } from "drizzle-orm";
+import { db, families, familyMemberships, posts, calendarEvents, comments, reactions } from "@/db";
+import { eq, desc, count, inArray, lt } from "drizzle-orm";
+import { createClerkClient, type User } from "@clerk/backend";
 import { DashboardClient } from "./dashboard-client";
 import type { DashboardStats } from "./dashboard-client";
 import type { FamilyMember, LastActivity } from "./dashboard-client";
+import type { ActivityItem } from "@/components/feed/ActivityFeed";
 
 export default async function DashboardPage() {
   let userId: string | null = null;
@@ -65,21 +66,30 @@ export default async function DashboardPage() {
       with: { family: false },
     });
 
-    // Fetch actual display names (synced from Clerk on first auth)
-    const membersWithNames = await Promise.all(
-      memberRecords.map(async (m) => ({
+    // Fetch real names from Clerk
+    const userIds = memberRecords.map((m) => m.userId);
+    const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+    const clerkResponse = await clerk.users.getUserList({ userId: userIds });
+    const clerkUserMap = new Map(
+      (clerkResponse.data as User[]).map((u) => [u.id, u])
+    );
+
+    familyMembers = memberRecords.map((m) => {
+      const clerkUser = clerkUserMap.get(m.userId) as User | undefined;
+      return {
         id: m.id,
-        name: await getUserDisplayName(m.userId),
+        name: clerkUser?.fullName ?? m.userId.slice(0, 8) + "...",
         role: m.role,
         isOnline: false,
-      }))
-    );
-    familyMembers = membersWithNames;
+      };
+    });
   }
 
   // Compute stats for the primary (first) family
   let stats: DashboardStats = { members: 0, postsThisWeek: 0, upcomingEvents: 0 };
   let lastActivity: LastActivity | null = null;
+  let feedItems: ActivityItem[] = [];
+  let feedCursor: string | null = null;
 
   if (familiesData.length > 0) {
     const primaryFamily = familiesData[0];
@@ -127,10 +137,7 @@ export default async function DashboardPage() {
 
       // Update family members with real names from recent posts
       if (familyMembers.length > 0 && recentPosts[0]) {
-        familyMembers = familyMembers.map((member, i) => ({
-          ...member,
-          name: i === 0 ? recentPosts[0].authorName : `Member ${i + 1}`,
-        }));
+        // Names are already resolved from Clerk above — no override needed
       }
     }
 
@@ -139,6 +146,100 @@ export default async function DashboardPage() {
       postsThisWeek: postsResult[0]?.cnt ?? 0,
       upcomingEvents: eventsResult[0]?.cnt ?? 0,
     };
+
+    // ── Fetch initial feed items (Activity Feed) ─────────────────────────────
+    const INITIAL_FEED_LIMIT = 20;
+
+    // Fetch posts and events for the family
+    const [familyPosts, familyEvents] = await Promise.all([
+      db.query.posts.findMany({
+        where: eq(posts.familyId, primaryFamily.id),
+        orderBy: [desc(posts.createdAt)],
+        limit: INITIAL_FEED_LIMIT,
+      }),
+      db.query.calendarEvents.findMany({
+        where: eq(calendarEvents.familyId, primaryFamily.id),
+        orderBy: [desc(calendarEvents.createdAt)],
+        limit: INITIAL_FEED_LIMIT,
+      }),
+    ]);
+
+    // Get post IDs for fetching comments/reactions
+    const postIds = familyPosts.map((p) => p.id);
+
+    // Fetch comments and reactions for these posts
+    let familyComments: typeof comments.$inferSelect[] = [];
+    let familyReactions: typeof reactions.$inferSelect[] = [];
+
+    if (postIds.length > 0) {
+      const [commentsResult, reactionsResult] = await Promise.all([
+        db.query.comments.findMany({
+          where: inArray(comments.postId, postIds),
+          orderBy: [desc(comments.createdAt)],
+          limit: INITIAL_FEED_LIMIT,
+        }),
+        db.query.reactions.findMany({
+          where: inArray(reactions.postId, postIds),
+          orderBy: [desc(reactions.createdAt)],
+          limit: INITIAL_FEED_LIMIT,
+        }),
+      ]);
+      familyComments = commentsResult;
+      familyReactions = reactionsResult;
+    }
+
+    // Transform into ActivityItems and sort by createdAt descending
+    const activities: ActivityItem[] = [
+      ...familyPosts.map((p) => ({
+        id: p.id,
+        type: "post" as const,
+        actor: { name: p.authorName, avatar: null },
+        content: {
+          contentType: p.contentType ?? undefined,
+          mediaUrl: p.mediaUrl ?? undefined,
+          caption: p.caption ?? undefined,
+        },
+        createdAt: p.createdAt.toISOString(),
+      })),
+      ...familyComments.map((c) => ({
+        id: c.id,
+        type: "comment" as const,
+        actor: { name: c.authorName, avatar: null },
+        content: { postId: c.postId, content: c.content },
+        createdAt: c.createdAt.toISOString(),
+      })),
+      ...familyReactions.map((r) => ({
+        id: r.id,
+        type: "reaction" as const,
+        actor: { name: r.userId, avatar: null },
+        content: { postId: r.postId, emoji: r.emoji },
+        createdAt: r.createdAt.toISOString(),
+      })),
+      ...familyEvents.map((e) => ({
+        id: e.id,
+        type: "event" as const,
+        actor: { name: e.createdBy, avatar: null },
+        content: {
+          title: e.title,
+          description: e.description ?? undefined,
+          startDate: e.startDate.toISOString(),
+          endDate: e.endDate?.toISOString() ?? null,
+          allDay: e.allDay ?? undefined,
+        },
+        createdAt: e.createdAt.toISOString(),
+      })),
+    ];
+
+    // Sort by createdAt descending
+    activities.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    // Apply limit and determine cursor
+    feedItems = activities.slice(0, INITIAL_FEED_LIMIT);
+    const hasMore = activities.length > INITIAL_FEED_LIMIT;
+    const lastItem = feedItems[feedItems.length - 1];
+    feedCursor = hasMore && lastItem ? lastItem.createdAt : null;
   }
 
   return (
@@ -150,6 +251,8 @@ export default async function DashboardPage() {
       familyMembers={familyMembers}
       stats={stats}
       lastActivity={lastActivity}
+      feedItems={feedItems}
+      feedCursor={feedCursor}
     />
   );
 }

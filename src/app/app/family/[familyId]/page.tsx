@@ -6,7 +6,9 @@ import { eq, and } from "drizzle-orm";
 import { createClerkClient, type User } from "@clerk/backend";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Suspense } from "react";
 import { FamilyFeed } from "@/components/family-feed";
+import { Skeleton } from "@/components/ui/skeleton";
 import { FamilyCalendar } from "@/components/family-calendar";
 import { FamilyMembers } from "@/components/family-members";
 import type { FamilyMember, PendingInvite } from "@/components/family-members";
@@ -164,7 +166,13 @@ export default async function FamilyPage({
         </TabsList>
 
         <TabsContent value="feed">
-          <FamilyFeed familyId={familyId} />
+          <Suspense fallback={
+            <div className="rounded-xl p-6 text-center" style={{ backgroundColor: "#1A1A1E" }}>
+              <p className="text-sm" style={{ color: "#A8A8B0" }}>Loading feed...</p>
+            </div>
+          }>
+            <FamilyFeed familyId={familyId} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="calendar">

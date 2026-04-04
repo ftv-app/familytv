@@ -5,7 +5,7 @@ import { io, type Socket } from "socket.io-client";
 import { cn } from "@/lib/utils";
 
 // Default 6 reactions as per PRD
-export const REACTION_EMOJIS = ["🎬", "😂", "❤️", "🔥", "😮", "💯"] as const;
+export const REACTION_EMOJIS = ["😂", "❤️", "😮", "👏", "😢", "🔥"] as const;
 
 export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
 
@@ -378,12 +378,12 @@ function ReactionBubble({ reaction }: ReactionBubbleProps) {
  */
 function getEmojiLabel(emoji: ReactionEmoji): string {
   const labels: Record<ReactionEmoji, string> = {
-    "🎬": "clapper board",
     "😂": "crying with laughter",
     "❤️": "red heart",
-    "🔥": "fire",
     "😮": "astonished face",
-    "💯": "hundred points",
+    "👏": "clapping hands",
+    "😢": "crying face",
+    "🔥": "fire",
   };
   return labels[emoji] || emoji;
 }

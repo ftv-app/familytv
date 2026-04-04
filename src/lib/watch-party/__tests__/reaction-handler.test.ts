@@ -121,7 +121,7 @@ describe('registerReactionHandlers', () => {
       const { registerReactionHandlers } = await import('../reaction-handler');
       registerReactionHandlers(mockIo as SocketIOServer);
 
-      await capturedHandler!({ emoji: '🎬', videoTimestamp: 60 });
+      await capturedHandler!({ emoji: '👏', videoTimestamp: 60 });
 
       const broadcastCall = (mockIo.emit as ReturnType<typeof vi.fn>).mock.calls.find(
         ([event]: any[]) => event === 'reaction:new'

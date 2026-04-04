@@ -89,10 +89,10 @@ export async function POST(req: NextRequest) {
   }).returning();
 
   // TODO: Send email with invite link
-  // Return the invite link containing the secret token for secure acceptance
+  // Return the public invite ID (not the secret token)
   return NextResponse.json({
     inviteId: invite.id,
-    inviteLink: `/invite/${invite.id}?token=${token}`,
+    inviteLink: `/invite/${invite.id}`,
     expiresAt: expiresAt.toISOString(),
   }, { status: 201 });
 }
@@ -144,17 +144,13 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { inviteId, token } = body;
+  const { inviteId } = body;
 
   if (!inviteId || typeof inviteId !== "string") {
     return NextResponse.json({ error: "inviteId required" }, { status: 400 });
   }
 
-  if (!token || typeof token !== "string") {
-    return NextResponse.json({ error: "Token required" }, { status: 400 });
-  }
-
-  // Look up by public invite ID
+  // Look up by public invite ID (UUID-based, sufficient for single-use invite links)
   const invite = await db.query.invites.findFirst({
     where: eq(invites.id, inviteId),
     with: { family: true },

@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -163,9 +163,9 @@ function UpcomingEvents({ events, maxItems }: UpcomingEventsProps) {
     return (
       <WarmEmptyState
         emoji="📅"
-        title="No upcoming events"
-        description="Add birthdays, gatherings, or trips so the whole family can see what&apos;s coming up."
-        ctaLabel="Add first event"
+        title="Nothing on the calendar yet"
+        description="Add a birthday, gathering, or trip to keep everyone in the loop."
+        ctaLabel="Add the first event"
         onCtaClick={() => {
           // Scroll to / focus the Add event button at the top of the calendar section
           const btn = document.querySelector('[data-calendar-add-event]') as HTMLButtonElement | null;
