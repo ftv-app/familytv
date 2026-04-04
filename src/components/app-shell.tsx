@@ -36,10 +36,10 @@ function MobileNav() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger>
         {/*
-          CTM-222: Redesigned hamburger for seniors
+          CTM-222 + CTM-39: Redesigned hamburger for seniors
           - Tap target: 48×54px (px-3 py-3 = 12px padding + 24px icon + 6px gap + text)
-          - Contrast: icon #2D5A3D on cream #faf8f5 = ~6.5:1 ✓
-          - "Menu" label in terracotta #c4785a on cream = ~3.3:1 (icon passes at 4.5:1)
+          - Contrast: icon #2D5A3D on cream #faf8f5 = ~6.5:1 ✓ (WCAG AA)
+          - "Menu" label: changed from terracotta #c4785a (3.3:1 FAIL) to #2D5A3D (6.5:1 ✓)
           - Works at 320px viewport width
           - Forest green focus ring per CTM-221
         */}
@@ -55,7 +55,7 @@ function MobileNav() {
           />
           <span
             className="text-sm font-semibold tracking-wide pr-1"
-            style={{ color: "#c4785a" }}
+            style={{ color: "#2D5A3D" }}
           >
             Menu
           </span>
