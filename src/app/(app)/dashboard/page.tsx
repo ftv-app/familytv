@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { db, families, familyMemberships, posts, calendarEvents, comments, reactions } from "@/db";
 import { eq, desc, count, inArray, lt } from "drizzle-orm";
+import { createClerkClient, type User } from "@clerk/backend";
 import { DashboardClient } from "./dashboard-client";
 import type { DashboardStats } from "./dashboard-client";
 import type { FamilyMember, LastActivity } from "./dashboard-client";
@@ -65,14 +66,23 @@ export default async function DashboardPage() {
       with: { family: false },
     });
 
-    // For now, mark members as offline (we don't have real-time presence data)
-    // The names come from Clerk — we use the cached authorName from posts if available
-    familyMembers = memberRecords.map((m, i) => ({
-      id: m.id,
-      name: `Member ${i + 1}`,
-      role: m.role,
-      isOnline: false,
-    }));
+    // Fetch real names from Clerk
+    const userIds = memberRecords.map((m) => m.userId);
+    const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+    const clerkResponse = await clerk.users.getUserList({ userId: userIds });
+    const clerkUserMap = new Map(
+      (clerkResponse.data as User[]).map((u) => [u.id, u])
+    );
+
+    familyMembers = memberRecords.map((m) => {
+      const clerkUser = clerkUserMap.get(m.userId) as User | undefined;
+      return {
+        id: m.id,
+        name: clerkUser?.fullName ?? m.userId.slice(0, 8) + "...",
+        role: m.role,
+        isOnline: false,
+      };
+    });
   }
 
   // Compute stats for the primary (first) family
@@ -127,10 +137,7 @@ export default async function DashboardPage() {
 
       // Update family members with real names from recent posts
       if (familyMembers.length > 0 && recentPosts[0]) {
-        familyMembers = familyMembers.map((member, i) => ({
-          ...member,
-          name: i === 0 ? recentPosts[0].authorName : `Member ${i + 1}`,
-        }));
+        // Names are already resolved from Clerk above — no override needed
       }
     }
 
