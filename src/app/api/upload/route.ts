@@ -7,7 +7,16 @@ import { and, eq } from "drizzle-orm";
 // POST /api/upload - upload media to Vercel Blob
 // Body: multipart/form-data with file + fields (filename, contentType, familyId)
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
+  let userId: string | null = null;
+  try {
+    const authResult = await auth();
+    userId = authResult.userId ?? null;
+  } catch {
+    // auth() throws when there's no valid session (e.g., no cookie in request).
+    // Return 401 instead of propagating the error - the client can handle this.
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
