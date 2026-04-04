@@ -84,3 +84,36 @@ describe("AppShell hooks consistency (CTM-59)", () => {
     expect(screen.getAllByTestId("user-button").length).toBeGreaterThan(0);
   });
 });
+
+/**
+ * CTM-39: Mobile nav contrast fix
+ *
+ * The bug: The "Menu" label in the mobile hamburger button used terracotta
+ * color #c4785a on cream background #faf8f5, giving a contrast ratio of ~3.3:1
+ * which FAILS WCAG AA (requires 4.5:1 for normal text).
+ *
+ * Fix: Changed to forest green #2D5A3D on cream #faf8f5 = ~6.5:1 ✓ (WCAG AA)
+ */
+describe("Mobile nav contrast (CTM-39)", () => {
+  it("Menu button label meets WCAG AA contrast (4.5:1 minimum)", () => {
+    const { container } = render(<AppShell><div>Test</div></AppShell>);
+    const menuTrigger = container.querySelector('[data-testid="sheet-trigger"]');
+    expect(menuTrigger).toBeTruthy();
+    const menuSpan = menuTrigger?.querySelector("span");
+    expect(menuSpan).toBeTruthy();
+    const style = menuSpan?.getAttribute("style") || "";
+    // rgb(45,90,61) = hex #2D5A3D (forest green). Previous color was #c4785a (terracotta).
+    expect(style).toContain("rgb(45, 90, 61)");
+  });
+
+  it("Menu hamburger icon meets WCAG AA contrast", () => {
+    const { container } = render(<AppShell><div>Test</div></AppShell>);
+    const menuTrigger = container.querySelector('[data-testid="sheet-trigger"]');
+    expect(menuTrigger).toBeTruthy();
+    const svg = menuTrigger?.querySelector("svg");
+    expect(svg).toBeTruthy();
+    const style = svg?.getAttribute("style") || "";
+    // rgb(45,90,61) = hex #2D5A3D (forest green). Previous color was #c4785a (terracotta).
+    expect(style).toContain("rgb(45, 90, 61)");
+  });
+});
