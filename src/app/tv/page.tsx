@@ -177,13 +177,13 @@ function ProgressBar({
       <div className="flex justify-between mb-1.5">
         <span
           className="font-mono text-xs"
-          style={{ color: "#A8A8B0", fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)" }}
+          style={{ color: "currentColor", fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)" }}
         >
           {formatTime(currentTime)}
         </span>
         <span
           className="font-mono text-xs"
-          style={{ color: "#A8A8B0", fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)" }}
+          style={{ color: "currentColor", fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)" }}
         >
           {formatTime(duration)}
         </span>
@@ -296,7 +296,7 @@ function SkipButton({
         style={{
           fontSize: 10,
           fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)",
-          color: "#A8A8B0",
+          color: "currentColor",
           lineHeight: 1,
           marginBottom: 2,
         }}
@@ -593,7 +593,7 @@ export default function TVPlayerPage() {
             <p
               className="font-heading text-xs mt-0.5"
               style={{
-                color: "#A8A8B0",
+                color: "currentColor",
                 fontFamily: "var(--font-heading, 'Oswald', sans-serif)",
                 fontWeight: 400,
               }}
@@ -612,7 +612,7 @@ export default function TVPlayerPage() {
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-heading font-medium uppercase tracking-wide transition-colors duration-150"
             style={{
               background: "transparent",
-              color: "#A8A8B0",
+              color: "currentColor",
               border: "1px solid rgba(255,255,255,0.08)",
               fontFamily: "var(--font-heading, 'Oswald', sans-serif)",
             }}
@@ -620,7 +620,7 @@ export default function TVPlayerPage() {
               ((e.currentTarget as HTMLButtonElement).style.color = "#E8E8EC")
             }
             onMouseLeave={(e) =>
-              ((e.currentTarget as HTMLButtonElement).style.color = "#A8A8B0")
+              ((e.currentTarget as HTMLButtonElement).style.color = "currentColor")
             }
             aria-label="Open TV Guide"
           >
@@ -646,7 +646,7 @@ export default function TVPlayerPage() {
           <span
             className="font-mono text-xs hidden sm:block"
             style={{
-              color: "#A8A8B0",
+              color: "currentColor",
               fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)",
             }}
           >
@@ -787,7 +787,7 @@ export default function TVPlayerPage() {
             <span
               className="text-sm"
               style={{
-                color: "#A8A8B0",
+                color: "currentColor",
                 fontFamily: "var(--font-sans, 'Source Sans 3', sans-serif)",
                 fontSize: 14,
               }}

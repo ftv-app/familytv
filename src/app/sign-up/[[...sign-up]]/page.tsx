@@ -121,43 +121,6 @@ export default function SignUpPage() {
     );
   }
 
-  static getDerivedStateFromError(error: Error): SignUpBoundaryState {
-    return { hasError: true, errorMessage: error.message || "Something went wrong" };
-  }
-
-  componentDidCatch(error: Error) {
-    console.error("[SignUp] error:", error);
-  }
-
-  handleReset = () => {
-    this.setState({ hasError: false, errorMessage: "" });
-    this.props.onReset?.();
-  };
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div
-          className="flex flex-col items-center justify-center p-6 rounded-lg border border-destructive/50 bg-destructive/10"
-          data-testid="auth-signup-error-boundary"
-          role="alert"
-        >
-          <p className="text-destructive text-sm mb-4 text-center">{this.state.errorMessage}</p>
-          <button
-            onClick={this.handleReset}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring"
-            data-testid="auth-signup-retry-button"
-          >
-            Try again
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-export default function SignUpPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-background px-4" aria-label="Create a FamilyTV account">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">

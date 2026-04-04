@@ -99,7 +99,7 @@ export default function OnboardingCreateFamilyPage() {
         role="status"
         aria-label="Loading"
       >
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#A8A8B0' }} aria-hidden="true" />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'currentColor' }} aria-hidden="true" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -123,7 +123,7 @@ export default function OnboardingCreateFamilyPage() {
       <button
         onClick={() => router.push("/onboarding")}
         className="absolute top-4 left-4 flex items-center gap-2 transition-colors"
-        style={{ color: '#A8A8B0', minWidth: "44px", minHeight: "44px" }}
+        style={{ color: 'currentColor', minWidth: "44px", minHeight: "44px" }}
         aria-label="Go back"
         data-testid="auth-back"
       >

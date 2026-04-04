@@ -29,7 +29,7 @@ export default function OnboardingPage() {
         role="status"
         aria-label="Loading"
       >
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#A8A8B0' }} aria-hidden="true" />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'currentColor' }} aria-hidden="true" />
         <span className="sr-only">Loading FamilyTV...</span>
       </div>
     );
@@ -53,7 +53,7 @@ export default function OnboardingPage() {
       <Link
         href="/"
         className="absolute top-4 left-4 flex items-center gap-2 transition-colors"
-        style={{ color: '#A8A8B0', minWidth: "48px", minHeight: "48px" }}
+        style={{ color: 'currentColor', minWidth: "48px", minHeight: "48px" }}
         aria-label="Go back to home"
         data-testid="auth-back-home"
       >
@@ -138,7 +138,7 @@ export default function OnboardingPage() {
         ) : (
           // Redirecting state - should not happen since we redirect in useEffect
           <div className="flex items-center justify-center" aria-live="polite" role="status">
-            <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#A8A8B0' }} aria-hidden="true" />
+            <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'currentColor' }} aria-hidden="true" />
             <span className="sr-only">Redirecting...</span>
           </div>
         )}
