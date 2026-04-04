@@ -3,7 +3,8 @@ import Link from "next/link";
 export default function NotFound() {
   return (
     <main
-      className="min-h-screen flex flex-col items-center justify-center bg-background px-4"
+      className="min-h-screen flex flex-col items-center justify-center px-4"
+      style={{ backgroundColor: "#0D0D0F" }}
       aria-label="Page not found"
     >
       <div className="w-full max-w-md text-center space-y-6">

@@ -1,0 +1,3 @@
+{
+  "/app/family/[familyId]/feed/page": "app/app/family/[familyId]/feed/page.js"
+}
