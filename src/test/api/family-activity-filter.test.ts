@@ -117,8 +117,17 @@ describe("/api/family/activity - filtering", () => {
   });
 
   describe("timeRange parameter", () => {
-    // Note: timeRange filtering is not yet implemented in the route
-    // These tests verify that unknown parameters don't cause errors
+    it("returns 400 for invalid timeRange", async () => {
+      const req = new NextRequest(
+        "http://localhost/api/family/activity?familyId=family_123&timeRange=invalid"
+      );
+      const res = await GET(req);
+
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toContain("Invalid timeRange");
+    });
+
     it("accepts timeRange=24h", async () => {
       mockPostsFindMany.mockResolvedValue([]);
       mockEventsFindMany.mockResolvedValue([]);
@@ -160,11 +169,34 @@ describe("/api/family/activity - filtering", () => {
 
       expect(res.status).toBe(200);
     });
+
+    it("defaults to all when timeRange not specified", async () => {
+      mockPostsFindMany.mockResolvedValue([]);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([]);
+
+      const req = new NextRequest(
+        "http://localhost/api/family/activity?familyId=family_123"
+      );
+      const res = await GET(req);
+
+      expect(res.status).toBe(200);
+    });
   });
 
   describe("types parameter", () => {
-    // Note: types filtering is not yet implemented in the route
-    // These tests verify that unknown parameters don't cause errors
+    it("returns 400 for invalid activity type", async () => {
+      const req = new NextRequest(
+        "http://localhost/api/family/activity?familyId=family_123&types=invalid"
+      );
+      const res = await GET(req);
+
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toContain("Invalid activity type");
+    });
+
     it("accepts single type=post", async () => {
       mockPostsFindMany.mockResolvedValue([]);
       mockEventsFindMany.mockResolvedValue([]);
@@ -206,10 +238,17 @@ describe("/api/family/activity - filtering", () => {
 
       expect(res.status).toBe(200);
     });
+
+    it("returns 400 for mixed valid/invalid types", async () => {
+      const req = new NextRequest(
+        "http://localhost/api/family/activity?familyId=family_123&types=post,invalid"
+      );
+      const res = await GET(req);
+
+      expect(res.status).toBe(400);
+    });
   });
 
-  // Note: members parameter filtering is not yet implemented in the route
-  // The following tests verify that unknown parameters don't cause errors
   describe("members parameter", () => {
     it("accepts single member ID", async () => {
       mockPostsFindMany.mockResolvedValue([]);
@@ -238,11 +277,59 @@ describe("/api/family/activity - filtering", () => {
 
       expect(res.status).toBe(200);
     });
+
+    it("filters activities by member IDs", async () => {
+      const post = createMockPost({
+        id: "post_1",
+        familyId: "family_123",
+        authorId: "user_123",
+        authorName: "Mom",
+      });
+
+      mockPostsFindMany.mockResolvedValue([post]);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([]);
+
+      // Filter for different user
+      const req = new NextRequest(
+        "http://localhost/api/family/activity?familyId=family_123&members=user_456"
+      );
+      const res = await GET(req);
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      // Post by Mom (user_123) should be filtered out
+      expect(json.items).toEqual([]);
+    });
+
+    it("returns activities for matching member", async () => {
+      const post = createMockPost({
+        id: "post_1",
+        familyId: "family_123",
+        authorId: "user_123",
+        authorName: "Mom",
+      });
+
+      mockPostsFindMany.mockResolvedValue([post]);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([]);
+      mockReactionsFindMany.mockResolvedValue([]);
+
+      // Filter for same user
+      const req = new NextRequest(
+        "http://localhost/api/family/activity?familyId=family_123&members=user_123"
+      );
+      const res = await GET(req);
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.items).toHaveLength(1);
+      expect(json.items[0].actor.id).toBe("user_123");
+    });
   });
 
   describe("combined filtering", () => {
-    // Note: combined filtering is not yet implemented - these tests verify
-    // that multiple unknown parameters together don't cause errors
     it("accepts all filter parameters together", async () => {
       mockPostsFindMany.mockResolvedValue([]);
       mockEventsFindMany.mockResolvedValue([]);
@@ -255,6 +342,39 @@ describe("/api/family/activity - filtering", () => {
       const res = await GET(req);
 
       expect(res.status).toBe(200);
+    });
+
+    it("filters by type and member together", async () => {
+      const post = createMockPost({
+        id: "post_1",
+        familyId: "family_123",
+        authorId: "user_123",
+        authorName: "Mom",
+      });
+
+      const comment = createMockComment({
+        id: "comment_1",
+        postId: "post_1",
+        authorId: "user_456", // Different user
+        authorName: "Dad",
+      });
+
+      mockPostsFindMany.mockResolvedValue([post]);
+      mockEventsFindMany.mockResolvedValue([]);
+      mockCommentsFindMany.mockResolvedValue([comment]);
+      mockReactionsFindMany.mockResolvedValue([]);
+
+      // Filter for posts only, by user_123
+      const req = new NextRequest(
+        "http://localhost/api/family/activity?familyId=family_123&types=post&members=user_123"
+      );
+      const res = await GET(req);
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.items).toHaveLength(1);
+      expect(json.items[0].type).toBe("post");
+      expect(json.items[0].actor.id).toBe("user_123");
     });
   });
 

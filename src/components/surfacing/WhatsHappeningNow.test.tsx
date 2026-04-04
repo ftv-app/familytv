@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor, cleanup, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
 import { WhatsHappeningNow } from "./WhatsHappeningNow";
 
 // Mock WebSocket
@@ -20,8 +20,6 @@ describe("WhatsHappeningNow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-
-  afterEach(cleanup);
 
   it("renders loading skeleton initially", () => {
     render(
@@ -110,94 +108,79 @@ describe("WhatsHappeningNow", () => {
     });
   });
 
-    // TODO: Fix WebSocket mock timing — ws.onopen/onmessage must fire inside fake-timer act
-  it.skip("shows online member chip when presence join received", async () => {
-    vi.useFakeTimers();
-
+  it("shows online member chip when presence join received", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ items: [], nextCursor: null, familyName: "The Smiths" }),
     });
 
-    await act(async () => {
-      render(
-        <WhatsHappeningNow
-          familyId="family-1"
-          currentUserId="user-1"
-        />
-      );
-      await vi.runAllTimersAsync();
+    render(
+      <WhatsHappeningNow
+        familyId="family-1"
+        currentUserId="user-1"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("surfacing-container")).toBeInTheDocument();
     });
 
-    await act(async () => {
-      mockWs.onopen?.();
-      await vi.runAllTimersAsync();
-    });
-
+    // Simulate WebSocket message
     if (mockWs.onmessage) {
-      await act(async () => {
-        mockWs.onmessage(new MessageEvent("message", {
-          data: JSON.stringify({
-            type: "presence:update",
-            payload: {
-              userId: "user-2",
-              userName: "Dad",
-              sessionId: "session-1",
-              joinedAt: Date.now(),
-              action: "join",
-            },
-          }),
-        }));
-        await vi.runAllTimersAsync();
-      });
+      mockWs.onmessage(new MessageEvent("message", {
+        data: JSON.stringify({
+          type: "presence:update",
+          payload: {
+            userId: "user-2",
+            userName: "Dad",
+            sessionId: "session-1",
+            joinedAt: Date.now(),
+            action: "join",
+          },
+        }),
+      }));
     }
 
-    expect(screen.getByTestId("surfacing-online-member")).toBeInTheDocument();
-    vi.useRealTimers();
+    await waitFor(() => {
+      expect(screen.getByTestId("surfacing-online-member")).toBeInTheDocument();
+      expect(screen.getByText("Dad")).toBeInTheDocument();
+    });
   });
 
-  // TODO: Fix WebSocket mock timing — ws.onopen/onmessage must fire inside fake-timer act
-  it.skip("shows recent activity when reaction received via WebSocket", async () => {
-    vi.useFakeTimers();
-
+  it("shows recent activity when reaction received via WebSocket", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ items: [], nextCursor: null, familyName: "The Smiths" }),
     });
 
-    await act(async () => {
-      render(
-        <WhatsHappeningNow
-          familyId="family-1"
-          currentUserId="user-1"
-        />
-      );
-      await vi.runAllTimersAsync();
+    render(
+      <WhatsHappeningNow
+        familyId="family-1"
+        currentUserId="user-1"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("surfacing-container")).toBeInTheDocument();
     });
 
-    await act(async () => {
-      mockWs.onopen?.();
-      await vi.runAllTimersAsync();
-    });
-
+    // Simulate reaction update via WebSocket
     if (mockWs.onmessage) {
-      await act(async () => {
-        mockWs.onmessage(new MessageEvent("message", {
-          data: JSON.stringify({
-            type: "reaction:update",
-            payload: {
-              userId: "user-2",
-              userName: "Sam",
-              emoji: "❤️",
-              timestamp: Date.now(),
-            },
-          }),
-        }));
-        await vi.runAllTimersAsync();
-      });
+      mockWs.onmessage(new MessageEvent("message", {
+        data: JSON.stringify({
+          type: "reaction:update",
+          payload: {
+            userId: "user-2",
+            userName: "Sam",
+            emoji: "❤️",
+            timestamp: Date.now(),
+          },
+        }),
+      }));
     }
 
-    expect(screen.getByTestId("surfacing-activity-card")).toBeInTheDocument();
-    vi.useRealTimers();
+    await waitFor(() => {
+      expect(screen.getByTestId("surfacing-activity-card")).toBeInTheDocument();
+    });
   });
 });

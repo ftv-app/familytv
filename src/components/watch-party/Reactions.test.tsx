@@ -35,7 +35,7 @@ describe("Reactions Component", () => {
 
   describe("REACTION_EMOJIS constant", () => {
     it("should contain the correct 6 default emojis", () => {
-      expect(REACTION_EMOJIS).toEqual(["🎬", "😂", "❤️", "🔥", "😮", "💯"]);
+      expect(REACTION_EMOJIS).toEqual(["😂", "❤️", "😮", "👏", "😢", "🔥"]);
     });
   });
 
@@ -407,7 +407,7 @@ describe("Reactions Component", () => {
       reactionHandler?.({
         userId: "user-2",
         userName: "Sister",
-        emoji: "🎬",
+        emoji: "👏",
         videoTimestamp: 15.0,
       });
 
@@ -418,7 +418,7 @@ describe("Reactions Component", () => {
         expect(bubbles.length).toBeGreaterThan(0);
         // Verify the specific emoji bubble exists
         const clapBubble = Array.from(bubbles).find(b => 
-          b.getAttribute('data-testid')?.includes('🎬')
+          b.getAttribute('data-testid')?.includes('👏')
         );
         expect(clapBubble).toBeDefined();
       });

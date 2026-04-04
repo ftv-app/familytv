@@ -265,7 +265,7 @@ describe('Socket Validation', () => {
     });
 
     it('should return false for invalid emojis', () => {
-      const invalidEmojis = ['💩', '👎', '✅', '❌', '🙈', '😀', '🎊'];
+      const invalidEmojis = ['💩', '👎', '✅', '❌', '🙈', '💯', '😀', '🎊'];
       invalidEmojis.forEach(emoji => {
         expect(isValidEmoji(emoji)).toBe(false);
       });

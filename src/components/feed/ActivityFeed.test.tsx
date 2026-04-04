@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ActivityFeed } from "./ActivityFeed";
 import type { ActivityItem } from "./ActivityFeed";
 
@@ -48,8 +48,6 @@ describe("ActivityFeed", () => {
     mockFetch.mockReset();
   });
 
-  afterEach(cleanup);
-
   it("renders loading skeletons when loading", () => {
     mockFetch.mockImplementation(
       () => new Promise(() => {}) // Never resolves to keep loading state
@@ -93,8 +91,8 @@ describe("ActivityFeed", () => {
       expect(cards.length).toBe(MOCK_ACTIVITY.length);
     });
 
-    // Check actor names (Mom appears twice in mock data - post and event)
-    expect(screen.getAllByText("Mom").length).toBe(2);
+    // Check actor names
+    expect(screen.getByText("Mom")).toBeInTheDocument();
     expect(screen.getByText("Dad")).toBeInTheDocument();
     expect(screen.getByText("Sam")).toBeInTheDocument();
   });

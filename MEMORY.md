@@ -4,9 +4,8 @@
 Private family social media. Invite-only, video/image sharing, shared calendars, watch parties. No ads/algorithms. Cinema Black design (Velvet Red #C41E3A, cream #FDF8F3, dark #0D0D0F).
 
 ## Active Sprints
-- **Sprint 013**: Watch Party Integration & March Debt Resolution (CTM-231-232, CTM-253-256) — 16h overdue
-- **Sprint 012**: Embedding infrastructure (CTM-242-248) — COMPLETE
-- **Sprint 011**: Watch Party social layer (CTM-229-235) — COMPLETE (PR #35 merged)
+- **Sprint 011**: Watch Party social layer (CTM-229-235) — PR #35 merged, test failures remain
+- **Sprint 012**: Embedding infrastructure (CTM-242) + Search/Suggestions UI (CTM-243-245) + Video (CTM-246-248)
 
 ## Embedding Infrastructure
 - Architecture: Vercel + Cloud Run hybrid (Next.js on Vercel → BGE-small/LanceDB on Cloud Run)
@@ -42,39 +41,6 @@ Next.js 16.2.1 + Turbopack | Clerk v7 | Neon Postgres | Vercel Blob | Socket.IO 
 
 ## Quality
 Build passes | E2E: landing 9/9, auth 3/3 | Coverage: ~86% → target 97%+ (CTM-212)
-
-## Sprint Management
-**Current Sprint:** Watch Party Integration & March Debt Resolution — 16h overdue
-**Sprint 013:** Activity Stories Feed UI + What's Happening Now + Mobile Nav Polish + Empty State CTAs
-
-### Open Tickets (Sprint 013)
-| ID | Title | Assignee | Status | Priority | Notes |
-|----|-------|----------|--------|----------|-------|
-| CTM-231 | Watch Party — Live Chat | — | In Progress | 2 | Blocked by PR #35 |
-| CTM-232 | Watch Party — Quick Reactions | — | In Progress | 2 | Blocked by PR #35 |
-| CTM-253 | Activity Stories Feed UI | sean conway | Todo | 2 | Design spec ready |
-| CTM-254 | Empty State CTAs | sean conway | Todo | 3 | Design spec ready |
-| CTM-255 | What's Happening Now — Widget UI | — | Todo | 3 | Spec complete: design/whats-happening-now.md ✅ |
-| CTM-256 | Mobile Navigation Polish | sean conway | Todo | 3 | |
-
-### Recently Completed (Sprint 011-012)
-| ID | Title | Status |
-|----|-------|--------|
-| CTM-229 | Watch Party — WebSocket Server | Done |
-| CTM-235 | Watch Party — Mobile Responsive Polish | Done |
-| CTM-242 | Embedding infrastructure | Done |
-| CTM-243 | Wire embedding service into Next.js API routes | Done |
-| CTM-244 | Search UI component | Done |
-| CTM-245 | Suggestions UI — auto-tagging | Done |
-| CTM-246 | Video embedding pipeline Phase 1 (CLIP + 5s frames) | Done |
-
-### Blockers
-- CTM-231, CTM-232: Waiting for PR #35 test fixes (qa-engineer working on chat-handler + reaction-handler mocks)
-- CTM-255: Cannot start until architect writes design/whats-happening-now.md
-- ~15 test failures in ActivityFeed, WhatsHappeningNow, family-presence, family-activity-filter
-
-### Team Members (Linear)
-- **sean conway** (id: 309cc7af-180b-4ea6-981e-275eb952e632) — sole team member in Linear team Ctmedia
 
 ## CTM-212 Test Infrastructure
 Scaffolding added to make it easy to write tests for API routes and components.
@@ -120,37 +86,3 @@ Scaffolding added to make it easy to write tests for API routes and components.
 - Bcrypt (12 rounds) remains for secure storage
 - Lookup hash is useless without the original code (one-way)
 - Index is conditional (`WHERE lookup_hash != ''`) to handle edge cases
-
-## Embedding Service — Ops Notes (2026-04-03)
-- Service: `/home/openclaw/familytv/embedding-service/`
-- Venv: `.venv/` (already gitignored)
-- Port: 8080, Host: 0.0.0.0
-- Model: BAAI/bge-small-en-v1.5 (384 dims), LanceDB at /tmp/familytv_vectors
-
-### Starting / Restarting
-```bash
-# Quick start (if not running):
-/home/openclaw/familytv/embedding-service/start.sh
-
-# Or manually:
-cd /home/openclaw/familytv/embedding-service
-source .venv/bin/activate
-nohup python -m uvicorn src.main:app --host 0.0.0.0 --port 8080 >> /tmp/embedding-service.log 2>&1 &
-
-# Health check:
-curl http://localhost:8080/health
-```
-
-### Logs
-- `/tmp/embedding-service.log`
-
-### Systemd (production)
-```bash
-sudo cp /home/openclaw/familytv/embedding-service/familytv-embedding.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now familytv-embedding
-# Restart: sudo systemctl restart familytv-embedding
-```
-
-### If it dies
-The model takes ~10-15s to load at startup. Check `tail -f /tmp/embedding-service.log`.

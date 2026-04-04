@@ -17,9 +17,7 @@ interface InviteInfo {
 export default function InviteAcceptPage() {
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const inviteId = params.token as string;
-  const token = searchParams.get("token") || "";
 
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
@@ -55,7 +53,7 @@ export default function InviteAcceptPage() {
       const res = await fetch("/api/invite", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inviteId, token }),
+        body: JSON.stringify({ inviteId }),
       });
 
       const data = await res.json();

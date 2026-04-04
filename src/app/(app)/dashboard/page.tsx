@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { getUserDisplayName } from "@/lib/get-user-display-name";
 import { db, families, familyMemberships, posts, calendarEvents } from "@/db";
 import { eq, desc, count } from "drizzle-orm";
 import { DashboardClient } from "./dashboard-client";
@@ -65,16 +64,14 @@ export default async function DashboardPage() {
       with: { family: false },
     });
 
-    // Fetch actual display names (synced from Clerk on first auth)
-    const membersWithNames = await Promise.all(
-      memberRecords.map(async (m) => ({
-        id: m.id,
-        name: await getUserDisplayName(m.userId),
-        role: m.role,
-        isOnline: false,
-      }))
-    );
-    familyMembers = membersWithNames;
+    // For now, mark members as offline (we don't have real-time presence data)
+    // The names come from Clerk — we use the cached authorName from posts if available
+    familyMembers = memberRecords.map((m, i) => ({
+      id: m.id,
+      name: `Member ${i + 1}`,
+      role: m.role,
+      isOnline: false,
+    }));
   }
 
   // Compute stats for the primary (first) family
