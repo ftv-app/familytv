@@ -90,4 +90,47 @@ test.describe("Landing Page", () => {
 
     await expect(page).toHaveURL(/\/sign-up/);
   });
+
+  test("hero and first section below it should not overlap", async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    // Get all sections within main
+    const main = page.locator("main");
+    const sections = main.locator("> section, > div[style*='height'"]");
+
+    const heroCarousel = sections.nth(0);
+    const heroContent = sections.nth(1);
+    const socialProof = sections.nth(2);
+
+    // Hero carousel and hero content should not overlap
+    const carouselBottom = await heroCarousel.boundingBox();
+    const heroContentBox = await heroContent.boundingBox();
+
+    expect(carouselBottom).not.toBeNull();
+    expect(heroContentBox).not.toBeNull();
+
+    // Hero content starts exactly where carousel ends (no gap, no overlap)
+    expect(heroContentBox!.top).toBe(carouselBottom!.top + carouselBottom!.height);
+
+    // SocialProofSection starts after hero content ends (no overlap)
+    const socialProofBox = await socialProof.boundingBox();
+    expect(socialProofBox).not.toBeNull();
+    expect(socialProofBox!.top).toBe(heroContentBox!.top + heroContentBox!.height);
+  });
+
+  test("hero content section has opaque background to prevent carousel show-through", async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const main = page.locator("main");
+    // Hero content is the second direct child of main (first is carousel div)
+    const heroContentSection = main.locator("section").first();
+
+    const bg = await heroContentSection.evaluate(
+      (el) => window.getComputedStyle(el).backgroundColor
+    );
+
+    // Background must not be fully transparent
+    const isTransparent = bg === "rgba(0, 0, 0, 0)" || bg === "transparent";
+    expect(isTransparent).toBe(false);
+  });
 });
