@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ import {
 } from "lucide-react";
 import { ActivityFeed } from "@/components/feed/ActivityFeed";
 import type { ActivityItem } from "@/components/feed/ActivityFeed";
+import { WarmSpinner } from "@/components/ui/spinner";
 
 export interface FamilyMember {
   id: string;
@@ -138,11 +140,22 @@ function QuickActionButton({
   description: string;
   testId?: string;
 }) {
+  const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
+  // App Router: use pathname as proxy for navigation state
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    setIsNavigating(false);
+  }, [pathname, searchParams]);
+
   return (
     <Link
       href={href}
       data-testid={testId}
-      className="block rounded-xl transition-all duration-200 min-h-[60px]"
+      aria-busy={isNavigating}
+      className="block rounded-xl transition-all duration-200 min-h-[60px] focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2"
       style={{
         backgroundColor: THEATER_CHARCOAL,
         boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
@@ -154,7 +167,11 @@ function QuickActionButton({
           className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
           style={{ backgroundColor: "rgba(212,175,55,0.12)" }}
         >
-          <Icon className="w-4 h-4" style={{ color: BROADCAST_GOLD }} />
+          {isNavigating ? (
+            <WarmSpinner size="sm" />
+          ) : (
+            <Icon className="w-4 h-4" style={{ color: BROADCAST_GOLD }} />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <span className="font-medium block" style={{ color: SILVER_WHITE }}>
@@ -164,7 +181,11 @@ function QuickActionButton({
             {description}
           </span>
         </div>
-        <ArrowRight className="w-4 h-4 shrink-0" style={{ color: MUTED_SILVER }} />
+        {isNavigating ? (
+          <WarmSpinner size="sm" />
+        ) : (
+          <ArrowRight className="w-4 h-4 shrink-0" style={{ color: MUTED_SILVER }} />
+        )}
       </div>
     </Link>
   );
