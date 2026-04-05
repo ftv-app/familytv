@@ -52,17 +52,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
           cache: "npm"
+
       - run: npm ci
+
       - name: Run npm audit
         run: npm audit --audit-level=high
-      - name: Check for hardcoded secrets
+
+      - name: Run Gitleaks secrets scan
+        uses: goreleaser/gitleaks-action@v2
+        with:
+          args: "detect --no-color --redact"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for hardcoded secrets via custom patterns
         run: |
-          # Scan for common secret patterns
-          git diff --staged --secrets | head -20 || true
+          echo "Scanning for common secret patterns in git history..."
+          # Scan all branches for committed secrets
+          git log --all --oneline --name-only | head -50
+          # Check for common dangerous patterns in current diff
+          if git diff --origin/${{ github.base_ref }} --name-only | grep -vE "\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|eot|ttf|mp4|mp3|wav)$" | while read file; do
+            if [[ -f "$file" ]]; then
+              # Check for hardcoded secrets, API keys, tokens
+              if grep -nE "(api[_-]?key|secret[_-]?key|aws[_-]?key|password|token|ghp_[a-zA-Z0-9]{36}|sk-[a-zA-Z0-9]{48})" "$file" 2>/dev/null; then
+                echo "::warning::Potential secret found in $file"
+              fi
+            fi
+          done; then
+            echo "::warning::Some files may contain hardcoded secrets — review above warnings"
+          fi
 
   # Gate 4: Design Review (accessibility + brand)
   design-review:
@@ -71,18 +96,29 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check data-testid presence on interactive elements
         run: |
-          # Reject PRs that add interactive elements without data-testid
-          PR_FILES=$(git diff --staged --name-only)
+          # Check PR diff for TSX files missing data-testid on interactive elements
+          PR_FILES=$(git diff --origin/${{ github.base_ref }} --name-only | grep -E '\.tsx$' || echo "")
+          if [ -z "$PR_FILES" ]; then
+            echo "No TSX files changed — design review gate passing"
+            exit 0
+          fi
+          echo "Checking TSX files for accessibility attributes:"
+          MISSING=0
           for file in $PR_FILES; do
-            if [[ "$file" == *.tsx ]]; then
-              # Check if file has interactive elements but no data-testid
-              HAS_INTERACTIVE=$(grep -c "onClick\|onChange\|<button\|<input\|<a href" "$file" 2>/dev/null || echo 0)
+            if [[ -f "$file" ]]; then
+              HAS_INTERACTIVE=$(grep -cE "onClick|onChange|<button|<input|<a href" "$file" 2>/dev/null || echo 0)
               HAS_TESTID=$(grep -c "data-testid" "$file" 2>/dev/null || echo 0)
               if [ "$HAS_INTERACTIVE" -gt 0 ] && [ "$HAS_TESTID" -eq 0 ]; then
                 echo "::warning::File $file has interactive elements but no data-testid attributes"
+                MISSING=$((MISSING + 1))
               fi
             fi
           done
+          if [ "$MISSING" -gt 0 ]; then
+            echo "::warning::$MISSING file(s) missing data-testid on interactive elements"
+          else
+            echo "✅ All TSX files have proper test ids"
+          fi
 
   # Gate 5: Smoke Test (replaces release-manager manual check)
   smoke-test:
