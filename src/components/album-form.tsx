@@ -147,7 +147,7 @@ export function AlbumForm({ mode, albumId, initialData, familyId }: AlbumFormPro
               }}
               placeholder="e.g., Summer Vacation 2024"
               maxLength={100}
-              className={`border-[#d8d3cc] focus:border-[#7c2d2d] focus:ring-[#7c2d2d] dark:border-[#444] dark:bg-[#1a1a1a] dark:focus:border-[#7c2d2d] dark:focus:ring-[#7c2d2d] ${
+              className={`border-[#d8d3cc] focus-visible:border-[#7c2d2d] focus-visible:ring-[#7c2d2d] dark:border-[#444] dark:bg-[#1a1a1a] dark:focus-visible:border-[#7c2d2d] dark:focus-visible:ring-[#7c2d2d] ${
                 errors.name ? "border-destructive" : ""
               }`}
               data-testid="albums-name-input"
@@ -175,7 +175,7 @@ export function AlbumForm({ mode, albumId, initialData, familyId }: AlbumFormPro
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add a description for your album..."
               rows={3}
-              className="border-[#d8d3cc] focus:border-[#7c2d2d] focus:ring-[#7c2d2d] dark:border-[#444] dark:bg-[#1a1a1a] dark:focus:border-[#7c2d2d] dark:focus:ring-[#7c2d2d] resize-none"
+              className="border-[#d8d3cc] focus-visible:border-[#7c2d2d] focus-visible:ring-[#7c2d2d] dark:border-[#444] dark:bg-[#1a1a1a] dark:focus-visible:border-[#7c2d2d] dark:focus-visible:ring-[#7c2d2d] resize-none"
               data-testid="albums-description-input"
             />
           </div>
@@ -194,7 +194,7 @@ export function AlbumForm({ mode, albumId, initialData, familyId }: AlbumFormPro
                 if (errors.coverUrl) setErrors((prev) => ({ ...prev, coverUrl: undefined }));
               }}
               placeholder="https://example.com/photo.jpg"
-              className={`border-[#d8d3cc] focus:border-[#7c2d2d] focus:ring-[#7c2d2d] dark:border-[#444] dark:bg-[#1a1a1a] dark:focus:border-[#7c2d2d] dark:focus:ring-[#7c2d2d] ${
+              className={`border-[#d8d3cc] focus-visible:border-[#7c2d2d] focus-visible:ring-[#7c2d2d] dark:border-[#444] dark:bg-[#1a1a1a] dark:focus-visible:border-[#7c2d2d] dark:focus-visible:ring-[#7c2d2d] ${
                 errors.coverUrl ? "border-destructive" : ""
               }`}
               data-testid="albums-cover-url-input"
