@@ -226,7 +226,7 @@ export default function OnboardingCreateFamilyPage() {
             <p 
               id="family-name-hint"
               className="text-xs text-right mt-2"
-              style={{ color: '#5A5A62' }}
+              style={{ color: '#8A8A8E' }}
               aria-live="polite"
             >
               {familyName.length}/50

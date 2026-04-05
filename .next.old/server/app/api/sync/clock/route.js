@@ -1,0 +1,11 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/sync/clock/route.js")
+R.c("server/chunks/[root-of-the-server]__0siblox._.js")
+R.c("server/chunks/03oy_@neondatabase_serverless_index_mjs_0aornz-._.js")
+R.c("server/chunks/03oy_next_dist_esm_build_templates_app-route_03_ur8n.js")
+R.c("server/chunks/03oy_0tifiyj._.js")
+R.c("server/chunks/[root-of-the-server]__10dv5jl._.js")
+R.c("server/chunks/familytv_01on8j9._.js")
+R.c("server/chunks/03oy_next_dist_0jwdvcu._.js")
+R.c("server/chunks/familytv__next-internal_server_app_api_sync_clock_route_actions_13k80im.js")
+R.m(75952)
+module.exports=R.m(75952).exports

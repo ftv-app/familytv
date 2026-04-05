@@ -1,0 +1,3 @@
+module.exports=[85330,a=>{"use strict";var b=a.i(87650);a.s(["default",0,function(){return(0,b.jsx)("div",{className:"flex items-center justify-center min-h-[60vh]","aria-label":"Loading...",children:(0,b.jsxs)("div",{className:"flex flex-col items-center gap-4",children:[(0,b.jsx)("div",{className:"w-10 h-10 border-3 border-muted border-t-primary rounded-full animate-spin","aria-hidden":"true"}),(0,b.jsx)("p",{className:"text-muted-foreground text-sm",children:"Loading your family..."})]})})}])},13036,a=>{a.n(a.i(85330))}];
+
+//# sourceMappingURL=familytv_src_app_%28app%29_loading_tsx_0q9l_l0._.js.map

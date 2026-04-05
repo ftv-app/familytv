@@ -315,7 +315,7 @@ function OnboardingInviteContent() {
           <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)' }} />
           <span 
             className="text-sm"
-            style={{ color: '#5A5A62' }}
+            style={{ color: '#8A8A8E' }}
           >
             or
           </span>
