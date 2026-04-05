@@ -187,7 +187,7 @@ function QuickActionButton({
           <span className="font-medium block" style={{ color: SILVER_WHITE }}>
             {label}
           </span>
-          <span className="text-sm" style={{ color: MUTED_SILVER }}>
+          <span className="text-base" style={{ color: MUTED_SILVER }}>
             {description}
           </span>
         </div>

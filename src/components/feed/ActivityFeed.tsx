@@ -128,7 +128,7 @@ function ActivityCard({ item }: { item: ActivityItem }) {
               {item.content.title}
             </p>
             {item.content.startDate && (
-              <p className="text-xs flex items-center gap-1" style={{ color: CREAM_MUTED }}>
+              <p className="text-sm flex items-center gap-1" style={{ color: CREAM_MUTED }}>
                 <Clock className="w-3 h-3" aria-hidden="true" />
                 {formatEventDate(item.content.startDate, item.content.allDay)}
               </p>
@@ -178,7 +178,7 @@ function ActivityCard({ item }: { item: ActivityItem }) {
         <div data-testid="feed-card-content">{renderContent()}</div>
         <time
           dateTime={item.createdAt}
-          className="text-xs block"
+          className="text-sm block"
           style={{ color: `${TERRACOTTA}99` }}
           data-testid="feed-card-time"
         >

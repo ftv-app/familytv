@@ -14,6 +14,7 @@ import path from "path";
 
 const dashboardPath = path.join(__dirname, "../app/(app)/dashboard/dashboard-client.tsx");
 const appShellPath = path.join(__dirname, "../components/app-shell.tsx");
+const activityFeedPath = path.join(__dirname, "../components/feed/ActivityFeed.tsx");
 
 describe("Text Sizes — Senior Accessibility (#3)", () => {
   it("dashboard-client: PresenceDot avatar initial should be text-sm (14px), not text-xs (12px)", () => {
@@ -45,5 +46,38 @@ describe("Text Sizes — Senior Accessibility (#3)", () => {
     const navSection = source.substring(source.indexOf("nav className"));
     const hasSmallNavText = navSection.includes("text-xs");
     expect(hasSmallNavText).toBe(false);
+  });
+
+  it("ActivityFeed: event date timestamp should be text-sm (14px) minimum, not text-xs (12px)", () => {
+    // WCAG 1.4.4 + ticket #3: event dates are readable metadata
+    // Must be at least text-sm (14px) for senior accessibility
+    const source = readFileSync(activityFeedPath, "utf8");
+    // Check for text-xs in event date rendering — the <p> containing Clock icon
+    const hasSmallEventDate = /className="text-xs flex items-center gap-1"/.test(source);
+    expect(hasSmallEventDate).toBe(false);
+  });
+
+  it("ActivityFeed: card timestamp (<time>) should be text-sm (14px) minimum, not text-xs (12px)", () => {
+    // The <time> element in ActivityFeed cards must be at least text-sm (14px)
+    // 12px timestamps are too small for seniors per WCAG 1.4.4
+    const source = readFileSync(activityFeedPath, "utf8");
+    // Find the <time ... className="text-xs block"> pattern used for timestamps
+    const hasSmallTime = /<time[^>]*className="text-xs/.test(source);
+    expect(hasSmallTime).toBe(false);
+  });
+
+  it("dashboard-client: QuickActionButton descriptions should be text-base (16px) for readability", () => {
+    // Ticket #3: ActionButton descriptions should be text-base (16px) per design brief
+    // Body text should be 15-16px minimum for senior legibility
+    const source = readFileSync(dashboardPath, "utf8");
+    // QuickActionButton renders {description} in a <span> — must be text-base or larger
+    // The span with text-sm that contains {description} is the description element
+    const hasSmallDesc = /\{description\}[^<]*<\/span>\s*<\/div>/.test(source) &&
+      /text-sm[^\n]*<span/.test(source);
+    // More direct: check that in QuickActionButton, the description span uses text-sm
+    // by looking at the rendered output section of the file
+    const quickActionSection = source.substring(source.indexOf("function QuickActionButton"));
+    const descSpanPattern = /<span[^>]*text-sm[^>]*>\s*\{description\}/;
+    expect(descSpanPattern.test(quickActionSection)).toBe(false);
   });
 });
