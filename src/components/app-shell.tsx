@@ -45,8 +45,8 @@ function MobileNav() {
         */}
         <button
           data-testid="hamburger-menu"
-          className="flex items-center gap-1.5 px-3 py-3 rounded-lg transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2"
-          style={{ backgroundColor: "#faf8f5" }}
+          className="flex items-center gap-1.5 px-3 py-3 rounded-lg border transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2"
+          style={{ backgroundColor: "#faf8f5", borderColor: "#2D5A3D", borderWidth: "1px" }}
           aria-label="Open navigation menu"
         >
           <Menu
