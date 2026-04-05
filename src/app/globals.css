@@ -135,8 +135,8 @@
 
   /* Muted: warm dark surface */
   --muted: oklch(0.22 0.012 50);
-  /* Fix P1 contrast: #8E8E96 (~2.4:1) → #A8A8B0 (5.2:1) on Cinema Black */
-  --muted-foreground: oklch(0.60 0.015 50);
+  /* Muted foreground: oklch(0.68 0.015 50) achieves 4.5:1+ contrast on Cinema Black */
+  --muted-foreground: oklch(0.68 0.015 50);
 
   /* Accent: dusty gold - darker */
   --accent: oklch(0.55 0.08 85);

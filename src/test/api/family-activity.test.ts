@@ -54,6 +54,16 @@ vi.mock("@/lib/rate-limiter", () => ({
 // Mock Clerk auth
 vi.mock("@clerk/nextjs/server", () => ({
   auth: (...args: unknown[]) => mockAuth(...args),
+  clerkClient: vi.fn().mockReturnValue({
+    users: {
+      getUser: vi.fn().mockResolvedValue({
+        id: "user_123",
+        fullName: "Test User",
+        primaryEmailAddress: { emailAddress: "test@example.com" },
+        imageUrl: null,
+      }),
+    },
+  }),
 }));
 
 // Mock database
@@ -98,6 +108,13 @@ describe("/api/family/activity", () => {
       remaining: 59,
       resetAt: Date.now() + 60000,
     });
+    // Default familyMemberships.findMany to return [] (avoids "not iterable" errors)
+    mockMembershipsFindMany.mockResolvedValue([]);
+    // Default posts/events/comments/reactions to [] for computePostScores
+    mockPostsFindMany.mockResolvedValue([]);
+    mockEventsFindMany.mockResolvedValue([]);
+    mockCommentsFindMany.mockResolvedValue([]);
+    mockReactionsFindMany.mockResolvedValue([]);
   });
 
   describe("Authentication", () => {
@@ -239,10 +256,12 @@ describe("/api/family/activity", () => {
       expect(json).toHaveProperty("items");
       expect(json).toHaveProperty("nextCursor");
       expect(json).toHaveProperty("familyName");
+      expect(json).toHaveProperty("familyId");
+      expect(json).toHaveProperty("meta");
       expect(json.familyName).toBe("The Smiths");
       expect(json.items).toHaveLength(1);
       expect(json.items[0].type).toBe("post");
-      expect(json.items[0].actor.name).toBe("John Doe");
+      expect(json.items[0].author.name).toBe("John Doe");
     });
 
     it("returns empty items when no activity", async () => {
@@ -282,9 +301,11 @@ describe("/api/family/activity", () => {
       const membershipWithFamily = { ...mockMembership, family: mockFamily };
       mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
 
-      const mockPost = createMockPost({ id: "post_123", familyId: "family_123" });
+      // Comment must be on the requesting user's post to appear in ranked feed (CTM-38)
+      const mockPost = createMockPost({ id: "post_123", familyId: "family_123", authorId: "user_123" });
       const mockComment = createMockComment({
         postId: "post_123",
+        authorId: "user_other",
         authorName: "Jane Doe",
         content: "Great photo!",
       });
@@ -301,8 +322,8 @@ describe("/api/family/activity", () => {
       const json = await res.json();
       const commentActivity = json.items.find((item: { type: string }) => item.type === "comment");
       expect(commentActivity).toBeDefined();
-      expect(commentActivity.actor.name).toBe("Jane Doe");
-      expect(commentActivity.content.content).toBe("Great photo!");
+      expect(commentActivity.author.name).toBe("Jane Doe");
+      expect(commentActivity.content).toBe("Great photo!");
     });
 
     it("includes reactions in activity feed", async () => {
@@ -326,13 +347,13 @@ describe("/api/family/activity", () => {
 
       expect(res.status).toBe(200);
       const json = await res.json();
-      const reactionActivity = json.items.find((item: { type: string }) => item.type === "reaction");
-      expect(reactionActivity).toBeDefined();
-      expect(reactionActivity.actor.name).toBe("user_456");
-      expect(reactionActivity.content.emoji).toBe("👍");
+      // Reactions are used for post scoring, not returned as separate items (CTM-38)
+      const reactionItems = json.items.filter((item: { type: string }) => item.type === "reaction");
+      expect(reactionItems).toHaveLength(0);
     });
 
-    it("includes events in activity feed", async () => {
+    // CTM-38: Events are no longer in the ranked activity feed (posts/comments/members/birthdays only)
+    it.skip("includes events in activity feed", async () => {
       const membershipWithFamily = { ...mockMembership, family: mockFamily };
       mockMembershipsFindFirst.mockResolvedValue(membershipWithFamily);
 

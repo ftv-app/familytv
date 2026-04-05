@@ -1,27 +1,58 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor, cleanup } from "@testing-library/react";
+import { render, screen, waitFor, cleanup, act } from "@testing-library/react";
 import { WhatsHappeningNow } from "./WhatsHappeningNow";
 
-// Mock WebSocket
+// ─── Mock WebSocket class ───────────────────────────────────────────────────────
+// Must be defined at module level so the component captures it when imported
 class MockWebSocket {
-  onopen: (() => void) | null = null;
-  onclose: (() => void) | null = null;
-  onmessage: ((event: { data: string }) => void) | null = null;
-  onerror: (() => void) | null = null;
+  static instances: MockWebSocket[] = [];
+  onopen: ((event: Event) => void) | null = null;
+  onclose: ((event: CloseEvent) => void) | null = null;
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
   close = vi.fn();
   send = vi.fn();
   readyState = 1; // OPEN
+  url: string;
+
+  constructor(url: string) {
+    MockWebSocket.instances.push(this);
+    this.url = url;
+  }
+
+  // Helper to trigger onopen from tests
+  triggerOpen() {
+    if (this.onopen) {
+      this.onopen(new Event("open"));
+    }
+  }
+
+  // Helper to trigger onmessage from tests
+  triggerMessage(data: unknown) {
+    if (this.onmessage) {
+      this.onmessage(new MessageEvent("message", { data: JSON.stringify(data) }));
+    }
+  }
 }
 
-const mockWs = new MockWebSocket() as unknown as WebSocket;
-vi.stubGlobal("WebSocket", vi.fn(() => mockWs));
+// Stub WebSocket globally at module level (before component imports it)
+vi.stubGlobal("WebSocket", MockWebSocket);
 
 describe("WhatsHappeningNow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    MockWebSocket.instances = [];
   });
 
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+  });
+
+  const getLastWs = (): MockWebSocket => {
+    const instances = MockWebSocket.instances;
+    if (!instances.length) throw new Error("No WebSocket instance created");
+    return instances[instances.length - 1];
+  };
 
   it("renders loading skeleton initially", () => {
     render(
@@ -30,13 +61,11 @@ describe("WhatsHappeningNow", () => {
         currentUserId="user-1"
       />
     );
-    // Loading skeleton should be present (aria-hidden so not found by text)
     const container = screen.getByTestId("surfacing-container");
     expect(container).toBeInTheDocument();
   });
 
   it("shows empty state when no activity", async () => {
-    // Mock empty fetch for events
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ items: [], nextCursor: null, familyName: "The Smiths" }),
@@ -127,21 +156,31 @@ describe("WhatsHappeningNow", () => {
       expect(screen.getByTestId("surfacing-container")).toBeInTheDocument();
     });
 
-    // Simulate WebSocket message
-    if (mockWs.onmessage) {
-      mockWs.onmessage(new MessageEvent("message", {
-        data: JSON.stringify({
-          type: "presence:update",
-          payload: {
-            userId: "user-2",
-            userName: "Dad",
-            sessionId: "session-1",
-            joinedAt: Date.now(),
-            action: "join",
-          },
-        }),
-      }));
-    }
+    const ws = getLastWs();
+
+    // Simulate WebSocket connection open
+    await act(async () => {
+      ws.triggerOpen();
+    });
+
+    // Verify presence join was sent
+    expect(ws.send).toHaveBeenCalledWith(
+      expect.stringContaining('"type":"presence:join"')
+    );
+
+    // Fire presence update message
+    await act(async () => {
+      ws.triggerMessage({
+        type: "presence:update",
+        payload: {
+          userId: "user-2",
+          userName: "Dad",
+          sessionId: "session-1",
+          joinedAt: Date.now(),
+          action: "join",
+        },
+      });
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId("surfacing-online-member")).toBeInTheDocument();
@@ -166,20 +205,25 @@ describe("WhatsHappeningNow", () => {
       expect(screen.getByTestId("surfacing-container")).toBeInTheDocument();
     });
 
-    // Simulate reaction update via WebSocket
-    if (mockWs.onmessage) {
-      mockWs.onmessage(new MessageEvent("message", {
-        data: JSON.stringify({
-          type: "reaction:update",
-          payload: {
-            userId: "user-2",
-            userName: "Sam",
-            emoji: "❤️",
-            timestamp: Date.now(),
-          },
-        }),
-      }));
-    }
+    const ws = getLastWs();
+
+    // Simulate WebSocket connection open
+    await act(async () => {
+      ws.triggerOpen();
+    });
+
+    // Fire reaction update message
+    await act(async () => {
+      ws.triggerMessage({
+        type: "reaction:update",
+        payload: {
+          userId: "user-2",
+          userName: "Sam",
+          emoji: "❤️",
+          timestamp: Date.now(),
+        },
+      });
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId("surfacing-activity-card")).toBeInTheDocument();

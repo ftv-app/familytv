@@ -2,6 +2,7 @@
 
 import { SignIn } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 export default function SignInPage() {
   const [mounted, setMounted] = useState(false);
@@ -35,6 +36,11 @@ export default function SignInPage() {
             <p className="text-muted-foreground mt-1 text-base" data-testid="auth-subheading">
               Your family is waiting for you
             </p>
+          </div>
+          {/* Loading spinner - shows while Clerk component hydrates */}
+          <div className="flex justify-center" data-testid="signin-loading-spinner" role="status" aria-label="Loading">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" aria-hidden="true" />
+            <span className="sr-only">Loading sign-in form...</span>
           </div>
         </div>
       </main>

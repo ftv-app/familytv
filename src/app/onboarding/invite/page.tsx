@@ -137,7 +137,7 @@ function OnboardingInviteContent() {
         role="status"
         aria-label="Loading"
       >
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#A8A8B0' }} aria-hidden="true" />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'currentColor' }} aria-hidden="true" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -166,7 +166,7 @@ function OnboardingInviteContent() {
       <button
         onClick={() => router.push("/onboarding/create-family")}
         className="absolute top-4 left-4 flex items-center gap-2 transition-colors"
-        style={{ color: '#A8A8B0', minWidth: "44px", minHeight: "44px" }}
+        style={{ color: 'currentColor', minWidth: "44px", minHeight: "44px" }}
         aria-label="Go back"
         data-testid="auth-back"
       >
@@ -211,7 +211,7 @@ function OnboardingInviteContent() {
           </h2>
           <h2 
             className="font-heading text-3xl sm:text-4xl font-bold leading-tight"
-            style={{ color: '#A8A8B0' }}
+            style={{ color: 'currentColor' }}
             data-testid="auth-invite-heading-3"
           >
             to your channel
@@ -220,7 +220,7 @@ function OnboardingInviteContent() {
 
         <p 
           className="text-base text-center mb-8"
-          style={{ color: '#A8A8B0' }}
+          style={{ color: 'currentColor' }}
           data-testid="auth-invite-description"
         >
           Your family can&apos;t wait to see your photos and videos.
@@ -236,7 +236,7 @@ function OnboardingInviteContent() {
                 height: "52px", 
                 fontSize: "16px",
                 backgroundColor: '#1A1A1E',
-                color: '#A8A8B0'
+                color: 'currentColor'
               }}
               data-testid="auth-copy-invite-loading"
               aria-busy="true"
@@ -277,7 +277,7 @@ function OnboardingInviteContent() {
                 height: "52px", 
                 fontSize: "16px",
                 backgroundColor: '#1A1A1E',
-                color: '#A8A8B0'
+                color: 'currentColor'
               }}
               data-testid="auth-copy-invite-error"
               aria-disabled="true"
@@ -289,7 +289,7 @@ function OnboardingInviteContent() {
           {copyError && inviteLink && (
             <div 
               className="text-sm text-center"
-              style={{ color: '#A8A8B0' }}
+              style={{ color: 'currentColor' }}
               role="alert"
             >
               <p>Could not copy automatically. Here&apos;s your link:</p>
@@ -356,7 +356,7 @@ function OnboardingInviteContent() {
               fontSize: "16px",
               backgroundColor: 'transparent',
               border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: '#A8A8B0'
+              color: 'currentColor'
             }}
             aria-disabled={!email || emailLoading || !inviteLink}
             data-testid="auth-send-invite-btn"
@@ -390,7 +390,7 @@ function OnboardingInviteContent() {
           <button
             onClick={handleSkip}
             className="font-medium hover:underline"
-            style={{ fontSize: "16px", color: '#A8A8B0' }}
+            style={{ fontSize: "16px", color: 'currentColor' }}
             data-testid="auth-skip-invite"
           >
             Skip for now <span aria-hidden="true">→</span>
@@ -410,7 +410,7 @@ function InvitePageLoading() {
       role="status"
       aria-label="Loading"
     >
-      <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#A8A8B0' }} aria-hidden="true" />
+      <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'currentColor' }} aria-hidden="true" />
       <span className="sr-only">Loading...</span>
     </div>
   );
