@@ -1,3 +1,5 @@
+"use client";
+
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, cleanup, fireEvent } from "@testing-library/react";
 import { DashboardClient } from "@/app/(app)/dashboard/dashboard-client";
@@ -8,6 +10,19 @@ vi.mock("next/link", () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
+}));
+
+// Mock next/navigation for useRouter, usePathname, useSearchParams
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+  }),
+  usePathname: () => "/app/dashboard",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // Mock ActivityFeed

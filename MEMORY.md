@@ -50,12 +50,12 @@ Build passes ✅ | Tests: 890 passed, 5 failed (pre-existing invite.test.ts) | D
 - `src/components/__tests__/`, `src/lib/activity/__tests__/`: root-owned dirs blocking `git checkout -f main`
 - `albums` table: restored Apr 4 (was removed in bad merge 88e07bb)
 - SLO alerting: inactive
+- `dashboard-activity-feed.test.tsx`: 7 failures — FamilyFeedTab vs FamilyFeed+Suspense mismatch from CTM-37 merge (50f1e87) — FIX IN PROGRESS
 
-## CTM-219 Invite Validation O(n)→O(1) — UNRESOLVED (3-sprint carry-over)
-- **Risk**: DoS vector — attacker creates many invites, slow validation for all users
-- **Fix needed**: Add `lookup_hash` (SHA-256) column with UNIQUE index, bcrypt verify after O(1) lookup
-- **Status**: NOT DONE — no completion evidence in git log
-- Owner: needs assignment
+## CTM-219 Invite Validation O(n)→O(1) — RESOLVED ✅
+- **Fix**: `237e1b2` + `9274869` — O(1) hash lookup + secret token required for invite acceptance
+- **Commit**: `9274869 fix(CTM-219): require secret token for invite acceptance — prevents invite ID enumeration`
+- **Verified**: 2026-04-05 — CTM-219 removed from open issues
 
 ## Embedding Service — Ops
 - Service dir: `/home/openclaw/familytv/embedding-service/`
