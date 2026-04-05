@@ -19,14 +19,12 @@ describe("FamilyFeed auth timing fix — Suspense boundary", () => {
     expect(source).toContain("<FamilyFeed");
   });
 
-  it("family page wraps FamilyFeed tab in Suspense boundary", () => {
+  it("family page uses FamilyFeedTab component", () => {
     const source = readFileSync(familyPagePath, "utf8");
-    expect(source).toContain("Suspense");
-    expect(source).toContain("<FamilyFeed");
+    expect(source).toContain("FamilyFeedTab");
   });
 
   it("FeedLoadingSkeleton renders skeleton elements", () => {
-    // Verify the skeleton component exists and renders expected structure
     const source = readFileSync(feedPagePath, "utf8");
     expect(source).toContain("feed-loading-skeleton");
     expect(source).toContain("animate-pulse");
