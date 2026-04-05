@@ -172,3 +172,12 @@ describe("DashboardClient — Multi-Family Context (CTM-5)", () => {
     });
   });
 });
+  describe("CTM-11: Family selector has aria-label for screen readers", () => {
+    it("family selector DropdownMenuTrigger has aria-label with current family name", () => {
+      render(<DashboardClient {...multiFamilyProps} />);
+      const trigger = document.querySelector('[aria-label*="Select family"]');
+      expect(trigger).toBeTruthy();
+      const label = trigger!.getAttribute("aria-label");
+      expect(label).toContain("The Smiths");
+    });
+  });

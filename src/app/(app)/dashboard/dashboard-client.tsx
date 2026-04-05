@@ -513,7 +513,7 @@ export function DashboardClient({
             Viewing:
           </span>
           <DropdownMenu>
-            <DropdownMenuTrigger>
+            <DropdownMenuTrigger aria-label={`Select family: ${selectedFamily?.name ?? "Choose a family"}`}>
               <Button
                 variant="outline"
                 className="gap-2"

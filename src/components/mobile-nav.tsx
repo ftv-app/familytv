@@ -101,6 +101,7 @@ export function MobileNav() {
                 key={item.href}
                 href={item.href}
                 data-testid={`nav-item-${item.label.toLowerCase()}`}
+                aria-current={active ? "page" : undefined}
                 className={`
                   flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200
                   focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
@@ -115,6 +116,7 @@ export function MobileNav() {
               >
                 <item.icon
                   className="w-5 h-5 shrink-0"
+                  aria-hidden="true"
                   style={{ color: active ? BROADCAST_GOLD : "inherit" }}
                 />
                 <span className="text-sm font-medium">{item.label}</span>

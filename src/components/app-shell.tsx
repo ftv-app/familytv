@@ -105,6 +105,7 @@ function AppShellContent({ pathname, children }: { pathname: string; children: R
                     key={item.href}
                     href={item.href}
                     data-testid={`desktop-nav-${item.label.toLowerCase()}`}
+                    aria-current={isActive ? "page" : undefined}
                     className={`
                       flex items-center gap-2 px-3 py-3 rounded-lg text-sm font-medium transition-colors min-h-[48px]
                       focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
@@ -117,6 +118,7 @@ function AppShellContent({ pathname, children }: { pathname: string; children: R
                   >
                     <item.icon
                       className="w-4 h-4"
+                      aria-hidden="true"
                       style={{ color: isActive ? "#D4AF37" : "inherit" }}
                     />
                     {item.label}
