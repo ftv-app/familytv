@@ -47,7 +47,7 @@ describe("Dashboard Quick Actions — Loading State (#7)", () => {
     expect(hasWarmSpinner).toBe(true);
   });
 
-  it("QuickActionButton Link has aria-busy during navigation", () => {
+  it("QuickActionButton has aria-busy during navigation", () => {
     const source = readFileSync(dashboardClientPath, "utf8");
 
     // aria-busy="true" must be set during navigation to prevent double-taps
@@ -61,5 +61,24 @@ describe("Dashboard Quick Actions — Loading State (#7)", () => {
     // Must use useRouter to detect navigation state
     const usesRouter = source.includes("useRouter");
     expect(usesRouter).toBe(true);
+  });
+
+  it("QuickActionButton has disabled={isNavigating} to prevent double-tap", () => {
+    const source = readFileSync(dashboardClientPath, "utf8");
+
+    // Double-tap prevention: disabled={isNavigating} on a <button>
+    // This is the critical fix for elderly users who may double-tap Quick Actions
+    const hasDisabledDuringNav = source.includes("disabled={isNavigating}");
+    expect(hasDisabledDuringNav).toBe(true);
+  });
+
+  it("QuickActionButton uses onClick+router.push for programmatic navigation", () => {
+    const source = readFileSync(dashboardClientPath, "utf8");
+
+    // Must use onClick + router.push instead of <Link> to enable disabled state
+    const usesOnClick = source.includes("onClick={handleClick}");
+    const usesRouterPush = source.includes("router.push(href)");
+    expect(usesOnClick).toBe(true);
+    expect(usesRouterPush).toBe(true);
   });
 });

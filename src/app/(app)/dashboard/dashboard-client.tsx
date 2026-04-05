@@ -150,16 +150,26 @@ function QuickActionButton({
     setIsNavigating(false);
   }, [pathname, searchParams]);
 
+  const handleClick = () => {
+    if (isNavigating) return;
+    setIsNavigating(true);
+    router.push(href);
+  };
+
   return (
-    <Link
-      href={href}
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={isNavigating}
       data-testid={testId}
       aria-busy={isNavigating}
-      className="block rounded-xl transition-all duration-200 min-h-[60px] focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2"
+      className="block w-full rounded-xl transition-all duration-200 min-h-[60px] text-left focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2"
       style={{
         backgroundColor: THEATER_CHARCOAL,
         boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
         border: "1px solid rgba(255,255,255,0.04)",
+        cursor: isNavigating ? "not-allowed" : "pointer",
+        opacity: isNavigating ? 0.7 : 1,
       }}
     >
       <div className="flex items-center gap-2 w-full p-4">
@@ -187,7 +197,7 @@ function QuickActionButton({
           <ArrowRight className="w-4 h-4 shrink-0" style={{ color: MUTED_SILVER }} />
         )}
       </div>
-    </Link>
+    </button>
   );
 }
 
