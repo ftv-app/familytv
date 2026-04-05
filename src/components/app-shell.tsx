@@ -83,7 +83,7 @@ function MobileNav() {
           </SheetTitle>
         </SheetHeader>
         <nav className="p-3 space-y-1">
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
             const isActive = pathname === item.href;
             return (
               <Link
@@ -94,11 +94,12 @@ function MobileNav() {
                   flex items-center gap-3 px-3 py-3 rounded-lg transition-colors
                   focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
                   hover:bg-[#252529] hover:text-[#E8E8EC]
-                  ${isActive ? "" : ""}
+                  nav-item-animate
                 `}
                 style={{
                   backgroundColor: isActive ? "#252529" : "transparent",
                   color: isActive ? "#E8E8EC" : "#A8A8B0",
+                  animationDelay: `${index * 40}ms`,
                 }}
                 onClick={() => setOpen(false)}
               >

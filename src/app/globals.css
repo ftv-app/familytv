@@ -427,3 +427,19 @@ button[data-testid^="watch-party-reaction-"]:active {
 [data-testid="watch-party-chat-messages"]::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.15);
 }
+
+/* Mobile nav item stagger animation (CTM-39 polish) */
+@keyframes nav-item-in {
+  from {
+    opacity: 0;
+    transform: translateX(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.nav-item-animate {
+  animation: nav-item-in 200ms ease-out both;
+}
