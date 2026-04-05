@@ -239,7 +239,7 @@ function EmptyFeed({ familyName }: { familyName?: string }) {
       }
       ctaLabel="Share the first moment"
       ctaHref="/app/family"
-      secondaryLabel="Invite family members"
+      secondaryLabel="Invite family members →"
       secondaryHref="/app/family/invites"
     />
   );

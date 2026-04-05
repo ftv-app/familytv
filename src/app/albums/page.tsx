@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { WarmEmptyState } from "@/components/warm-empty-state";
 
 interface Album {
   id: string;
@@ -202,45 +203,15 @@ export default function AlbumsPage() {
 
       {/* Empty State */}
       {!loading && albums.length === 0 && selectedFamilyId && (
-        <div
-          className="flex flex-col items-center justify-center py-16 text-center"
-          data-testid="albums-empty"
-        >
-          <svg
-            className="h-16 w-16 text-[#c4b8ad] dark:text-[#555] mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-          <h3
-            className="font-heading text-xl font-semibold text-[#1e1a17] dark:text-[#faf8f5] mb-2"
-            data-testid="albums-empty-title"
-          >
-            No albums yet
-          </h3>
-          <p
-            className="text-muted-foreground mb-6 max-w-md"
-            data-testid="albums-empty-description"
-          >
-            Create your first album to start organizing your family photos and videos.
-          </p>
-          <Link href="/albums/new" data-testid="albums-empty-create-link">
-            <Button
-              className="bg-[#7c2d2d] hover:bg-[#6b2626] text-white dark:bg-[#7c2d2d] dark:hover:bg-[#6b2626]"
-              data-testid="albums-empty-create-button"
-            >
-              Create Your First Album
-            </Button>
-          </Link>
-        </div>
+        <WarmEmptyState
+          emoji="📚"
+          title="Your family's memories start here"
+          description="Create your first album to start organizing your family photos and videos."
+          ctaLabel="Create Your First Album"
+          ctaHref="/albums/new"
+          secondaryLabel="Invite family members →"
+          secondaryHref={`/app/family/${selectedFamilyId}/invite`}
+        />
       )}
 
       {/* Albums Grid */}

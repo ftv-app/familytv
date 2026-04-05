@@ -165,10 +165,10 @@ function EmptyFeedState({ familyId }: { familyId: string }) {
     <WarmEmptyState
       emoji="📷"
       title="Your family's story starts here"
-      description="When someone shares a moment, it will appear here"
+      description="When someone shares a moment, it will appear here."
       ctaLabel="Share the first moment"
       ctaHref="#create-post"
-      secondaryLabel="Invite family members"
+      secondaryLabel="Invite family members →"
       secondaryHref={`/app/family/${familyId}/invite`}
     />
   );
