@@ -102,7 +102,7 @@ describe("FamilyFeedTab", () => {
     render(<FamilyFeedTab familyId="family-1" familyName="The Smiths" />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Your family feed is quiet/i)).toBeInTheDocument();
+      expect(screen.getByText(/Your family's story starts here/i)).toBeInTheDocument();
     });
   });
 
