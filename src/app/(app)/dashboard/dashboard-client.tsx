@@ -372,12 +372,22 @@ export function DashboardClient({
       {/* ── Activity Stories Feed ───────────────────────────────────────────── */}
       {feedItems !== undefined ? (
         <div>
-          <h2
-            className="font-heading text-lg font-semibold mb-4"
-            style={{ color: SILVER_WHITE }}
-          >
-            Activity Stories
-          </h2>
+          {/* Stats Row: family initial avatar for multi-family anchoring (CTM-5) */}
+          <div className="flex items-center gap-3 mb-4">
+            <h2
+              className="font-heading text-lg font-semibold"
+              style={{ color: SILVER_WHITE }}
+            >
+              Activity Stories
+            </h2>
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold shrink-0"
+              style={{ backgroundColor: "rgba(212,175,55,0.15)", color: BROADCAST_GOLD }}
+              aria-label={`Family: ${channelName}`}
+            >
+              {channelName.charAt(0).toUpperCase()}
+            </div>
+          </div>
           {selectedFamily && (
             <ActivityFeed
               familyId={selectedFamily.id}

@@ -71,9 +71,8 @@ describe("CTM-6: Mobile hamburger nav WCAG contrast (seniors)", () => {
 
   it("inactive mobile nav item text meets 4.5:1 on dark page bg (#0D0D0F)", () => {
     const { container } = render(<AppShell><div>Test</div></AppShell>);
-    const openBtn = container.querySelector('[data-testid="open-sheet"]') as HTMLButtonElement;
-    openBtn?.click();
-    const navItem = container.querySelector('[data-testid="nav-item-settings"]') as HTMLElement;
+    // Mobile nav has Dashboard, Family, Albums, Calendar — no Settings
+    const navItem = container.querySelector('[data-testid="nav-item-dashboard"]') as HTMLElement;
     expect(navItem).toBeTruthy();
     const fg = rgbToHex(getComputedStyle(navItem).color);
     // Contrast against page bg (#0D0D0F)
