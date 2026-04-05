@@ -207,7 +207,7 @@ function PresenceDot({ name, isOnline }: { name: string; isOnline: boolean }) {
     <div className="flex items-center gap-2">
       <div className="relative">
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold"
           style={{ backgroundColor: SHADOW_GRAY, color: SILVER_WHITE }}
         >
           {name.charAt(0).toUpperCase()}

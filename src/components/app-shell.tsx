@@ -115,7 +115,7 @@ function MobileNav() {
             style={{ borderColor: "rgba(255,255,255,0.06)" }}
           >
             <p
-              className="px-3 py-2 text-xs font-medium uppercase tracking-wider"
+              className="px-3 py-2 text-sm font-medium uppercase tracking-wider"
               style={{ color: "#5A5A62" }}
             >
               Account
