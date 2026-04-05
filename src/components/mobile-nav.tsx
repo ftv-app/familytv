@@ -22,49 +22,27 @@ import {
   Tv,
 } from "lucide-react";
 
-const CINE_BLACK = "#0D0D0F";
 const THEATER_CHARCOAL = "#1A1A1E";
 const SHADOW_GRAY = "#252529";
 const BROADCAST_GOLD = "#D4AF37";
 const SILVER_WHITE = "#E8E8EC";
 const MUTED_SILVER = "#A8A8B0";
 
-// Family context nav items — shown when inside a family route
-const familyNavItems = [
-  { href: "/app/family/[familyId]/feed", icon: Home, label: "Feed" },
-  { href: "/app/family/[familyId]/albums", icon: Image, label: "Albums" },
-  { href: "/app/family/[familyId]/events", icon: Calendar, label: "Events" },
-  { href: "/app/family/[familyId]/members", icon: Users, label: "Members" },
-];
-
-// Generic nav items — shown when not inside a specific family
+// Nav items — generic routes that work at all contexts
 const genericNavItems = [
   { href: "/app", icon: Home, label: "Dashboard" },
-  { href: "/app/create-family", icon: Plus, label: "Create family" },
+  { href: "/app/family", icon: Users, label: "Family" },
+  { href: "/app/albums", icon: Image, label: "Albums" },
+  { href: "/app/calendar", icon: Calendar, label: "Calendar" },
 ];
 
-function isFamilyContext(pathname: string): boolean {
-  return /\/app\/family\/[^/]+/.test(pathname);
-}
-
-function getNavItems(pathname: string) {
-  return isFamilyContext(pathname) ? familyNavItems : genericNavItems;
-}
-
 function isActiveNavItem(href: string, pathname: string): boolean {
-  // For family nav items, check if pathname starts with the base path
-  if (href.includes("[familyId]")) {
-    const basePath = href.replace("/[familyId]/", "/");
-    const basePattern = basePath.replace("/app/family/", "/app/family/");
-    return pathname.includes(basePattern.replace("/feed", "").replace("/albums", "").replace("/events", "").replace("/members", ""));
-  }
-  return pathname === href;
+  return pathname === href || pathname.startsWith(href + "/");
 }
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const navItems = getNavItems(pathname);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -116,7 +94,7 @@ export function MobileNav() {
           </SheetTitle>
         </SheetHeader>
         <nav className="p-3 space-y-1">
-          {navItems.map((item, index) => {
+          {genericNavItems.map((item, index) => {
             const active = isActiveNavItem(item.href, pathname);
             return (
               <Link
@@ -143,6 +121,29 @@ export function MobileNav() {
               </Link>
             );
           })}
+          {/* Create family — special accent */}
+          <Link
+            href="/app/create-family"
+            data-testid="nav-item-create-family"
+            className={`
+              flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200
+              focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
+              nav-item-animate
+            `}
+            style={{
+              backgroundColor: pathname === "/app/create-family" ? SHADOW_GRAY : "transparent",
+              color: pathname === "/app/create-family" ? SILVER_WHITE : MUTED_SILVER,
+              animationDelay: `${genericNavItems.length * 40}ms`,
+            }}
+            onClick={() => setOpen(false)}
+          >
+            <Plus
+              className="w-5 h-5 shrink-0"
+              style={{ color: pathname === "/app/create-family" ? BROADCAST_GOLD : "inherit" }}
+            />
+            <span className="text-sm font-medium">Create family</span>
+          </Link>
+
           <div
             className="pt-4 mt-4 border-t"
             style={{ borderColor: "rgba(255,255,255,0.06)" }}
