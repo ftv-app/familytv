@@ -4,9 +4,10 @@
 Private family social media. Invite-only, video/image sharing, shared calendars, watch parties. No ads/algorithms. Cinema Black design (Velvet Red #C41E3A, cream #FDF8F3, dark #0D0D0F).
 
 ## Active Sprints
-- **Sprint 013**: Auth Polish + Accessibility Polish (2026-04-05) — COMPLETE
-- **Sprint 012**: Embedding infrastructure (CTM-242-248) — COMPLETE
-- **Sprint 011**: Watch Party social layer (CTM-229-235) — COMPLETE
+- **Sprint 014**: Dashboard Warmth + Competitive Intelligence (2026-04-05 EVE) — COMPLETE ✅
+- **Sprint 013**: Auth Polish + Accessibility Polish (2026-04-05 AM/PM) — COMPLETE ✅
+- **Sprint 012**: Embedding infrastructure (CTM-242-248) — COMPLETE ✅
+- **Sprint 011**: Watch Party social layer (CTM-229-235) — COMPLETE ✅
 
 ## Embedding Infrastructure
 - Architecture: Vercel + Cloud Run hybrid (Next.js on Vercel → BGE-small/LanceDB on Cloud Run)

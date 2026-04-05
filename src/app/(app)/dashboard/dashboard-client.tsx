@@ -376,7 +376,7 @@ export function DashboardClient({
           {/* Stats Row: family initial avatar for multi-family anchoring (CTM-5) */}
           <div className="flex items-center gap-3 mb-4">
             <h2
-              className="font-heading text-lg font-semibold"
+              className="font-heading text-lg font-semibold uppercase tracking-wider"
               style={{ color: SILVER_WHITE }}
             >
               Activity Stories
@@ -429,7 +429,7 @@ export function DashboardClient({
         <>
           <div>
             <h2
-              className="font-heading text-lg font-semibold mb-4"
+              className="font-heading text-lg font-semibold mb-4 uppercase tracking-wider"
               style={{ color: SILVER_WHITE }}
             >
               Family members
@@ -464,7 +464,7 @@ export function DashboardClient({
       {/* ── Quick Actions ───────────────────────────────────────────────────── */}
       <div>
         <h2
-          className="font-heading text-lg font-semibold mb-4"
+          className="font-heading text-lg font-semibold mb-4 uppercase tracking-wider"
           style={{ color: SILVER_WHITE }}
         >
           Quick actions
