@@ -78,7 +78,8 @@ const CREAM = "#FDF8F3";
 const SILVER_WHITE = "#E8E8EC";
 const MUTED_SILVER = "#A8A8B0";
 
-// ─── Stat Card ───────────────────────────────────────────────────────────────
+// ─── Stat Card (Family Warmth) ───────────────────────────────────────────────
+// Design brief: warm, rounded, family-contextual — not enterprise analytics
 function StatCard({
   icon: Icon,
   label,
@@ -92,31 +93,31 @@ function StatCard({
 }) {
   return (
     <div
-      className="flex-1 min-w-[140px] rounded-xl overflow-hidden"
+      className="flex-1 min-w-[140px] rounded-2xl overflow-hidden"
       style={{
         backgroundColor: THEATER_CHARCOAL,
-        boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(212,175,55,0.06)",
       }}
     >
-      <CardContent className="p-4 flex items-start gap-3">
+      <CardContent className="p-5 flex items-start gap-4">
         <div
-          className="w-12 h-12 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 min-w-[48px] min-h-[48px]"
-          style={{ backgroundColor: "rgba(212,175,55,0.12)" }}
+          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 min-w-[48px] min-h-[48px]"
+          style={{ backgroundColor: "rgba(212,175,55,0.15)" }}
         >
-          <Icon className="w-4 h-4" style={{ color: BROADCAST_GOLD }} />
+          <Icon className="w-5 h-5" style={{ color: BROADCAST_GOLD }} />
         </div>
-        <div>
+        <div className="min-w-0">
           <p
-            className="text-2xl font-semibold"
-            style={{ color: SILVER_WHITE, fontFamily: "var(--font-heading, inherit)" }}
+            className="text-3xl font-bold"
+            style={{ color: CREAM, fontFamily: "var(--font-heading, inherit)" }}
           >
             {value}
           </p>
-          <p className="text-sm" style={{ color: MUTED_SILVER }}>
+          <p className="text-base font-medium mt-0.5" style={{ color: SILVER_WHITE }}>
             {label}
           </p>
           {sublabel && (
-            <p className="text-sm" style={{ color: `${MUTED_SILVER}99` }}>
+            <p className="text-sm mt-0.5" style={{ color: "rgba(168,168,176,0.7)" }}>
               {sublabel}
             </p>
           )}
