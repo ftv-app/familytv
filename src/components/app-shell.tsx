@@ -227,7 +227,7 @@ function AppShellContent({ pathname, children }: { pathname: string; children: R
                     href={item.href}
                     data-testid={`desktop-nav-${item.label.toLowerCase()}`}
                     className={`
-                      flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                      flex items-center gap-2 px-3 py-3 rounded-lg text-sm font-medium transition-colors min-h-[48px]
                       focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2
                       hover:bg-[#252529] hover:text-[#E8E8EC]
                     `}
@@ -252,7 +252,7 @@ function AppShellContent({ pathname, children }: { pathname: string; children: R
             <UserButton
               appearance={{
                 elements: {
-                  userButtonAvatarBox: "w-8 h-8",
+                  userButtonAvatarBox: "w-12 h-12 rounded-full",
                 },
               }}
             />

@@ -100,7 +100,7 @@ function StatCard({
     >
       <CardContent className="p-4 flex items-start gap-3">
         <div
-          className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shrink-0 min-w-[44px]"
+          className="w-12 h-12 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 min-w-[48px] min-h-[48px]"
           style={{ backgroundColor: "rgba(212,175,55,0.12)" }}
         >
           <Icon className="w-4 h-4" style={{ color: BROADCAST_GOLD }} />
