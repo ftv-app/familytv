@@ -12,13 +12,6 @@ import {
 } from "lucide-react";
 import { MobileNav } from "@/components/mobile-nav";
 
-const navItems = [
-  { href: "/app", icon: Home, label: "Dashboard" },
-  { href: "/app/family", icon: Users, label: "Family" },
-  { href: "/app/calendar", icon: Calendar, label: "Calendar" },
-  { href: "/app/settings", icon: Settings, label: "Settings" },
-];
-
 function SignedOutFallback() {
   return (
     <div
@@ -48,7 +41,16 @@ function SignedOutFallback() {
   );
 }
 
-function AppShellContent({ pathname, children }: { pathname: string; children: React.ReactNode }) {
+function AppShellContent({ pathname, children, familyId }: { pathname: string; children: React.ReactNode; familyId?: string }) {
+  // Build family-scoped nav links
+  const familyHref = familyId ? `/app/family/${familyId}` : "/app/family";
+  const calendarHref = familyId ? `/app/family/${familyId}/events` : "/app/calendar";
+  const navItems = [
+    { href: "/app", icon: Home, label: "Dashboard" },
+    { href: familyHref, icon: Users, label: "Family" },
+    { href: calendarHref, icon: Calendar, label: "Calendar" },
+    { href: "/app/settings", icon: Settings, label: "Settings" },
+  ];
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#0D0D0F" }}>
       {/* Film grain overlay */}
@@ -149,7 +151,7 @@ function AppShellContent({ pathname, children }: { pathname: string; children: R
   );
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, familyId }: { children: React.ReactNode; familyId?: string }) {
   // CTM-59 fix: Call useAuth() and usePathname() unconditionally and before any
   // early returns. This ensures hooks are called in the same order on every render,
   // preventing "Rendered more hooks than during the previous render." errors.
@@ -172,7 +174,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return <SignedOutFallback />;
   }
 
-  return <AppShellContent pathname={pathname}>{children}</AppShellContent>;
+  return <AppShellContent pathname={pathname} familyId={familyId}>{children}</AppShellContent>;
 }
 
 // Default export as alias for the named export
