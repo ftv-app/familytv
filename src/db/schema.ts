@@ -261,6 +261,7 @@ export const familiesRelations = relations(families, ({ many, one }) => ({
   posts: many(posts),
   calendarEvents: many(calendarEvents),
   albums: many(albums),
+  tags: many(tags),
   // CTM-223: One sync state per family
   syncState: one(familySyncStates, {
     fields: [families.id],
@@ -292,11 +293,12 @@ export const familyInvitesRelations = relations(familyInvites, ({ one }) => ({
   }),
 }));
 
-export const postsRelations = relations(posts, ({ one }) => ({
+export const postsRelations = relations(posts, ({ one, many }) => ({
   family: one(families, {
     fields: [posts.familyId],
     references: [families.id],
   }),
+  mediaTags: many(mediaTags),
 }));
 
 export const calendarEventsRelations = relations(calendarEvents, ({ one }) => ({
@@ -344,3 +346,76 @@ export const albumsRelations = relations(albums, ({ one }) => ({
     references: [families.id],
   }),
 }));
+
+// ============================================================
+// CTM-240: Tagging System
+// ============================================================
+
+/**
+ * Tags - family-scoped labels for media categorization
+ * Unique constraint on (family_id, lower(name)) ensures case-insensitive uniqueness
+ */
+export const tags = pgTable(
+  "tags",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    familyId: uuid("family_id")
+      .notNull()
+      .references(() => families.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    color: text("color").default("#6366f1").notNull(), // hex color for UI display
+    createdBy: text("created_by").notNull(), // Clerk userId
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("tags_family_idx").on(table.familyId),
+    // Case-insensitive unique constraint on family_id + name
+    uniqueIndex("tags_family_name_unique").on(table.familyId, table.name),
+  ]
+);
+
+/**
+ * Media Tags - join table between posts and tags (many-to-many)
+ */
+export const mediaTags = pgTable(
+  "media_tags",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    tagId: uuid("tag_id")
+      .notNull()
+      .references(() => tags.id, { onDelete: "cascade" }),
+    createdBy: text("created_by").notNull(), // Clerk userId
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("media_tags_post_idx").on(table.postId),
+    index("media_tags_tag_idx").on(table.tagId),
+    uniqueIndex("media_tags_post_tag_unique").on(table.postId, table.tagId),
+  ]
+);
+
+// CTM-240: Tags relations
+export const tagsRelations = relations(tags, ({ one, many }) => ({
+  family: one(families, {
+    fields: [tags.familyId],
+    references: [families.id],
+  }),
+  mediaTags: many(mediaTags),
+}));
+
+export const mediaTagsRelations = relations(mediaTags, ({ one }) => ({
+  post: one(posts, {
+    fields: [mediaTags.postId],
+    references: [posts.id],
+  }),
+  tag: one(tags, {
+    fields: [mediaTags.tagId],
+    references: [tags.id],
+  }),
+}));
+
+// Posts relation to mediaTags

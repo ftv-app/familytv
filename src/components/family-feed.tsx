@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
-import { db, posts, familyMemberships } from "@/db";
+import { db, posts, familyMemberships, mediaTags, tags } from "@/db";
 import { eq, desc } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { FamilyFeedClient } from "@/components/family-feed-client";
 
 interface FamilyFeedProps {
@@ -32,9 +33,40 @@ export async function FamilyFeed({ familyId }: FamilyFeedProps) {
     ? lastPost.createdAt.toISOString()
     : null;
 
+  // Attach tags to each post (matching /api/posts behavior)
+  const postIds = postsData.map((p) => p.id);
+  let tagsByPostId: Record<string, { id: string; name: string; color: string }[]> = {};
+
+  if (postIds.length > 0) {
+    const allMediaTags = await db.query.mediaTags.findMany({
+      where: sql`${mediaTags.postId} = ANY(${postIds})`,
+    });
+
+    const tagIds = [...new Set(allMediaTags.map((mt) => mt.tagId))];
+    const tagRecords = tagIds.length > 0
+      ? await db.query.tags.findMany({
+          where: sql`${tags.id} = ANY(${tagIds})`,
+        })
+      : [];
+
+    const tagById = Object.fromEntries(
+      tagRecords.map((t) => [t.id, { id: t.id, name: t.name, color: t.color }])
+    );
+
+    for (const mt of allMediaTags) {
+      if (!tagsByPostId[mt.postId]) tagsByPostId[mt.postId] = [];
+      if (tagById[mt.tagId]) tagsByPostId[mt.postId].push(tagById[mt.tagId]);
+    }
+  }
+
+  const postsWithTags = postsData.map((post) => ({
+    ...post,
+    tags: tagsByPostId[post.id] ?? [],
+  }));
+
   return (
     <FamilyFeedClient
-      initialPosts={postsData}
+      initialPosts={postsWithTags}
       familyId={familyId}
       nextCursor={nextCursor}
     />
