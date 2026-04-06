@@ -90,6 +90,7 @@ import { DELETE as deleteTag } from "@/app/api/tags/[id]/route";
 import { POST as applyTagsToPost } from "@/app/api/media/[postId]/tags/route";
 import { DELETE as removeTagFromPost } from "@/app/api/media/[postId]/tags/[tagId]/route";
 import { GET as autocompleteTags } from "@/app/api/tags/autocomplete/route";
+import { GET as getTagPosts } from "@/app/api/tags/[id]/posts/route";
 
 const FAMILY_ID = "family-xyz-456";
 const USER_ID = "user_123";
@@ -469,5 +470,75 @@ describe("GET /api/tags/autocomplete", () => {
     const res = await autocompleteTags(req, { params: Promise.resolve({}) });
 
     expect(res.status).toBe(400);
+  });
+});
+
+/* ============================================================
+   GET /api/tags/:id/posts
+   ============================================================ */
+describe("GET /api/tags/:id/posts", () => {
+  const mockPost = {
+    id: POST_ID,
+    familyId: FAMILY_ID,
+    authorId: USER_ID,
+    authorName: "Alice",
+    contentType: "photo",
+    mediaUrl: "https://blob.vercel.app/photo.jpg",
+    caption: "Summer trip",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    serverTimestamp: new Date(),
+  };
+
+  it("returns 401 when unauthenticated", async () => {
+    mockAuth.mockResolvedValue(null);
+    const req = new NextRequest("http://localhost/api/tags/" + TAG_ID + "/posts");
+    const res = await getTagPosts(req, { params: Promise.resolve({ id: TAG_ID }) });
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 404 when tag does not exist", async () => {
+    authAs(USER_ID);
+    mockTagsFindFirst.mockResolvedValue(null);
+    const req = new NextRequest("http://localhost/api/tags/" + TAG_ID + "/posts");
+    const res = await getTagPosts(req, { params: Promise.resolve({ id: TAG_ID }) });
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 403 when user is not a family member", async () => {
+    authAs(USER_ID);
+    mockTagsFindFirst.mockResolvedValue({ id: TAG_ID, familyId: FAMILY_ID, name: "Holidays" });
+    mockMembershipsFindFirst.mockResolvedValue(null); // not a member
+    const req = new NextRequest("http://localhost/api/tags/" + TAG_ID + "/posts");
+    const res = await getTagPosts(req, { params: Promise.resolve({ id: TAG_ID }) });
+    expect(res.status).toBe(403);
+  });
+
+  it("returns posts tagged with the given tag", async () => {
+    authAs(USER_ID);
+    mockTagsFindFirst.mockResolvedValue({ id: TAG_ID, familyId: FAMILY_ID, name: "Holidays", color: "#6366f1" });
+    mockMediaTagsFindMany.mockResolvedValue([
+      { tagId: TAG_ID, postId: POST_ID, post: mockPost },
+    ]);
+    const req = new NextRequest("http://localhost/api/tags/" + TAG_ID + "/posts");
+    const res = await getTagPosts(req, { params: Promise.resolve({ id: TAG_ID }) });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.tag.id).toBe(TAG_ID);
+    expect(body.posts).toHaveLength(1);
+    expect(body.posts[0].id).toBe(POST_ID);
+    expect(body.total).toBe(1);
+  });
+
+  it("returns empty array when no posts are tagged", async () => {
+    authAs(USER_ID);
+    mockTagsFindFirst.mockResolvedValue({ id: TAG_ID, familyId: FAMILY_ID, name: "Rare" });
+    mockMediaTagsFindMany.mockResolvedValue([]);
+    const req = new NextRequest("http://localhost/api/tags/" + TAG_ID + "/posts");
+    const res = await getTagPosts(req, { params: Promise.resolve({ id: TAG_ID }) });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.posts).toHaveLength(0);
+    expect(body.total).toBe(0);
   });
 });
