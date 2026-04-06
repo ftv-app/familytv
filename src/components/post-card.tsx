@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { ImageLightbox } from "@/components/image-lightbox";
+import { TagInput, type Tag } from "@/components/tag-input";
 
 export interface PostWithAuthor {
   id: string;
@@ -17,6 +18,7 @@ export interface PostWithAuthor {
   mediaUrl?: string | null;
   caption?: string | null;
   createdAt: Date | string;
+  tags?: Tag[];
 }
 
 function formatRelativeTime(date: Date | string): string {
@@ -53,12 +55,16 @@ function getMediaSrc(url: string): string {
 
 interface PostCardProps {
   post: PostWithAuthor;
+  familyId?: string;
 }
 
-export function PostCard({ post }: PostCardProps) {
+export function PostCard({ post, familyId: familyIdProp }: PostCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [tags, setTags] = useState<Tag[]>(post.tags ?? []);
+
+  const effectiveFamilyId = familyIdProp ?? post.familyId;
 
   const isVideo = post.contentType === "video";
   const isImage = post.contentType === "image";
@@ -188,6 +194,18 @@ export function PostCard({ post }: PostCardProps) {
             >
               {post.caption}
             </p>
+          )}
+
+          {/* Tags */}
+          {effectiveFamilyId && (
+            <div className="px-5 pt-1" data-testid="post-tags-section">
+              <TagInput
+                postId={post.id}
+                familyId={effectiveFamilyId}
+                tags={tags}
+                onTagsChange={setTags}
+              />
+            </div>
           )}
 
           {/* Text-only placeholder */}
