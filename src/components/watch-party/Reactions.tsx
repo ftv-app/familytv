@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { io, type Socket } from "socket.io-client";
 import { cn } from "@/lib/utils";
 
-// Default 6 reactions as per PRD
-export const REACTION_EMOJIS = ["😂", "❤️", "😮", "👏", "😢", "🔥"] as const;
+// Default 6 reactions as per PRD CTM-232: ["🎬", "😂", "❤️", "🔥", "😮", "💯"]
+export const REACTION_EMOJIS = ["🎬", "😂", "❤️", "🔥", "😮", "💯"] as const;
 
 export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
 
@@ -53,7 +53,7 @@ interface ReactionsProps {
  * Watch Party Quick Reactions Component
  * 
  * Features:
- * - 6 floating reaction bubbles: 😂 ❤️ 😮 👏 😢 🔥
+ * - 6 floating reaction bubbles: 🎬 😂 ❤️ 🔥 😮 💯
  * - Click to send reaction via Socket.IO
  * - Reactions float up and fade out (animation)
  * - Shows reactions from other family members in real-time
@@ -378,12 +378,12 @@ function ReactionBubble({ reaction }: ReactionBubbleProps) {
  */
 function getEmojiLabel(emoji: ReactionEmoji): string {
   const labels: Record<ReactionEmoji, string> = {
+    "🎬": "clapper board",
     "😂": "crying with laughter",
     "❤️": "red heart",
-    "😮": "astonished face",
-    "👏": "clapping hands",
-    "😢": "crying face",
     "🔥": "fire",
+    "😮": "astonished face",
+    "💯": "hundred points",
   };
   return labels[emoji] || emoji;
 }

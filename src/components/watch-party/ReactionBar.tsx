@@ -9,7 +9,8 @@ import { ReactionBubbleContainer, type ReactionBubbleData } from "./ReactionBubb
    Constants
    ============================================================ */
 
-export const REACTION_EMOJIS = ["😂", "❤️", "😮", "👏", "😢", "🎉"] as const;
+// PRD CTM-232: ["🎬", "😂", "❤️", "🔥", "😮", "💯"]
+export const REACTION_EMOJIS = ["🎬", "😂", "❤️", "🔥", "😮", "💯"] as const;
 export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
 
 /* ============================================================
@@ -17,21 +18,21 @@ export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
    ============================================================ */
 
 const EMOJI_LABELS: Record<string, string> = {
+  "🎬": "clapper board",
   "😂": "crying with laughter",
   "❤️": "red heart",
+  "🔥": "fire",
   "😮": "astonished face",
-  "👏": "clapping hands",
-  "😢": "crying face",
-  "🎉": "party popper",
+  "💯": "hundred points",
 };
 
 const EMOJI_TO_SLUG: Record<string, string> = {
+  "🎬": "clapper",
   "😂": "laugh",
   "❤️": "heart",
+  "🔥": "fire",
   "😮": "wow",
-  "👏": "clap",
-  "😢": "cry",
-  "🎉": "party",
+  "💯": "hundred",
 };
 
 function getEmojiLabel(emoji: ReactionEmoji): string {

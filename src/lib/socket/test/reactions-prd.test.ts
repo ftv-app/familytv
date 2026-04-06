@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { VALID_EMOJIS } from "../../types";
+import { VALID_EMOJIS } from "../types";
 
 // PRD spec: Watch Party reactions use 6 emoji set
 const PRD_EMOJIS = ["🎬", "😂", "❤️", "🔥", "😮", "💯"] as const;
