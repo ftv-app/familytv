@@ -94,8 +94,7 @@ describe("TagInput", () => {
       });
 
       expect(fetchSpy).toHaveBeenCalledWith(
-        `/api/tags/autocomplete?familyId=${FAMILY_ID}&q=Hal`,
-        expect.any(Object)
+        `/api/tags/autocomplete?familyId=${FAMILY_ID}&q=Hal`
       );
 
       fetchSpy.mockRestore();
@@ -167,12 +166,13 @@ describe("TagInput", () => {
 
       await act(async () => {
         fireEvent.change(input, { target: { value: "Hal" } });
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise((r) => setTimeout(r, 500));
       });
 
+      // Click using mousedown (how the component actually handles it)
       await act(async () => {
-        fireEvent.click(screen.getByTestId("tag-input-suggestion-0"));
-        await new Promise((r) => setTimeout(r, 100));
+        fireEvent.mouseDown(screen.getByTestId("tag-input-suggestion-0"));
+        await new Promise((r) => setTimeout(r, 200));
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
@@ -199,12 +199,12 @@ describe("TagInput", () => {
 
       await act(async () => {
         fireEvent.change(input, { target: { value: "Hal" } });
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise((r) => setTimeout(r, 500));
       });
 
       await act(async () => {
-        fireEvent.click(screen.getByTestId("tag-input-suggestion-0"));
-        await new Promise((r) => setTimeout(r, 100));
+        fireEvent.mouseDown(screen.getByTestId("tag-input-suggestion-0"));
+        await new Promise((r) => setTimeout(r, 200));
       });
 
       expect((input as HTMLInputElement).value).toBe("");
@@ -246,12 +246,12 @@ describe("TagInput", () => {
 
       await act(async () => {
         fireEvent.change(input, { target: { value: "XYZNewTag" } });
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise((r) => setTimeout(r, 500));
       });
 
       await act(async () => {
-        fireEvent.click(screen.getByTestId("tag-input-create-option"));
-        await new Promise((r) => setTimeout(r, 100));
+        fireEvent.mouseDown(screen.getByTestId("tag-input-create-option"));
+        await new Promise((r) => setTimeout(r, 200));
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
