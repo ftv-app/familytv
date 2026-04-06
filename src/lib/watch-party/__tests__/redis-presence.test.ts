@@ -17,28 +17,26 @@ import {
 } from '../redis-presence';
 
 // Mock Redis client
-const mockRedisHset = vi.fn();
-const mockRedisHget = vi.fn();
-const mockRedisHdel = vi.fn();
+const mockRedisSet = vi.fn();
+const mockRedisGet = vi.fn();
+const mockRedisDel = vi.fn();
 const mockRedisSadd = vi.fn();
 const mockRedisSrem = vi.fn();
 const mockRedisSmembers = vi.fn();
 const mockRedisScard = vi.fn();
 const mockRedisExists = vi.fn();
 const mockRedisExpire = vi.fn();
-const mockRedisDel = vi.fn();
 
 const mockRedis = {
-  hset: mockRedisHset,
-  hget: mockRedisHget,
-  hdel: mockRedisHdel,
+  set: mockRedisSet,
+  get: mockRedisGet,
+  del: mockRedisDel,
   sadd: mockRedisSadd,
   srem: mockRedisSrem,
   smembers: mockRedisSmembers,
   scard: mockRedisScard,
   exists: mockRedisExists,
   expire: mockRedisExpire,
-  del: mockRedisDel,
 } as unknown as Redis;
 
 describe('redis-presence', () => {
@@ -57,7 +55,7 @@ describe('redis-presence', () => {
       it('should add user to Redis set and hash', async () => {
         const manager = new RedisPresenceManager(mockRedis);
 
-        mockRedisHset.mockResolvedValue(1);
+        mockRedisSet.mockResolvedValue(1);
         mockRedisSadd.mockResolvedValue(1);
         mockRedisExpire.mockResolvedValue(1);
 
@@ -79,7 +77,7 @@ describe('redis-presence', () => {
         expect(user.lastSeen).toBeGreaterThan(0);
 
         // Verify Redis calls
-        expect(mockRedisHset).toHaveBeenCalled();
+        expect(mockRedisSet).toHaveBeenCalled();
         expect(mockRedisSadd).toHaveBeenCalled();
         expect(mockRedisExpire).toHaveBeenCalled();
       });
@@ -87,7 +85,7 @@ describe('redis-presence', () => {
       it('should handle null avatar', async () => {
         const manager = new RedisPresenceManager(mockRedis);
 
-        mockRedisHset.mockResolvedValue(1);
+        mockRedisSet.mockResolvedValue(1);
         mockRedisSadd.mockResolvedValue(1);
         mockRedisExpire.mockResolvedValue(1);
 
@@ -109,7 +107,7 @@ describe('redis-presence', () => {
         const manager = new RedisPresenceManager(mockRedis);
 
         mockRedisSrem.mockResolvedValue(1);
-        mockRedisHdel.mockResolvedValue(1);
+        mockRedisDel.mockResolvedValue(1);
 
         const result = await manager.leaveRoom(
           'family:fam1:video:vid1:session:sess1',
@@ -118,7 +116,7 @@ describe('redis-presence', () => {
 
         expect(result).toBe(true);
         expect(mockRedisSrem).toHaveBeenCalled();
-        expect(mockRedisHdel).toHaveBeenCalled();
+        expect(mockRedisDel).toHaveBeenCalled();
       });
     });
 
@@ -136,8 +134,8 @@ describe('redis-presence', () => {
           lastSeen: Date.now() - 5000,
         });
 
-        mockRedisHget.mockResolvedValue(userData);
-        mockRedisHset.mockResolvedValue(1);
+        mockRedisGet.mockResolvedValue(userData);
+        mockRedisSet.mockResolvedValue(1);
         mockRedisExpire.mockResolvedValue(1);
 
         const result = await manager.heartbeat(
@@ -146,15 +144,15 @@ describe('redis-presence', () => {
         );
 
         expect(result).toBe(true);
-        expect(mockRedisHget).toHaveBeenCalled();
-        expect(mockRedisHset).toHaveBeenCalled();
+        expect(mockRedisGet).toHaveBeenCalled();
+        expect(mockRedisSet).toHaveBeenCalled();
         expect(mockRedisExpire).toHaveBeenCalled();
       });
 
       it('should return false if user not found', async () => {
         const manager = new RedisPresenceManager(mockRedis);
 
-        mockRedisHget.mockResolvedValue(null);
+        mockRedisGet.mockResolvedValue(null);
 
         const result = await manager.heartbeat(
           'family:fam1:video:vid1:session:sess1',
@@ -190,7 +188,7 @@ describe('redis-presence', () => {
         });
 
         mockRedisSmembers.mockResolvedValue(['oder-1', 'oder-2']);
-        mockRedisHget
+        mockRedisGet
           .mockResolvedValueOnce(user1)
           .mockResolvedValueOnce(user2);
 
@@ -287,11 +285,11 @@ describe('redis-presence', () => {
         // joinRoom invalidates cache by calling localCache.delete()
         // We verify this by checking that after joinRoom, getRoomPresence
         // does NOT use the cache (because smembers is NOT called in cache path)
-        mockRedisHset.mockResolvedValue(1);
+        mockRedisSet.mockResolvedValue(1);
         mockRedisSadd.mockResolvedValue(1);
         mockRedisExpire.mockResolvedValue(1);
         mockRedisSmembers.mockResolvedValue(['oder-123']);
-        mockRedisHget.mockResolvedValue(JSON.stringify({
+        mockRedisGet.mockResolvedValue(JSON.stringify({
           oderId: 'oder-123',
           userId: 'user-456',
           name: 'Mom',
@@ -357,7 +355,7 @@ describe('redis-presence integration', () => {
       const manager = new RedisPresenceManager(mockRedis);
 
       // Mock responses for join
-      mockRedisHset.mockResolvedValue(1);
+      mockRedisSet.mockResolvedValue(1);
       mockRedisSadd.mockResolvedValue(1);
       mockRedisExpire.mockResolvedValue(1);
 
@@ -374,7 +372,7 @@ describe('redis-presence integration', () => {
 
       // Mock response for presence check
       mockRedisSmembers.mockResolvedValue(['oder-123']);
-      mockRedisHget.mockResolvedValue(JSON.stringify(user));
+      mockRedisGet.mockResolvedValue(JSON.stringify(user));
 
       // Get presence
       const presence = await manager.getRoomPresence('family:fam1:video:vid1:session:sess1');
@@ -383,7 +381,7 @@ describe('redis-presence integration', () => {
 
       // Mock response for leave
       mockRedisSrem.mockResolvedValue(1);
-      mockRedisHdel.mockResolvedValue(1);
+      mockRedisDel.mockResolvedValue(1);
 
       // User leaves room
       await manager.leaveRoom('family:fam1:video:vid1:session:sess1', 'oder-123');
@@ -400,7 +398,7 @@ describe('redis-presence integration', () => {
       const manager = new RedisPresenceManager(mockRedis);
 
       // User joins room
-      mockRedisHset.mockResolvedValue(1);
+      mockRedisSet.mockResolvedValue(1);
       mockRedisSadd.mockResolvedValue(1);
       mockRedisExpire.mockResolvedValue(1);
 
@@ -426,8 +424,8 @@ describe('redis-presence integration', () => {
         ...originalPresence.users[0],
         lastSeen: originalLastSeen,
       });
-      mockRedisHget.mockResolvedValue(userData);
-      mockRedisHset.mockResolvedValue(1);
+      mockRedisGet.mockResolvedValue(userData);
+      mockRedisSet.mockResolvedValue(1);
       mockRedisExpire.mockResolvedValue(1);
 
       await manager.heartbeat('family:fam1:video:vid1:session:sess1', 'oder-123');

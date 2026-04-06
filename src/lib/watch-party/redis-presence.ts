@@ -4,7 +4,8 @@
  * Redis-backed presence tracking for horizontal scaling.
  * Uses Redis sets with TTL for tracking which users/devices are in watch party rooms.
  * 
- * Key pattern: `presence:{roomId}` -> Redis Set (member = oderId:deviceId)
+ * Key pattern: `presence:{roomId}` -> Redis Set (member = oderId)
+ * User data: `presence:{roomId}:{oderId}` -> JSON string
  * TTL: 30 seconds (refreshed by heartbeat)
  */
 
@@ -41,7 +42,8 @@ export interface RedisPresenceState {
  * RedisPresenceManager - tracks presence in Redis for horizontal scaling
  * 
  * Each user/device in a room is stored as a member in a Redis set.
- * The entire key has a TTL of 30 seconds, refreshed on heartbeat.
+ * The user data is stored as a separate key: presence:{roomId}:{oderId}
+ * The set key has a TTL of 30 seconds, refreshed on heartbeat.
  */
 export class RedisPresenceManager {
   private redis: Redis;
@@ -61,6 +63,13 @@ export class RedisPresenceManager {
   }
 
   /**
+   * Get the Redis key for a user's presence data
+   */
+  private getUserKey(roomId: string, oderId: string): string {
+    return `${PRESENCE_KEY_PREFIX}${roomId}:${oderId}`;
+  }
+
+  /**
    * Add a user to a room in Redis
    */
   async joinRoom(
@@ -72,6 +81,7 @@ export class RedisPresenceManager {
     deviceId: string
   ): Promise<RedisPresenceUser> {
     const key = this.getPresenceKey(roomId);
+    const userKey = this.getUserKey(roomId, oderId);
     const now = Date.now();
 
     const user: RedisPresenceUser = {
@@ -84,14 +94,17 @@ export class RedisPresenceManager {
       lastSeen: now,
     };
 
-    // Store user data as hash field
-    await this.redis.hset(key, oderId, JSON.stringify(user));
+    // Store user data as JSON string with composite key
+    await this.redis.set(userKey, JSON.stringify(user));
 
     // Add to set for room membership tracking
     await this.redis.sadd(key, oderId);
 
-    // Refresh TTL
+    // Refresh TTL on the presence set
     await this.redis.expire(key, HEARTBEAT_TTL_SECONDS);
+
+    // Also refresh TTL on user data
+    await this.redis.expire(userKey, HEARTBEAT_TTL_SECONDS);
 
     // Invalidate local cache
     this.localCache.delete(roomId);
@@ -104,12 +117,13 @@ export class RedisPresenceManager {
    */
   async leaveRoom(roomId: string, oderId: string): Promise<boolean> {
     const key = this.getPresenceKey(roomId);
+    const userKey = this.getUserKey(roomId, oderId);
 
     // Remove from set
     await this.redis.srem(key, oderId);
 
-    // Remove user data from hash
-    await this.redis.hdel(key, oderId);
+    // Remove user data key
+    await this.redis.del(userKey);
 
     // Invalidate local cache
     this.localCache.delete(roomId);
@@ -121,11 +135,11 @@ export class RedisPresenceManager {
    * Refresh a user's presence (heartbeat)
    */
   async heartbeat(roomId: string, oderId: string): Promise<boolean> {
-    const key = this.getPresenceKey(roomId);
+    const userKey = this.getUserKey(roomId, oderId);
     const now = Date.now();
 
     // Get current user data
-    const userData = await this.redis.hget(key, oderId);
+    const userData = await this.redis.get(userKey);
     if (!userData) {
       return false;
     }
@@ -134,10 +148,10 @@ export class RedisPresenceManager {
     user.lastSeen = now;
 
     // Update user data
-    await this.redis.hset(key, oderId, JSON.stringify(user));
+    await this.redis.set(userKey, JSON.stringify(user));
 
-    // Refresh TTL on the key
-    await this.redis.expire(key, HEARTBEAT_TTL_SECONDS);
+    // Refresh TTL on user data
+    await this.redis.expire(userKey, HEARTBEAT_TTL_SECONDS);
 
     // Invalidate local cache
     this.localCache.delete(roomId);
@@ -167,7 +181,8 @@ export class RedisPresenceManager {
     // Get user data for each member
     const users: RedisPresenceUser[] = [];
     for (const oderId of oderIds) {
-      const userData = await this.redis.hget(key, oderId);
+      const userKey = this.getUserKey(roomId, oderId);
+      const userData = await this.redis.get(userKey);
       if (userData) {
         users.push(JSON.parse(userData as string) as RedisPresenceUser);
       }
@@ -203,7 +218,21 @@ export class RedisPresenceManager {
    */
   async clearRoom(roomId: string): Promise<void> {
     const key = this.getPresenceKey(roomId);
+
+    // Get all members first
+    const oderIds = await this.redis.smembers(key);
+    if (oderIds && oderIds.length > 0) {
+      // Delete all user data keys
+      for (const oderId of oderIds) {
+        const userKey = this.getUserKey(roomId, oderId);
+        await this.redis.del(userKey);
+      }
+    }
+
+    // Delete the presence set
     await this.redis.del(key);
+
+    // Invalidate local cache
     this.localCache.delete(roomId);
   }
 
