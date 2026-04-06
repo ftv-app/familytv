@@ -103,6 +103,6 @@ export const RATE_LIMITS = {
   chat: { maxPerMinute: 20, maxLength: 500 },
 } as const;
 
-// Valid emoji reactions
-export const VALID_EMOJIS = ['👍', '❤️', '😂', '😢', '🔥', '🎉'] as const;
+// Valid emoji reactions (PRD spec for Watch Party CTM-232)
+export const VALID_EMOJIS = ['🎬', '😂', '❤️', '🔥', '😮', '💯'] as const;
 export type ValidEmoji = typeof VALID_EMOJIS[number];
