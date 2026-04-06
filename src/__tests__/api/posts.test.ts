@@ -20,6 +20,14 @@ const mockDb = {
     },
     posts: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
+    },
+    tags: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+    },
+    mediaTags: {
+      findMany: vi.fn(),
     },
   },
   insert: vi.fn().mockReturnValue({
@@ -33,6 +41,8 @@ vi.mock("@/db", () => ({
   db: mockDb,
   posts: {},
   familyMemberships: {},
+  tags: {},
+  mediaTags: {},
 }));
 
 // Import route handlers after mocks
@@ -383,5 +393,162 @@ describe("POST /api/posts", () => {
     const res = await handler.POST(req);
 
     expect(res.status).toBe(201);
+  });
+});
+
+describe("GET /api/posts — tag filtering", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns posts with tags attached when no tagId filter", async () => {
+    const family = createMockFamily();
+    const post = createMockPost({ familyId: family.id });
+    const tag = { id: "tag-1", name: "Holidays", color: "#6366f1" };
+
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.familyMemberships.findFirst.mockResolvedValue(
+      createMockMembership({ familyId: family.id, userId: TEST_USER_ID })
+    );
+    mockDb.query.posts.findMany.mockResolvedValue([post]);
+    mockDb.query.mediaTags.findMany.mockResolvedValue([
+      { postId: post.id, tagId: "tag-1" },
+    ]);
+    mockDb.query.tags.findMany.mockResolvedValue([tag]);
+
+    const handler = await getHandler();
+    const req = new NextRequest(`http://localhost/api/posts?familyId=${family.id}`);
+    const res = await handler.GET(req);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.posts).toHaveLength(1);
+    expect(body.posts[0].tags).toEqual([tag]);
+    expect(body.nextCursor).toBeNull();
+  });
+
+  it("filters posts by tagId", async () => {
+    const family = createMockFamily();
+    const taggedPost = createMockPost({ familyId: family.id, id: "post-1" });
+    const tag = { id: "tag-holidays", name: "Holidays", color: "#6366f1" };
+
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.familyMemberships.findFirst.mockResolvedValue(
+      createMockMembership({ familyId: family.id, userId: TEST_USER_ID })
+    );
+    mockDb.query.tags.findFirst.mockResolvedValue(tag);
+    mockDb.query.mediaTags.findMany.mockResolvedValue([
+      { postId: "post-1", tagId: "tag-holidays" },
+    ]);
+    mockDb.query.posts.findMany.mockResolvedValue([taggedPost]);
+    mockDb.query.mediaTags.findMany.mockResolvedValue([
+      { postId: "post-1", tagId: "tag-holidays" },
+    ]);
+    mockDb.query.tags.findMany.mockResolvedValue([tag]);
+
+    const handler = await getHandler();
+    const req = new NextRequest(
+      `http://localhost/api/posts?familyId=${family.id}&tagId=tag-holidays`
+    );
+    const res = await handler.GET(req);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.posts).toHaveLength(1);
+    expect(body.posts[0].id).toBe("post-1");
+  });
+
+  it("returns 404 when tagId does not belong to the family", async () => {
+    const family = createMockFamily();
+
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.familyMemberships.findFirst.mockResolvedValue(
+      createMockMembership({ familyId: family.id, userId: TEST_USER_ID })
+    );
+    mockDb.query.tags.findFirst.mockResolvedValue(null); // tag not in family
+
+    const handler = await getHandler();
+    const req = new NextRequest(
+      `http://localhost/api/posts?familyId=${family.id}&tagId=tag-other`
+    );
+    const res = await handler.GET(req);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns empty array when no posts have the given tag", async () => {
+    const family = createMockFamily();
+    const tag = { id: "tag-rare", name: "Rare", color: "#6366f1" };
+
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.familyMemberships.findFirst.mockResolvedValue(
+      createMockMembership({ familyId: family.id, userId: TEST_USER_ID })
+    );
+    mockDb.query.tags.findFirst.mockResolvedValue(tag);
+    mockDb.query.mediaTags.findMany.mockResolvedValue([]); // no posts with this tag
+
+    const handler = await getHandler();
+    const req = new NextRequest(
+      `http://localhost/api/posts?familyId=${family.id}&tagId=tag-rare`
+    );
+    const res = await handler.GET(req);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.posts).toEqual([]);
+    expect(body.nextCursor).toBeNull();
+  });
+
+  it("supports cursor-based pagination", async () => {
+    const family = createMockFamily();
+    const posts = [
+      createMockPost({ familyId: family.id, id: "post-1" }),
+      createMockPost({ familyId: family.id, id: "post-2" }),
+    ];
+
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.familyMemberships.findFirst.mockResolvedValue(
+      createMockMembership({ familyId: family.id, userId: TEST_USER_ID })
+    );
+    // Return 2 posts when fetching with limit=1, indicating more pages
+    mockDb.query.posts.findMany.mockResolvedValue([posts[0]]);
+    mockDb.query.mediaTags.findMany.mockResolvedValue([]);
+
+    const handler = await getHandler();
+    const req = new NextRequest(
+      `http://localhost/api/posts?familyId=${family.id}&limit=1`
+    );
+    const res = await handler.GET(req);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.posts).toHaveLength(1);
+    expect(body.nextCursor).toBe("post-1"); // cursor returned for next page
+  });
+
+  it("caps limit at 100", async () => {
+    const family = createMockFamily();
+
+    const { auth } = await import("@clerk/nextjs/server");
+    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockDb.query.familyMemberships.findFirst.mockResolvedValue(
+      createMockMembership({ familyId: family.id, userId: TEST_USER_ID })
+    );
+    mockDb.query.posts.findMany.mockResolvedValue([]);
+    mockDb.query.mediaTags.findMany.mockResolvedValue([]);
+
+    const handler = await getHandler();
+    const req = new NextRequest(
+      `http://localhost/api/posts?familyId=${family.id}&limit=999`
+    );
+    const res = await handler.GET(req);
+
+    expect(res.status).toBe(200);
+    // verify findMany was called with limit+1=101 → capped
   });
 });

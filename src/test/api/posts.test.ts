@@ -56,15 +56,26 @@ vi.mock("@/db", () => ({
       },
       posts: {
         findMany: (...args: unknown[]) => mockFindMany(...args),
+        findFirst: vi.fn(),
+      },
+      tags: {
+        findFirst: vi.fn(),
+        findMany: vi.fn(),
+      },
+      mediaTags: {
+        findMany: vi.fn().mockResolvedValue([]),
       },
     },
     insert: (...args: unknown[]) => mockInsert(...args),
     update: vi.fn(),
     delete: vi.fn(),
+    sql: vi.fn(),
   },
   posts: {},
   familyMemberships: {},
   families: {},
+  tags: {},
+  mediaTags: {},
 }));
 
 import { GET, POST } from "@/app/api/posts/route";
