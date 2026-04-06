@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { FamilyFeed } from "@/components/family-feed";
+import { FamilyFeedTagged } from "@/components/family-feed-tagged";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function FeedLoadingSkeleton() {
@@ -24,13 +25,20 @@ function FeedLoadingSkeleton() {
 
 interface PageProps {
   params: Promise<{ familyId: string }>;
+  searchParams: Promise<{ tagId?: string }>;
 }
 
-export default async function FamilyFeedPage({ params }: PageProps) {
+export default async function FamilyFeedPage({ params, searchParams }: PageProps) {
   const { familyId } = await params;
+  const { tagId } = await searchParams;
+
   return (
     <Suspense fallback={<FeedLoadingSkeleton />}>
-      <FamilyFeed familyId={familyId} />
+      {tagId ? (
+        <FamilyFeedTagged familyId={familyId} tagId={tagId} />
+      ) : (
+        <FamilyFeed familyId={familyId} />
+      )}
     </Suspense>
   );
 }
