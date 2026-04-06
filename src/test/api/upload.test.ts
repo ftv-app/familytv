@@ -1,6 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
+// Mock Node.js crypto for Clerk auth in jsdom environment
+vi.mock("node:crypto", () => ({
+  randomUUID: vi.fn().mockReturnValue("test-upload-uuid"),
+}));
+vi.mock("crypto", () => ({
+  randomUUID: vi.fn().mockReturnValue("test-upload-uuid"),
+  default: {
+    randomUUID: vi.fn().mockReturnValue("test-upload-uuid"),
+  },
+}));
+
 // Create mock functions
 const mockAuth = vi.fn();
 const mockMembershipsFindFirst = vi.fn();
