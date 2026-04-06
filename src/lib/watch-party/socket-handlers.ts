@@ -47,31 +47,50 @@ export function registerPresenceHandlers(io: SocketIOServer): void {
     /**
      * room:join - Join a watch party room
      * 
-     * Payload: { familyId: string, videoId: string, sessionId: string }
+     * Payload: { roomId: string, userId: string, userName: string, avatar?: string }
+     * Or: { familyId: string, videoId: string, sessionId: string, deviceId?: string }
      * 
      * Response: room:joined { roomId, presence }
      */
     socket.on('room:join', (payload: {
-      familyId: string;
-      videoId: string;
-      sessionId: string;
+      roomId?: string;
+      familyId?: string;
+      videoId?: string;
+      sessionId?: string;
+      userId?: string;
+      userName?: string;
+      avatar?: string;
       deviceId?: string;
     }) => {
       try {
-        // Validate payload
-        if (!payload.familyId || !payload.videoId || !payload.sessionId) {
-          socket.emit('error', { code: 'INVALID_PAYLOAD', message: 'Missing required fields' });
+        let roomId: string;
+
+        // Support both roomId format (from client) and familyId/videoId/sessionId format
+        if (payload.roomId) {
+          // Client sent roomId directly - parse it
+          roomId = payload.roomId;
+          const parsed = parseRoomId(roomId);
+          if (!parsed) {
+            socket.emit('error', { code: 'INVALID_ROOM', message: 'Invalid room ID format' });
+            return;
+          }
+          // Verify user belongs to this family (from auth middleware)
+          if (socket.familyId && socket.familyId !== parsed.familyId) {
+            socket.emit('error', { code: 'UNAUTHORIZED', message: 'Cannot join room for different family' });
+            return;
+          }
+        } else if (payload.familyId && payload.videoId && payload.sessionId) {
+          // Client sent separate components - build roomId
+          // Verify user belongs to this family (from auth middleware)
+          if (socket.familyId && socket.familyId !== payload.familyId) {
+            socket.emit('error', { code: 'UNAUTHORIZED', message: 'Cannot join room for different family' });
+            return;
+          }
+          roomId = buildRoomId(payload.familyId, payload.videoId, payload.sessionId);
+        } else {
+          socket.emit('error', { code: 'INVALID_PAYLOAD', message: 'Missing roomId or familyId/videoId/sessionId' });
           return;
         }
-
-        // Verify user belongs to this family (from auth middleware)
-        if (socket.familyId && socket.familyId !== payload.familyId) {
-          socket.emit('error', { code: 'UNAUTHORIZED', message: 'Cannot join room for different family' });
-          return;
-        }
-
-        // Build room ID
-        const roomId = buildRoomId(payload.familyId, payload.videoId, payload.sessionId);
 
         // Validate room ID format
         if (!isValidRoomId(roomId)) {
@@ -89,11 +108,13 @@ export function registerPresenceHandlers(io: SocketIOServer): void {
         socket.deviceId = deviceId;
 
         // Add user to presence tracking
+        // Use userName from payload if provided, otherwise fall back to socket display name
+        const displayName = payload.userName || socket.displayName || 'Family Member';
         const user = presence.joinRoom(
           roomId,
-          socket.userId || 'anonymous',
-          socket.displayName || 'Family Member',
-          socket.avatarUrl ?? null,
+          socket.userId || payload.userId || 'anonymous',
+          displayName,
+          payload.avatar !== undefined ? payload.avatar : (socket.avatarUrl ?? null),
           deviceId
         );
 
