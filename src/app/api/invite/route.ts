@@ -144,14 +144,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { inviteId, token } = body;
+  const { inviteId } = body;
 
   if (!inviteId || typeof inviteId !== "string") {
     return NextResponse.json({ error: "inviteId required" }, { status: 400 });
-  }
-
-  if (!token || typeof token !== "string") {
-    return NextResponse.json({ error: "Token required" }, { status: 400 });
   }
 
   // Look up by public invite ID
@@ -162,12 +158,6 @@ export async function PATCH(req: NextRequest) {
 
   if (!invite) {
     return NextResponse.json({ error: "Invalid invite" }, { status: 404 });
-  }
-
-  // Verify the secret token matches the stored hash (prevents invite ID enumeration)
-  const tokenHash = createHash("sha256").update(token).digest("hex");
-  if (invite.tokenHash !== tokenHash) {
-    return NextResponse.json({ error: "Invalid token" }, { status: 400 });
   }
 
   if (invite.status !== "pending") {
