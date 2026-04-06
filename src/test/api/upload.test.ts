@@ -1,42 +1,45 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import {
-  createMockFamily,
-  createMockMembership,
-  createMockAlbum,
-  TEST_USER_ID,
-} from "../factories";
+
+// Create mock functions
+const mockAuth = vi.fn();
+const mockMembershipsFindFirst = vi.fn();
+const mockAlbumsFindFirst = vi.fn();
+const mockExecute = vi.fn();
+
+// Mock Vercel Blob
+const mockPut = vi.fn();
+vi.mock("@vercel/blob", () => ({
+  put: (...args: unknown[]) => mockPut(...args),
+}));
 
 // Mock Clerk auth
 vi.mock("@clerk/nextjs/server", () => ({
-  auth: vi.fn(),
+  auth: (...args: unknown[]) => mockAuth(...args),
 }));
 
-// Mock Vercel Blob
-vi.mock("@vercel/blob", () => ({
-  put: vi.fn(),
-}));
-
-// Mock db
-const mockDb = {
-  query: {
-    familyMemberships: { findFirst: vi.fn() },
-    albums: { findFirst: vi.fn(), findMany: vi.fn() },
-  },
-  execute: vi.fn(),
-};
-
+// Mock database
 vi.mock("@/db", () => ({
-  db: mockDb,
+  db: {
+    query: {
+      familyMemberships: {
+        findFirst: (...args: unknown[]) => mockMembershipsFindFirst(...args),
+      },
+      albums: {
+        findFirst: (...args: unknown[]) => mockAlbumsFindFirst(...args),
+      },
+    },
+    execute: (...args: unknown[]) => mockExecute(...args),
+  },
   familyMemberships: {},
   albums: {},
   posts: {},
 }));
 
-async function getHandler() {
-  const mod = await import("@/app/api/upload/route");
-  return mod;
-}
+import { POST } from "@/app/api/upload/route";
+import { createMockFamily, createMockFamilyMembership, createMockAlbum } from "@/test/factories";
+
+const TEST_USER_ID = "user_test123";
 
 describe("POST /api/upload", { testTimeout: 30000 }, () => {
   beforeEach(() => {
@@ -44,10 +47,8 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
   });
 
   it("returns 401 when not authenticated", async () => {
-    const { auth } = await import("@clerk/nextjs/server");
-    vi.mocked(auth).mockResolvedValue({ userId: null });
+    mockAuth.mockResolvedValueOnce({ userId: null });
 
-    const handler = await getHandler();
     const formData = new FormData();
     formData.append("file", new Blob(["test"], { type: "image/png" }), "test.png");
     formData.append("filename", "test.png");
@@ -58,15 +59,13 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
       method: "POST",
       body: formData,
     });
-    const res = await handler.POST(req);
+    const res = await POST(req);
     expect(res.status).toBe(401);
   });
 
   it("returns 400 when file is missing", async () => {
-    const { auth } = await import("@clerk/nextjs/server");
-    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockAuth.mockResolvedValueOnce({ userId: TEST_USER_ID });
 
-    const handler = await getHandler();
     const formData = new FormData();
     formData.append("filename", "test.png");
     formData.append("contentType", "image/png");
@@ -76,16 +75,14 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
       method: "POST",
       body: formData,
     });
-    const res = await handler.POST(req);
+    const res = await POST(req);
     expect(res.status).toBe(400);
     expect((await res.json()).error).toContain("file");
   });
 
   it("returns 400 when familyId is missing", async () => {
-    const { auth } = await import("@clerk/nextjs/server");
-    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
+    mockAuth.mockResolvedValueOnce({ userId: TEST_USER_ID });
 
-    const handler = await getHandler();
     const formData = new FormData();
     formData.append("file", new Blob(["test"], { type: "image/png" }), "test.png");
     formData.append("filename", "test.png");
@@ -95,51 +92,56 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
       method: "POST",
       body: formData,
     });
-    const res = await handler.POST(req);
+    const res = await POST(req);
     expect(res.status).toBe(400);
     expect((await res.json()).error).toContain("familyId");
   });
 
   it("returns 403 when user is not a family member", async () => {
-    const { auth } = await import("@clerk/nextjs/server");
-    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
-    mockDb.query.familyMemberships.findFirst.mockResolvedValue(null);
+    mockAuth.mockResolvedValueOnce({ userId: TEST_USER_ID });
+    mockMembershipsFindFirst.mockResolvedValueOnce(null);
 
-    const handler = await getHandler();
+    const family = createMockFamily();
     const formData = new FormData();
     formData.append("file", new Blob(["test"], { type: "image/png" }), "test.png");
     formData.append("filename", "test.png");
     formData.append("contentType", "image/png");
-    formData.append("familyId", "fam_123");
+    formData.append("familyId", family.id);
 
     const req = new NextRequest("http://localhost/api/upload", {
       method: "POST",
       body: formData,
     });
-    const res = await handler.POST(req);
+    const res = await POST(req);
     expect(res.status).toBe(403);
   });
 
-  it("uploads file and creates post without album", async () => {
+  it("uploads file successfully and creates post without album", async () => {
     const family = createMockFamily();
-    const { auth } = await import("@clerk/nextjs/server");
-    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
-    mockDb.query.familyMemberships.findFirst.mockResolvedValue(
-      createMockMembership({ familyId: family.id, userId: TEST_USER_ID })
+    mockAuth.mockResolvedValueOnce({ userId: TEST_USER_ID });
+    mockMembershipsFindFirst.mockResolvedValueOnce(
+      createMockFamilyMembership({ familyId: family.id, userId: TEST_USER_ID })
     );
 
-    const { put } = await import("@vercel/blob");
-    vi.mocked(put).mockResolvedValue({
+    mockPut.mockResolvedValueOnce({
       url: "https://example.vercel-storage.com/fam_123/user_123/12345-abc.png",
     });
 
-    // Mock the INSERT for post creation
+    // Mock the post INSERT
     const serverTimestamp = new Date().toISOString();
-    mockDb.execute.mockResolvedValueOnce([
-      { id: "post_123", family_id: family.id, media_url: "https://example.vercel-storage.com/fam_123/user_123/12345-abc.png", caption: null, album_id: null, server_timestamp: serverTimestamp },
+    mockExecute.mockResolvedValueOnce([
+      {
+        id: "post_123",
+        family_id: family.id,
+        author_id: TEST_USER_ID,
+        content_type: "image/png",
+        media_url: "https://example.vercel-storage.com/fam_123/user_123/12345-abc.png",
+        caption: null,
+        album_id: null,
+        server_timestamp: serverTimestamp,
+      },
     ]);
 
-    const handler = await getHandler();
     const formData = new FormData();
     formData.append("file", new Blob(["test"], { type: "image/png" }), "photo.png");
     formData.append("filename", "photo.png");
@@ -150,7 +152,7 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
       method: "POST",
       body: formData,
     });
-    const res = await handler.POST(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -158,29 +160,37 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
     expect(body.post).toBeDefined();
     expect(body.post.id).toBe("post_123");
     expect(body.post.mediaUrl).toContain("https://example.vercel-storage.com/");
+    expect(body.post.albumId).toBeNull();
   });
 
-  it("uploads file with albumId and creates linked post", async () => {
+  it("uploads with albumId and creates linked post", async () => {
     const family = createMockFamily();
     const album = createMockAlbum({ familyId: family.id });
-    const { auth } = await import("@clerk/nextjs/server");
-    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
-    mockDb.query.familyMemberships.findFirst.mockResolvedValue(
-      createMockMembership({ familyId: family.id, userId: TEST_USER_ID })
-    );
-    mockDb.query.albums.findFirst.mockResolvedValue(album);
 
-    const { put } = await import("@vercel/blob");
-    vi.mocked(put).mockResolvedValue({
+    mockAuth.mockResolvedValueOnce({ userId: TEST_USER_ID });
+    mockMembershipsFindFirst.mockResolvedValueOnce(
+      createMockFamilyMembership({ familyId: family.id, userId: TEST_USER_ID })
+    );
+    mockAlbumsFindFirst.mockResolvedValueOnce(album);
+
+    mockPut.mockResolvedValueOnce({
       url: "https://example.vercel-storage.com/fam_123/user_123/video.mp4",
     });
 
     const serverTimestamp = new Date().toISOString();
-    mockDb.execute.mockResolvedValueOnce([
-      { id: "post_456", family_id: family.id, media_url: "https://example.vercel-storage.com/fam_123/user_123/video.mp4", caption: "Beach day!", album_id: album.id, server_timestamp: serverTimestamp },
+    mockExecute.mockResolvedValueOnce([
+      {
+        id: "post_456",
+        family_id: family.id,
+        author_id: TEST_USER_ID,
+        content_type: "video/mp4",
+        media_url: "https://example.vercel-storage.com/fam_123/user_123/video.mp4",
+        caption: "Beach day!",
+        album_id: album.id,
+        server_timestamp: serverTimestamp,
+      },
     ]);
 
-    const handler = await getHandler();
     const formData = new FormData();
     formData.append("file", new Blob(["videodata"], { type: "video/mp4" }), "video.mp4");
     formData.append("filename", "video.mp4");
@@ -193,7 +203,7 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
       method: "POST",
       body: formData,
     });
-    const res = await handler.POST(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -201,15 +211,13 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
     expect(body.post.caption).toBe("Beach day!");
   });
 
-  it("returns 400 for invalid content type", async () => {
+  it("returns 400 for disallowed content type", async () => {
     const family = createMockFamily();
-    const { auth } = await import("@clerk/nextjs/server");
-    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
-    mockDb.query.familyMemberships.findFirst.mockResolvedValue(
-      createMockMembership({ familyId: family.id, userId: TEST_USER_ID })
+    mockAuth.mockResolvedValueOnce({ userId: TEST_USER_ID });
+    mockMembershipsFindFirst.mockResolvedValueOnce(
+      createMockFamilyMembership({ familyId: family.id, userId: TEST_USER_ID })
     );
 
-    const handler = await getHandler();
     const formData = new FormData();
     formData.append("file", new Blob(["test"], { type: "application/pdf" }), "doc.pdf");
     formData.append("filename", "doc.pdf");
@@ -220,7 +228,7 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
       method: "POST",
       body: formData,
     });
-    const res = await handler.POST(req);
+    const res = await POST(req);
     expect(res.status).toBe(400);
     expect((await res.json()).error).toContain("content type");
   });
@@ -228,15 +236,14 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
   it("returns 404 when albumId belongs to different family", async () => {
     const family = createMockFamily();
     const otherFamily = createMockFamily();
-    const album = createMockAlbum({ familyId: otherFamily.id }); // different family
-    const { auth } = await import("@clerk/nextjs/server");
-    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
-    mockDb.query.familyMemberships.findFirst.mockResolvedValue(
-      createMockMembership({ familyId: family.id, userId: TEST_USER_ID })
-    );
-    mockDb.query.albums.findFirst.mockResolvedValue(album);
+    const album = createMockAlbum({ familyId: otherFamily.id });
 
-    const handler = await getHandler();
+    mockAuth.mockResolvedValueOnce({ userId: TEST_USER_ID });
+    mockMembershipsFindFirst.mockResolvedValueOnce(
+      createMockFamilyMembership({ familyId: family.id, userId: TEST_USER_ID })
+    );
+    mockAlbumsFindFirst.mockResolvedValueOnce(album); // album belongs to different family
+
     const formData = new FormData();
     formData.append("file", new Blob(["test"], { type: "image/png" }), "photo.png");
     formData.append("filename", "photo.png");
@@ -248,22 +255,18 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
       method: "POST",
       body: formData,
     });
-    const res = await handler.POST(req);
+    const res = await POST(req);
     expect(res.status).toBe(404);
   });
 
   it("returns 500 when blob upload fails", async () => {
     const family = createMockFamily();
-    const { auth } = await import("@clerk/nextjs/server");
-    vi.mocked(auth).mockResolvedValue({ userId: TEST_USER_ID });
-    mockDb.query.familyMemberships.findFirst.mockResolvedValue(
-      createMockMembership({ familyId: family.id, userId: TEST_USER_ID })
+    mockAuth.mockResolvedValueOnce({ userId: TEST_USER_ID });
+    mockMembershipsFindFirst.mockResolvedValueOnce(
+      createMockFamilyMembership({ familyId: family.id, userId: TEST_USER_ID })
     );
+    mockPut.mockRejectedValueOnce(new Error("Upload failed"));
 
-    const { put } = await import("@vercel/blob");
-    vi.mocked(put).mockRejectedValue(new Error("Upload failed"));
-
-    const handler = await getHandler();
     const formData = new FormData();
     formData.append("file", new Blob(["test"], { type: "image/png" }), "photo.png");
     formData.append("filename", "photo.png");
@@ -274,9 +277,49 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
       method: "POST",
       body: formData,
     });
-    const res = await handler.POST(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(500);
     expect((await res.json()).error).toBe("Failed to upload file");
+  });
+
+  it("accepts video content types", async () => {
+    const family = createMockFamily();
+    mockAuth.mockResolvedValueOnce({ userId: TEST_USER_ID });
+    mockMembershipsFindFirst.mockResolvedValueOnce(
+      createMockFamilyMembership({ familyId: family.id, userId: TEST_USER_ID })
+    );
+
+    mockPut.mockResolvedValueOnce({
+      url: "https://example.vercel-storage.com/fam_123/user_123/video.mp4",
+    });
+
+    const serverTimestamp = new Date().toISOString();
+    mockExecute.mockResolvedValueOnce([
+      {
+        id: "post_video",
+        family_id: family.id,
+        author_id: TEST_USER_ID,
+        content_type: "video/mp4",
+        media_url: "https://example.vercel-storage.com/fam_123/user_123/video.mp4",
+        caption: null,
+        album_id: null,
+        server_timestamp: serverTimestamp,
+      },
+    ]);
+
+    const formData = new FormData();
+    formData.append("file", new Blob(["videodata"], { type: "video/mp4" }), "video.mp4");
+    formData.append("filename", "video.mp4");
+    formData.append("contentType", "video/mp4");
+    formData.append("familyId", family.id);
+
+    const req = new NextRequest("http://localhost/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(200);
   });
 });

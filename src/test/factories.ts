@@ -172,3 +172,26 @@ export function createMockCalendarEvent(overrides?: Partial<{
     ...overrides,
   };
 }
+
+export function createMockAlbum(overrides?: Partial<{
+  id: string;
+  familyId: string;
+  name: string;
+  description: string | null;
+  coverUrl: string | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}>) {
+  return {
+    id: generateUUID(),
+    familyId: generateUUID(),
+    name: "Summer 2025",
+    description: null,
+    coverUrl: null,
+    createdBy: `user_${generateUUID().slice(0, 8)}`,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
