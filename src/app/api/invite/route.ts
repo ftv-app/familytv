@@ -89,10 +89,11 @@ export async function POST(req: NextRequest) {
   }).returning();
 
   // TODO: Send email with invite link
-  // Return the public invite ID (not the secret token)
+  // Return the public invite ID + secret token in URL for PATCH verification
+  // Token is passed via query param (?token=xxx), not in the path
   return NextResponse.json({
     inviteId: invite.id,
-    inviteLink: `/invite/${invite.id}`,
+    inviteLink: `/invite/${invite.id}?token=${token}`,
     expiresAt: expiresAt.toISOString(),
   }, { status: 201 });
 }
@@ -127,12 +128,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "This invite has expired" }, { status: 400 });
   }
 
+  // Return the token so client can include it in PATCH
+  const tokenFromUrl = searchParams.get("token") || "";
+
   return NextResponse.json({
     family: {
       id: invite.family.id,
       name: invite.family.name,
     },
     email: invite.email,
+    token: tokenFromUrl,
   });
 }
 

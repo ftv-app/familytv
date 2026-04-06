@@ -28,8 +28,8 @@
   --color-muted-foreground: oklch(45% 0.02 50); /* warm medium gray */
 
   /* Background: warm cream (NOT pure white) */
-  --color-background: oklch(97% 0.005 50);   /* #faf8f5 - warm cream */
-  --color-foreground: oklch(18% 0.02 50);   /* #1e1a17 - warm soft black */
+  --color-background: var(--background);     /* inherits :root --background */
+  --color-foreground: var(--foreground);     /* inherits :root --foreground */
 
   /* Card */
   --color-card: oklch(98% 0.005 50);         /* #fdfcfb */
@@ -65,9 +65,87 @@
 
 /* Warm background for entire app */
 body {
-  background-color: #faf8f5;
-  color: #1e1a17;
+  background-color: var(--background);
+  color: var(--foreground);
   font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* =========================================
+   Cinema Black Dark Mode Overrides
+   ========================================= */
+
+.dark {
+  /* Body: Cinema Black */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Primary stays terracotta — warm pop on dark */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  /* Secondary: muted sage */
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  /* Accent: dusty gold */
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  /* Muted: dark surface */
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  /* Card: dark surface */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  /* Popover: dark surface */
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  /* Borders: subtle warm dark */
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Destructive */
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+}
+
+.dark body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Dark scrollbar: dark surface + subtle warm tint */
+.dark ::-webkit-scrollbar-track {
+  background: oklch(0.185 0.012 50);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0.02 50);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0.02 50);
+}
+
+/* Dark selection */
+.dark ::selection {
+  background-color: oklch(0.55 0.08 85 / 0.4);
+  color: oklch(0.98 0.005 50);
+}
+
+/* Dark links: warm gold on Cinema Black */
+.dark a {
+  color: oklch(0.70 0.08 85);
+  text-decoration: none;
+}
+
+.dark a:hover {
+  text-decoration: underline;
 }
 
 /* Custom scrollbar (warm tones) */
