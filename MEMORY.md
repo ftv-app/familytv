@@ -70,5 +70,17 @@ Build passes ✅ | Tests: 890 passed, 5 failed (pre-existing invite.test.ts) | D
 - Clerk dev: srconway0@gmail.com / MikesKey1928! (verified)
 - DB: Neon Postgres (familytv vercel project — DATABASE_URL in .env.local)
 
+## Learned Principles (Daily Reviews)
+- **Fix tests before building on them.** When a test suite is failing, fix the tests first. Working around failing tests means building on a false foundation.
+- **After any merge, run full test suite before declaring done.** Silent test failures after merge mean regressions go undetected. Every merge needs CI green before it's complete.
+- **UX walkthroughs are not optional.** A 30-min live inspection catches bugs that hours of testing miss. Non-negotiable part of every sprint.
+- **Merged ≠ Deployed.** Track production deployment explicitly. Wait for CI confirmation before closing pipeline tickets.
+- **Security tickets unfixed for 3+ sprints need immediate escalation.** Force an owner and deadline or close it. No valid state for "critical issue, no owner."
+- **Route hrefs are user-facing behavior.** Every navigation link should be verified against the routing spec at PR review time.
+- **Duplicate components eventually produce divergent behavior.** Check for existing similar components before creating new ones.
+- **If the tool can't reach it, the process can't trust it.** Deploy gate workflow, smoke-test scripts, and coverage config must be co-located and inspectable in the same repo as the code.
+- **A fix not tested in production is a fix that might break production.** Validate every automation with a real trigger before calling it done.
+- **Velocity without CI health is borrowed time.** Known-failing tests are debt that compounds. Assign owner + deadline or close the gap.
+
 ## Team (Linear)
 - **sean conway** (id: 309cc7af-180b-4ea6-981e-275eb952e632) — sole team member, Ctmedia team

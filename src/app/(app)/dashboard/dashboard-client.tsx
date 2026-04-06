@@ -164,7 +164,7 @@ function QuickActionButton({
       disabled={isNavigating}
       data-testid={testId}
       aria-busy={isNavigating}
-      className="block w-full rounded-xl transition-all duration-200 min-h-[60px] text-left focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2"
+      className="block w-full rounded-xl transition-all duration-200 min-h-[60px] text-left focus-visible:outline-2 focus-visible:outline-[#2D5A4A] focus-visible:outline-offset-2"
       style={{
         backgroundColor: THEATER_CHARCOAL,
         boxShadow: "0 4px 20px rgba(0,0,0,0.4)",

@@ -9,7 +9,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import {
   Home,
@@ -46,33 +45,32 @@ export function MobileNav() {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        {/*
-          CTM-222 + CTM-39 + CTM-34: Hamburger for seniors
-          - Tap target: 48×54px minimum
-          - Contrast: icon #2D5A3D on #faf8f5 = ~6.5:1 ✓ (WCAG AA)
-          - Forest green focus ring per CTM-221
-          - "Menu" label for clarity
-        */}
-        <button
-          data-testid="hamburger-menu"
-          className="flex items-center gap-1.5 px-3 py-3 rounded-lg border transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2 md:hidden"
-          style={{ backgroundColor: "#faf8f5", borderColor: "#2D5A3D", borderWidth: "1px" }}
-          aria-label="Open navigation menu"
+      {/*
+        CTM-222 + CTM-39 + CTM-34: Hamburger for seniors
+        - Tap target: 48×54px minimum
+        - Contrast: icon #2D5A3D on #faf8f5 = ~6.5:1 ✓ (WCAG AA)
+        - Forest green focus ring per CTM-221 (#2D5A4A)
+        - "Menu" label for clarity
+      */}
+      <button
+        data-testid="hamburger-menu"
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-1.5 px-3 py-3 rounded-lg border transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#2D5A4A] focus-visible:outline-offset-2 md:hidden"
+        style={{ backgroundColor: "#faf8f5", borderColor: "#2D5A3D", borderWidth: "1px" }}
+        aria-label="Open navigation menu"
+      >
+        <Menu
+          className="w-6 h-6 shrink-0"
+          style={{ color: "#2D5A3D" }}
+          aria-hidden="true"
+        />
+        <span
+          className="text-sm font-semibold tracking-wide pr-1"
+          style={{ color: "#2D5A3D" }}
         >
-          <Menu
-            className="w-6 h-6 shrink-0"
-            style={{ color: "#2D5A3D" }}
-            aria-hidden="true"
-          />
-          <span
-            className="text-sm font-semibold tracking-wide pr-1"
-            style={{ color: "#2D5A3D" }}
-          >
-            Menu
-          </span>
-        </button>
-      </SheetTrigger>
+          Menu
+        </span>
+      </button>
       <SheetContent side="left" className="w-72 p-0" style={{ backgroundColor: THEATER_CHARCOAL }}>
         <SheetHeader className="p-4 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
           <SheetTitle className="flex items-center gap-2">
