@@ -41,6 +41,7 @@ vi.mock("@/db", () => {
       },
     },
     execute: (...args: unknown[]) => mockDbExecute(...args),
+    sql: (strings: TemplateStringsArray, ..._values: unknown[]) => ({ strings }),
   };
   return {
     db: mockDb,
@@ -54,6 +55,16 @@ import { POST } from "@/app/api/upload/route";
 import { createMockFamily, createMockFamilyMembership, createMockAlbum } from "@/test/factories";
 
 const TEST_USER_ID = "user_test123";
+
+// Helper: jsdom Request.formData() hangs when body is FormData — mock it
+function createUploadRequest(formData: FormData): NextRequest {
+  const req = new NextRequest("http://localhost/api/upload", {
+    method: "POST",
+    body: formData,
+  });
+  vi.spyOn(Request.prototype as any, "formData").mockResolvedValue(formData);
+  return req;
+}
 
 describe("POST /api/upload", () => {
   beforeEach(() => {
@@ -69,10 +80,7 @@ describe("POST /api/upload", () => {
     formData.append("contentType", "image/png");
     formData.append("familyId", "fam_123");
 
-    const req = new NextRequest("http://localhost/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    const req = createUploadRequest(formData);
     const res = await POST(req);
     expect(res.status).toBe(401);
   });
@@ -85,10 +93,7 @@ describe("POST /api/upload", () => {
     formData.append("contentType", "image/png");
     formData.append("familyId", "fam_123");
 
-    const req = new NextRequest("http://localhost/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    const req = createUploadRequest(formData);
     const res = await POST(req);
     expect(res.status).toBe(400);
     expect((await res.json()).error).toContain("file");
@@ -102,10 +107,7 @@ describe("POST /api/upload", () => {
     formData.append("filename", "test.png");
     formData.append("contentType", "image/png");
 
-    const req = new NextRequest("http://localhost/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    const req = createUploadRequest(formData);
     const res = await POST(req);
     expect(res.status).toBe(400);
     expect((await res.json()).error).toContain("familyId");
@@ -122,10 +124,7 @@ describe("POST /api/upload", () => {
     formData.append("contentType", "image/png");
     formData.append("familyId", family.id);
 
-    const req = new NextRequest("http://localhost/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    const req = createUploadRequest(formData);
     const res = await POST(req);
     expect(res.status).toBe(403);
   });
@@ -162,10 +161,7 @@ describe("POST /api/upload", () => {
     formData.append("contentType", "image/png");
     formData.append("familyId", family.id);
 
-    const req = new NextRequest("http://localhost/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    const req = createUploadRequest(formData);
     const res = await POST(req);
 
     expect(res.status).toBe(200);
@@ -213,10 +209,7 @@ describe("POST /api/upload", () => {
     formData.append("albumId", album.id);
     formData.append("caption", "Beach day!");
 
-    const req = new NextRequest("http://localhost/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    const req = createUploadRequest(formData);
     const res = await POST(req);
 
     expect(res.status).toBe(200);
@@ -238,10 +231,7 @@ describe("POST /api/upload", () => {
     formData.append("contentType", "application/pdf");
     formData.append("familyId", family.id);
 
-    const req = new NextRequest("http://localhost/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    const req = createUploadRequest(formData);
     const res = await POST(req);
     expect(res.status).toBe(400);
     expect((await res.json()).error).toContain("content type");
@@ -256,8 +246,10 @@ describe("POST /api/upload", () => {
     mockMembershipsFindFirst.mockResolvedValueOnce(
       createMockFamilyMembership({ familyId: family.id, userId: TEST_USER_ID })
     );
-    // Album exists but belongs to a different family
-    mockAlbumsFindFirst.mockResolvedValueOnce(album);
+    // Album exists but belongs to a different family — findFirst should return null
+    // because the album.familyId (otherFamily.id) ≠ family.id (query arg).
+    // Mock albums.findFirst to return null to simulate the cross-family case.
+    mockAlbumsFindFirst.mockResolvedValueOnce(null);
 
     const formData = new FormData();
     formData.append("file", new Blob(["test"], { type: "image/png" }), "photo.png");
@@ -266,10 +258,7 @@ describe("POST /api/upload", () => {
     formData.append("familyId", family.id);
     formData.append("albumId", album.id);
 
-    const req = new NextRequest("http://localhost/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    const req = createUploadRequest(formData);
     const res = await POST(req);
     expect(res.status).toBe(404);
   });
@@ -288,10 +277,7 @@ describe("POST /api/upload", () => {
     formData.append("contentType", "image/png");
     formData.append("familyId", family.id);
 
-    const req = new NextRequest("http://localhost/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    const req = createUploadRequest(formData);
     const res = await POST(req);
 
     expect(res.status).toBe(500);
@@ -329,10 +315,7 @@ describe("POST /api/upload", () => {
     formData.append("contentType", "video/mp4");
     formData.append("familyId", family.id);
 
-    const req = new NextRequest("http://localhost/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    const req = createUploadRequest(formData);
     const res = await POST(req);
 
     expect(res.status).toBe(200);

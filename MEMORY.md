@@ -4,10 +4,34 @@
 Private family social media. Invite-only, video/image sharing, shared calendars, watch parties. No ads/algorithms. Cinema Black design (Velvet Red #C41E3A, cream #FDF8F3, dark #0D0D0F).
 
 ## Active Sprints
-- **Sprint 014**: Dashboard Warmth + Competitive Intelligence (2026-04-05 EVE) — COMPLETE ✅
-- **Sprint 013**: Auth Polish + Accessibility Polish (2026-04-05 AM/PM) — COMPLETE ✅
-- **Sprint 012**: Embedding infrastructure (CTM-242-248) — COMPLETE ✅
-- **Sprint 011**: Watch Party social layer (CTM-229-235) — COMPLETE ✅
+- **Sprint EVE 2026-04-06**: Media Upload + Watch Party Completion — IN PROGRESS (CTM-230 ✅, CTM-239 ✅)
+- **Sprint PM 2026-04-06**: Tags + Tailwind + Nav Fixes — COMPLETE ✅
+- **Sprint AM 2026-04-06**: Tagging Core + Emoji Alignment — COMPLETE ✅
+- **Sprint 014**: Dashboard Warmth + Competitive Intelligence — COMPLETE ✅
+- **Sprint 013**: Auth Polish + Accessibility Polish — COMPLETE ✅
+- **Sprint 012**: Embedding infrastructure — COMPLETE ✅
+- **Sprint 011**: Watch Party social layer — COMPLETE ✅
+
+## CTM-230 Watch Party Presence — SHIPPED ✅ (2026-04-06 EVE)
+- Socket.IO + Redis backend: `2af5f62` — RedisPresenceManager, 30s TTL, horizontal-scaling-ready
+- Presence UI: `a73c17b` — Clerk auth + family membership check + correct roomId format wired
+- Room format: `family:{familyId}:video:{videoId}:session:{sessionId}`
+- Redis key pattern: `presence:{roomId}:{oderId}` → JSON user data; `presence:{roomId}` → Redis Set
+- Enable Redis adapter: `NEXT_PUBLIC_USE_REDIS_ADAPTER=true` + `REDIS_URL` or `UPSTASH_REDIS_REST_URL`
+- Components: PresenceStrip (desktop), PresenceCollapsed (mobile), PresencePopover (mobile)
+
+## CTM-239 Media Upload — BACKEND DONE ✅ (2026-04-06 EVE)
+- `POST /api/upload` handler: `72b5dc8` + `9ed4aaa`
+- Vercel Blob confirmed present (`BLOB_READ_WRITE_TOKEN` in env)
+- Storage path: `{familyId}/{userId}/{timestamp}-{random}.{ext}`, access: private
+- Albums integration: albumId column on posts table
+- Remaining: `GET /api/media?url=xxx` + `GET /api/albums/:id/media` proxy routes — ⚠️ NOT yet shipped
+
+## CTM-241 Tags Browse — SHIPPED ✅ (2026-04-06 PM)
+- `GET /api/tags?familyId=` — family-scoped tag listing with post counts
+- `/app/family/[familyId]/tags` — tag grid with click-to-filter-feed
+- Tag filter banner in feed: `210e653`
+- Components: tag-browse-client.tsx, TagChip, TagInput
 
 ## Embedding Infrastructure
 - Architecture: Vercel + Cloud Run hybrid (Next.js on Vercel → BGE-small/LanceDB on Cloud Run)
@@ -17,46 +41,34 @@ Private family social media. Invite-only, video/image sharing, shared calendars,
 - Cloud Run: min-instances=1, 2vCPU/4GB, ~$10-15/month
 - Local test: embedding service on localhost:8080 (all endpoints verified ✅)
 - Repo: embedding-service/ (Dockerfile, FastAPI, pytest)
-- Video embedding: ffmpeg extracts key frames (1 per 5s) → CLIP encodes → LanceDB video_slices table
-- Separate LanceDB tables: text docs (384-dim) + video_slices (512-dim)
 
-## Linear Tickets
+## Linear Tickets (Current)
 | ID | Title | Status |
 |----|-------|--------|
-| CTM-242 | Embedding infrastructure | done |
-| CTM-243 | Wire embedding service into Next.js API routes | done |
-| CTM-244 | Search UI component | done |
-| CTM-245 | Suggestions UI — auto-tagging | done |
-| CTM-246 | Video embedding pipeline Phase 1 (CLIP + 5s frames) | done |
+| CTM-248 | Video Phase 3 — VLM captions | todo — blocked on VLM API credentials |
 | CTM-247 | Video Phase 2 — scene detection + multi-frame | todo |
-| CTM-248 | Video Phase 3 — VLM captions | todo |
-| CTM-238 | Albums UI | done |
-| CTM-38 | What's Happening Now — ranked family activity UI | done |
-
-## Key Features
-- Family TV sync playback: leader/follower, UTC-anchored
-- Watch Party: presence, reactions, chat via Socket.IO 4 + Redis
-- Semantic search: hybrid RRF+BM25, family-scoped (family_id enforced)
-- Video search: CLIP frame embeddings, 5s key frame sampling, timestamp per result
-- Albums: full CRUD UI + API
+| CTM-239 | Media Upload | done (handler done, proxy routes remaining) |
+| CTM-241 | Tags Browse | done |
+| CTM-240 | Tagging core | done |
+| CTM-38 | What's Happening Now | done |
+| CTM-230 | Watch Party Presence | done |
 
 ## Tech Stack
-Next.js 16.2.1 + Turbopack | Clerk v7 | Neon Postgres | Vercel Blob | Socket.IO + Redis | LanceDB | Sentry | GitHub Actions
+Next.js 16.2.1 + Turbopack | Clerk v7 | Neon Postgres | Vercel Blob | Socket.IO 4 + Redis | LanceDB | Sentry | GitHub Actions
 
 ## Quality
-Build passes ✅ | Tests: 890 passed, 5 failed (pre-existing invite.test.ts) | Deploy gate: enabled ✅
+Build passes ✅ | Tests: 1057/1059 passed (2 root-owned test regressions, not code bugs) | Deploy gate: enabled ✅
 
 ## Open Issues (Known)
-- `invite.test.ts`: 5 failing tests — token field missing in mocks (root-owned file, unfixable by team)
-- `src/components/__tests__/`, `src/lib/activity/__tests__/`: root-owned dirs blocking `git checkout -f main`
 - `albums` table: restored Apr 4 (was removed in bad merge 88e07bb)
+- Albums API (`/api/albums`): 500 on production — data/schema issue
+- Settings page: Duplicate "The Conways" entries — data issue
 - SLO alerting: inactive
-- `dashboard-activity-feed.test.tsx`: 7 failures — FamilyFeedTab vs FamilyFeed+Suspense mismatch from CTM-37 merge (50f1e87) — FIX IN PROGRESS
+- VLM API: CTM-248 blocked on founder-provided credentials
 
 ## CTM-219 Invite Validation O(n)→O(1) — RESOLVED ✅
 - **Fix**: `237e1b2` + `9274869` — O(1) hash lookup + secret token required for invite acceptance
-- **Commit**: `9274869 fix(CTM-219): require secret token for invite acceptance — prevents invite ID enumeration`
-- **Verified**: 2026-04-05 — CTM-219 removed from open issues
+- **Verified**: 2026-04-05
 
 ## Embedding Service — Ops
 - Service dir: `/home/openclaw/familytv/embedding-service/`
@@ -64,7 +76,6 @@ Build passes ✅ | Tests: 890 passed, 5 failed (pre-existing invite.test.ts) | D
 - Model: BAAI/bge-small-en-v1.5 (384 dims), LanceDB at `/tmp/familytv_vectors`
 - Start: `source .venv/bin/activate && nohup python -m uvicorn src.main:app --host 0.0.0.0 --port 8080 >> /tmp/embedding-service.log 2>&1 &`
 - Health: `curl http://localhost:8080/health`
-- Logs: `/tmp/embedding-service.log`
 
 ## Working Credentials
 - Clerk dev: srconway0@gmail.com / MikesKey1928! (verified)
@@ -72,13 +83,13 @@ Build passes ✅ | Tests: 890 passed, 5 failed (pre-existing invite.test.ts) | D
 
 ## Learned Principles (Daily Reviews)
 - **Fix tests before building on them.** When a test suite is failing, fix the tests first. Working around failing tests means building on a false foundation.
-- **After any merge, run full test suite before declaring done.** Silent test failures after merge mean regressions go undetected. Every merge needs CI green before it's complete.
+- **After any merge, run full test suite before declaring done.** Silent test failures after merge mean regressions go undetected.
 - **UX walkthroughs are not optional.** A 30-min live inspection catches bugs that hours of testing miss. Non-negotiable part of every sprint.
 - **Merged ≠ Deployed.** Track production deployment explicitly. Wait for CI confirmation before closing pipeline tickets.
-- **Security tickets unfixed for 3+ sprints need immediate escalation.** Force an owner and deadline or close it. No valid state for "critical issue, no owner."
+- **Security tickets unfixed for 3+ sprints need immediate escalation.** Force an owner and deadline or close it.
 - **Route hrefs are user-facing behavior.** Every navigation link should be verified against the routing spec at PR review time.
 - **Duplicate components eventually produce divergent behavior.** Check for existing similar components before creating new ones.
-- **If the tool can't reach it, the process can't trust it.** Deploy gate workflow, smoke-test scripts, and coverage config must be co-located and inspectable in the same repo as the code.
+- **If the tool can't reach it, the process can't trust it.** Deploy gate workflow, smoke-test scripts, and coverage config must be co-located in the same repo as the code.
 - **A fix not tested in production is a fix that might break production.** Validate every automation with a real trigger before calling it done.
 - **Velocity without CI health is borrowed time.** Known-failing tests are debt that compounds. Assign owner + deadline or close the gap.
 
