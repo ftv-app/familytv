@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import React from "react";
 
 // Mock next/image globally (used by AlbumCard even when not rendered)
@@ -92,7 +92,6 @@ describe("Albums empty state — WarmEmptyState integration", () => {
   beforeEach(() => mockWarmEmptyState.mockClear());
 
   it("AlbumsPage calls WarmEmptyState when albums array is empty", async () => {
-    // Intercept fetch for /api/family and /api/albums
     const mockFetch = vi.fn();
     global.fetch = mockFetch;
     mockFetch.mockResolvedValueOnce({
@@ -106,12 +105,16 @@ describe("Albums empty state — WarmEmptyState integration", () => {
 
     const { default: AlbumsPage } = await import("../app/albums/page");
 
-    render(<AlbumsPage params={{}} searchParams={{ familyId: FAM_ID }} />);
+    // Wrap in act() so useEffect hooks fire synchronously
+    await act(async () => {
+      render(<AlbumsPage params={{}} searchParams={{ familyId: FAM_ID }} />);
+    });
 
-    // Wait for useEffect to settle
-    await new Promise((r) => setTimeout(r, 10));
-
-    expect(mockWarmEmptyState).toHaveBeenCalled();
+    // After act() flushes effects, selectedFamilyId is set and fetchAlbums
+    // has resolved with { albums: [] }, triggering the WarmEmptyState render.
+    await waitFor(() => {
+      expect(mockWarmEmptyState).toHaveBeenCalled();
+    });
   });
 
   it("WarmEmptyState receives warm encouraging copy for albums", async () => {
@@ -128,18 +131,21 @@ describe("Albums empty state — WarmEmptyState integration", () => {
 
     const { default: AlbumsPage } = await import("../app/albums/page");
 
-    render(<AlbumsPage params={{}} searchParams={{ familyId: FAM_ID }} />);
-    await new Promise((r) => setTimeout(r, 10));
+    await act(async () => {
+      render(<AlbumsPage params={{}} searchParams={{ familyId: FAM_ID }} />);
+    });
 
-    const calls = mockWarmEmptyState.mock.calls;
-    const albumsCall = calls.find(([p]) => p?.description?.includes("album"));
-    expect(albumsCall).toBeDefined();
-    const [props] = albumsCall!;
-    expect(props.title).toBeTruthy();
-    expect(props.description).toBeTruthy();
-    // No generic cold copy
-    expect(props.title).not.toMatch(/^No |^Nothing |^Empty |^0 /i);
-    expect(props.description).not.toMatch(/^No |^Nothing |^Empty/i);
+    await waitFor(() => {
+      const calls = mockWarmEmptyState.mock.calls;
+      const albumsCall = calls.find(([p]) => p?.description?.includes("album"));
+      expect(albumsCall).toBeDefined();
+      const [props] = albumsCall!;
+      expect(props.title).toBeTruthy();
+      expect(props.description).toBeTruthy();
+      // No generic cold copy
+      expect(props.title).not.toMatch(/^No |^Nothing |^Empty |^0 /i);
+      expect(props.description).not.toMatch(/^No |^Nothing |^Empty/i);
+    });
   });
 
   it("WarmEmptyState includes a CTA linking to album creation", async () => {
@@ -156,15 +162,18 @@ describe("Albums empty state — WarmEmptyState integration", () => {
 
     const { default: AlbumsPage } = await import("../app/albums/page");
 
-    render(<AlbumsPage params={{}} searchParams={{ familyId: FAM_ID }} />);
-    await new Promise((r) => setTimeout(r, 10));
+    await act(async () => {
+      render(<AlbumsPage params={{}} searchParams={{ familyId: FAM_ID }} />);
+    });
 
-    const ctaCall = mockWarmEmptyState.mock.calls.find(
-      ([p]) => p?.ctaLabel
-    );
-    expect(ctaCall).toBeDefined();
-    const [props] = ctaCall!;
-    expect(props.ctaLabel).toBeTruthy();
-    expect(props.ctaHref).toBeTruthy();
+    await waitFor(() => {
+      const ctaCall = mockWarmEmptyState.mock.calls.find(
+        ([p]) => p?.ctaLabel
+      );
+      expect(ctaCall).toBeDefined();
+      const [props] = ctaCall!;
+      expect(props.ctaLabel).toBeTruthy();
+      expect(props.ctaHref).toBeTruthy();
+    });
   });
 });

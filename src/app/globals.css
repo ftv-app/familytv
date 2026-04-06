@@ -89,7 +89,7 @@
   /* Warm border (not cold gray) */
   --border: oklch(0.86 0.008 50);
   --input: oklch(0.86 0.008 50);
-  --ring: #2D5A4A; /* Forest green - CTM-221 focus ring */
+  --ring: #2D5A3D; /* Forest green - CTM-221 focus ring */
 
   /* Chart colors (warm variants) */
   --chart-1: oklch(0.58 0.12 50);
@@ -149,7 +149,7 @@
   /* Borders */
   --border: oklch(0.28 0.012 50);
   --input: oklch(0.28 0.012 50);
-  --ring: #2D5A4A; /* Forest green - CTM-221 focus ring */
+  --ring: #2D5A3D; /* Forest green - CTM-221 focus ring */
 }
 
 /* ---- Accessibility: WCAG 2.1 AA ---- */
