@@ -123,6 +123,8 @@ export const posts = pgTable(
     contentType: text("content_type").notNull(),
     mediaUrl: text("media_url"),           // Vercel Blob URL (null for text posts)
     caption: text("caption"),
+    // CTM-239: Album association for organized media
+    albumId: uuid("album_id").references(() => albums.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     // Server-authoritative timestamp for chronological ordering (CTM-223)
@@ -135,6 +137,8 @@ export const posts = pgTable(
     index("posts_created_idx").on(table.familyId, table.createdAt),
     // CTM-223: Index for efficient sync queries by server_timestamp
     index("posts_server_timestamp_idx").on(table.familyId, table.serverTimestamp),
+    // CTM-239: Index for album media queries
+    index("posts_album_idx").on(table.albumId),
   ]
 );
 

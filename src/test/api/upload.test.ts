@@ -5,10 +5,10 @@ import { NextRequest } from "next/server";
 const mockAuth = vi.fn();
 const mockMembershipsFindFirst = vi.fn();
 const mockAlbumsFindFirst = vi.fn();
-const mockExecute = vi.fn();
+const mockPut = vi.fn();
+const mockDbExecute = vi.fn();
 
 // Mock Vercel Blob
-const mockPut = vi.fn();
 vi.mock("@vercel/blob", () => ({
   put: (...args: unknown[]) => mockPut(...args),
 }));
@@ -18,9 +18,9 @@ vi.mock("@clerk/nextjs/server", () => ({
   auth: (...args: unknown[]) => mockAuth(...args),
 }));
 
-// Mock database
-vi.mock("@/db", () => ({
-  db: {
+// Mock database using factory pattern (same as comments.test.ts)
+vi.mock("@/db", () => {
+  const mockDb = {
     query: {
       familyMemberships: {
         findFirst: (...args: unknown[]) => mockMembershipsFindFirst(...args),
@@ -29,19 +29,22 @@ vi.mock("@/db", () => ({
         findFirst: (...args: unknown[]) => mockAlbumsFindFirst(...args),
       },
     },
-    execute: (...args: unknown[]) => mockExecute(...args),
-  },
-  familyMemberships: {},
-  albums: {},
-  posts: {},
-}));
+    execute: (...args: unknown[]) => mockDbExecute(...args),
+  };
+  return {
+    db: mockDb,
+    posts: {},
+    familyMemberships: {},
+    albums: {},
+  };
+});
 
 import { POST } from "@/app/api/upload/route";
 import { createMockFamily, createMockFamilyMembership, createMockAlbum } from "@/test/factories";
 
 const TEST_USER_ID = "user_test123";
 
-describe("POST /api/upload", { testTimeout: 30000 }, () => {
+describe("POST /api/upload", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -127,9 +130,9 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
       url: "https://example.vercel-storage.com/fam_123/user_123/12345-abc.png",
     });
 
-    // Mock the post INSERT
+    // Mock the post INSERT — return value is the rows array from the RETURNING clause
     const serverTimestamp = new Date().toISOString();
-    mockExecute.mockResolvedValueOnce([
+    mockDbExecute.mockResolvedValueOnce([
       {
         id: "post_123",
         family_id: family.id,
@@ -178,7 +181,7 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
     });
 
     const serverTimestamp = new Date().toISOString();
-    mockExecute.mockResolvedValueOnce([
+    mockDbExecute.mockResolvedValueOnce([
       {
         id: "post_456",
         family_id: family.id,
@@ -242,7 +245,8 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
     mockMembershipsFindFirst.mockResolvedValueOnce(
       createMockFamilyMembership({ familyId: family.id, userId: TEST_USER_ID })
     );
-    mockAlbumsFindFirst.mockResolvedValueOnce(album); // album belongs to different family
+    // Album exists but belongs to a different family
+    mockAlbumsFindFirst.mockResolvedValueOnce(album);
 
     const formData = new FormData();
     formData.append("file", new Blob(["test"], { type: "image/png" }), "photo.png");
@@ -295,7 +299,7 @@ describe("POST /api/upload", { testTimeout: 30000 }, () => {
     });
 
     const serverTimestamp = new Date().toISOString();
-    mockExecute.mockResolvedValueOnce([
+    mockDbExecute.mockResolvedValueOnce([
       {
         id: "post_video",
         family_id: family.id,
