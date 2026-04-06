@@ -14,7 +14,7 @@ import {
 import {
   Home,
   Users,
-  Calendar,
+  Settings,
   Image,
   Plus,
   Menu,
@@ -33,7 +33,7 @@ const genericNavItems = [
   { href: "/app", icon: Home, label: "Dashboard" },
   { href: "/app/family", icon: Users, label: "Family" },
   { href: "/app/albums", icon: Image, label: "Albums" },
-  { href: "/app/calendar", icon: Calendar, label: "Calendar" },
+  { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
 function isActiveNavItem(href: string, pathname: string): boolean {
@@ -46,7 +46,7 @@ export function MobileNav() {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger className="md:hidden">
+      <SheetTrigger asChild>
         {/*
           CTM-222 + CTM-39 + CTM-34: Hamburger for seniors
           - Tap target: 48×54px minimum
@@ -56,7 +56,7 @@ export function MobileNav() {
         */}
         <button
           data-testid="hamburger-menu"
-          className="flex items-center gap-1.5 px-3 py-3 rounded-lg border transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2"
+          className="flex items-center gap-1.5 px-3 py-3 rounded-lg border transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#2D5A3D] focus-visible:outline-offset-2 md:hidden"
           style={{ backgroundColor: "#faf8f5", borderColor: "#2D5A3D", borderWidth: "1px" }}
           aria-label="Open navigation menu"
         >

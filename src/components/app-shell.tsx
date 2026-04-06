@@ -6,7 +6,6 @@ import { UserButton, useAuth } from "@clerk/nextjs";
 import {
   Home,
   Users,
-  Calendar,
   Settings,
   Tv,
 } from "lucide-react";
@@ -15,8 +14,7 @@ import { MobileNav } from "@/components/mobile-nav";
 const navItems = [
   { href: "/app", icon: Home, label: "Dashboard" },
   { href: "/app/family", icon: Users, label: "Family" },
-  { href: "/app/calendar", icon: Calendar, label: "Calendar" },
-  { href: "/app/settings", icon: Settings, label: "Settings" },
+  { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
 function SignedOutFallback() {
