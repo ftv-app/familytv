@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { UploadButton } from "@/components/upload/UploadButton";
 import { toast } from "sonner";
 
 interface Album {
@@ -29,8 +30,9 @@ interface Album {
 
 interface Photo {
   id: string;
-  url: string;
+  mediaUrl: string;
   caption?: string;
+  authorName?: string;
 }
 
 export default function AlbumDetailPage() {
@@ -48,14 +50,22 @@ export default function AlbumDetailPage() {
     if (!id) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/albums/${id}`);
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error || "Failed to load album");
+      const [albumRes, mediaRes] = await Promise.all([
+        fetch(`/api/albums/${id}`),
+        fetch(`/api/albums/${id}/media`),
+      ]);
+      const albumData = await albumRes.json();
+      if (!albumRes.ok) {
+        toast.error(albumData.error || "Failed to load album");
         router.push("/albums");
         return;
       }
-      setAlbum(data.album);
+      setAlbum(albumData.album);
+
+      const mediaData = await mediaRes.json();
+      if (mediaRes.ok) {
+        setPhotos(mediaData.media ?? []);
+      }
     } catch {
       toast.error("Failed to load album");
       router.push("/albums");
@@ -204,7 +214,21 @@ export default function AlbumDetailPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2" data-testid="albums-detail-actions">
+              <div className="flex gap-2 items-center" data-testid="albums-detail-actions">
+                <UploadButton
+                  familyId={album.familyId}
+                  albumId={album.id}
+                  variant="outline"
+                  size="sm"
+                  className="border-[#d8d3cc] text-[#1e1a17] hover:bg-[#f0ede8] dark:border-[#444] dark:text-[#faf8f5] dark:hover:bg-[#2a2a2a]"
+                  data-testid="albums-detail-upload-button"
+                  onUploadComplete={(url, postId) => {
+                    setPhotos((prev) => [
+                      { id: postId, mediaUrl: url, caption: null },
+                      ...prev,
+                    ]);
+                  }}
+                />
                 {/* Edit */}
                 <Dialog open={editOpen} onOpenChange={setEditOpen}>
                   <DialogTrigger>
@@ -302,9 +326,6 @@ export default function AlbumDetailPage() {
                 <p className="text-muted-foreground text-sm" data-testid="albums-detail-photos-empty-text">
                   No photos in this album yet.
                 </p>
-                <p className="text-muted-foreground text-xs mt-1">
-                  Photo uploads coming soon.
-                </p>
               </div>
             ) : (
               <div
@@ -319,7 +340,7 @@ export default function AlbumDetailPage() {
                     data-testid={`albums-detail-photo-${index}`}
                   >
                     <Image
-                      src={photo.url}
+                      src={photo.mediaUrl}
                       alt={photo.caption ?? `Photo ${index + 1}`}
                       fill
                       className="object-cover transition-transform duration-200 group-hover:scale-105"
@@ -355,7 +376,7 @@ export default function AlbumDetailPage() {
               </button>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={lightboxPhoto.url}
+                src={lightboxPhoto.mediaUrl}
                 alt={lightboxPhoto.caption ?? "Photo"}
                 className="max-w-[90vw] max-h-[90vh] object-contain"
                 data-testid="albums-detail-lightbox-image"
