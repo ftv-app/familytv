@@ -6,6 +6,7 @@ const mockAuth = vi.fn();
 const mockAlbumsFindFirst = vi.fn();
 const mockMembershipsFindFirst = vi.fn();
 const mockExecute = vi.fn();
+const mockSql = vi.fn();
 
 // Mock Clerk auth
 vi.mock("@clerk/nextjs/server", () => ({
@@ -24,6 +25,7 @@ vi.mock("@/db", () => ({
       },
     },
     execute: (...args: unknown[]) => mockExecute(...args),
+    sql: (...args: unknown[]) => mockSql(...args),
   },
   albums: {},
   familyMemberships: {},
